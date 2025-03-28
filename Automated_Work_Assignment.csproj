@@ -60,6 +60,10 @@
         <Reference Include="UnityEngine.TextRenderingModule">
           <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
         </Reference>
+        <Reference Include="VSE">
+          <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\workshop\content\294100\3400246558\1.5\Assemblies\VSE.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
     </ItemGroup>
     <ItemGroup>
         <Compile Include="AutoAssign_GameComponent.cs" />
@@ -67,6 +71,7 @@
         <Compile Include="AutomatedWorkSettings.cs" />
         <Compile Include="Dialog_ManageExclusions.cs" />
         <Compile Include="HarmonyPatches.cs" />
+        <Compile Include="ModDetector.cs" />
         <Compile Include="Properties\AssemblyInfo.cs"/>
         <Compile Include="WorkAssigner.cs" />
         <Compile Include="WorkSettingValues.cs" />
