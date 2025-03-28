@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <AWA_SettingsCategory>Automated Work Assignment</AWA_SettingsCategory>
+  <AWA_EnableModLabel>Enable Mod Logic:</AWA_EnableModLabel>
+  <AWA_EnableModTooltip>When checked, the mod will manage work priorities.</AWA_EnableModTooltip>
+  <AWA_EnableDailyRefreshLabel>Enable Automatic Daily Refresh</AWA_EnableDailyRefreshLabel>
+  <AWA_EnableDailyRefreshTooltip>If enabled, assignments will be refreshed automatically near the start of each day.</AWA_EnableDailyRefreshTooltip>
+  <AWA_ManageExclusionsButton>Manage Excluded Pawns</AWA_ManageExclusionsButton>
+  <AWA_DesiredPawnsLabel>Configure Count (0=disabled) and Priority (1=Highest, 4=Lowest) per Job:</AWA_DesiredPawnsLabel>
+  <AWA_CountLabel>Count:</AWA_CountLabel>
+  <AWA_PriorityFieldLabel>Priority:</AWA_PriorityFieldLabel>
+
+  <AWA_ModOn>AutoWork: ON</AWA_ModOn>
+  <AWA_ModOff>AutoWork: OFF</AWA_ModOff>
+  <AWA_RefreshButton>Refresh Now</AWA_RefreshButton>
+  <AWA_SettingsButton>Mod Settings</AWA_SettingsButton>
+  <AWA_ModDisabledMessage>Automated Work Assignment is currently disabled.</AWA_ModDisabledMessage>
+
+  <AWA_ExclusionDialogTitle>Manage Excluded Pawns</AWA_ExclusionDialogTitle>
+  <AWA_ExclusionDialogDesc>Select pawns to exclude from automatic assignment:</AWA_ExclusionDialogDesc>
+
+  </LanguageData>

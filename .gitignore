@@ -1,0 +1,24 @@
+# Compiled assemblies and intermediate files
+[Aa]ssemblies/
+[Oo]bj/
+[Bb]in/
+*.dll
+*.exe
+*.pdb
+
+# Rider / VS specific
+.idea/
+*.suo
+*.user
+*.sln.dotsettings.user
+*.csproj.user
+
+# OS generated files
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+
+# Packages folder
+# packages/

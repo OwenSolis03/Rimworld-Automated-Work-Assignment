@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <AWA_SettingsCategory>Assignation Automatique du Travail</AWA_SettingsCategory>
+  <AWA_EnableModLabel>Activer la Logique du Mod :</AWA_EnableModLabel>
+  <AWA_EnableModTooltip>Si coché, le mod gérera les priorités de travail.</AWA_EnableModTooltip>
+  <AWA_EnableDailyRefreshLabel>Activer le Rafraîchissement Quotidien Auto</AWA_EnableDailyRefreshLabel> <AWA_EnableDailyRefreshTooltip>Si activé, les assignations seront rafraîchies automatiquement vers le début de chaque jour.</AWA_EnableDailyRefreshTooltip> <AWA_ManageExclusionsButton>Gérer les Colons Exclus</AWA_ManageExclusionsButton>
+  <AWA_DesiredPawnsLabel>Configurer Quantité (0=désactivé) et Priorité (1=Max, 4=Min) par Tâche :</AWA_DesiredPawnsLabel>
+  <AWA_CountLabel>Quantité :</AWA_CountLabel>
+  <AWA_PriorityFieldLabel>Priorité :</AWA_PriorityFieldLabel>
+
+  <AWA_ModOn>AutoTravail : ON</AWA_ModOn>
+  <AWA_ModOff>AutoTravail : OFF</AWA_ModOff>
+  <AWA_RefreshButton>Rafraîchir</AWA_RefreshButton>
+  <AWA_SettingsButton>Options du Mod</AWA_SettingsButton>
+  <AWA_ModDisabledMessage>Assignation Automatique du Travail est actuellement désactivé.</AWA_ModDisabledMessage>
+
+  <AWA_ExclusionDialogTitle>Gérer les Colons Exclus</AWA_ExclusionDialogTitle>
+  <AWA_ExclusionDialogDesc>Sélectionnez les colons à exclure de l'assignation automatique :</AWA_ExclusionDialogDesc>
+
+  </LanguageData>
