@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
+using UnityEngine;
 using Verse;
 using VSE.Passions;
 
@@ -87,6 +88,7 @@ namespace Automated_Work_Assignment
                 {
                     score += skill.Level; 
                 }
+
             }
             else
             {
@@ -99,8 +101,7 @@ namespace Automated_Work_Assignment
             {
                 Passion passionValue = skill.passion;
 
-
-                if (ModDetector.VSEIsActive)
+                if (ModDetector.VSEIsActive) 
                 {
                     try
                     {
@@ -108,65 +109,109 @@ namespace Automated_Work_Assignment
                         if (vsePassionDef != null)
                         {
 
-                            passionBonus = (vsePassionDef.learnRateFactor - 1.0f) * 10f;
-                        }
-                        else
-                        {
-                            Log.Warning($"[AutoWork] VSE Active but PassionManager.PassionToDef returned null for passion value {passionValue}. Applying default vanilla bonus.");
-                            passionBonus = passionValue == Passion.Major ? PassionBurningBonus : (passionValue == Passion.Minor ? PassionInterestedBonus : 0f);
+                            float calculatedBonus = (vsePassionDef.learnRateFactor - 1.0f) * 10f; // Ajusta '10f' si es necesario
+
+                            passionBonus = Mathf.Max(0f, calculatedBonus);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error($"[AutoWork] Error getting VSE passion for {pawn.LabelShortCap}. Skill {skill.def.defName}. Using vanilla bonus. Exception: {ex.Message}");
-                        passionBonus = passionValue == Passion.Major ? PassionBurningBonus : (passionValue == Passion.Minor ? PassionInterestedBonus : 0f);
+                        Log.ErrorOnce($"[AutoWork] Error getting VSE passion for {pawn.LabelShortCap}. Skill {skill.def.defName}. Setting passion bonus to 0 for this pawn/skill. Exception: {ex.Message}", pawn.thingIDNumber ^ skill.def.shortHash ^ 1984); // Log de error único por peón/skill
+                        passionBonus = 0f; 
                     }
                 }
                 else
                 {
+
                     passionBonus = passionValue == Passion.Major ? PassionBurningBonus : (passionValue == Passion.Minor ? PassionInterestedBonus : 0f);
                 }
             }
 
-            score += passionBonus;
+            score += passionBonus; 
 
 
+            if (score < 1f && relevantSkillDef != null)
+            {
+                score = 1f;
+            }
+            
             return score;
         }
 
 
         private static void AssignWorkPriorities(WorkTypeDef workType, int desiredCount, int targetPriority, List<Pawn> colonists)
         {
+#if Degub
+            Log.Message($"[AutoWork Debug] AssignWorkPriorities START for '{workType.defName}'. DesiredCount={desiredCount}, TargetPriority={targetPriority}"); // <-- LOG
+#endif
             List<PawnSuitability> suitabilityList = new List<PawnSuitability>();
-            foreach (Pawn pawn in colonists) {
-                if (pawn?.workSettings == null) continue;
+
+
+            foreach (Pawn pawn in colonists)
+            {
+                if (pawn?.workSettings == null) continue; 
+
                 float score = CalculateSuitability(pawn, workType);
-                if (score >= 0) {
+                if (score >= 0) 
+                {
                     suitabilityList.Add(new PawnSuitability { pawn = pawn, score = score });
                 } else {
+
                     pawn.workSettings.SetPriority(workType, 0);
                 }
             }
-
+            
             suitabilityList.Sort((a, b) => b.score.CompareTo(a.score));
 
+#if DEBUG
+            Log.Message($"[AutoWork Debug] Suitability list for '{workType.defName}' count: {suitabilityList.Count}. Top scores:"); // <-- LOG
+#endif
+            
+            for(int k=0; k < Mathf.Min(5, suitabilityList.Count); k++) {
+                Log.Message($"  #{k+1}: {suitabilityList[k].pawn.LabelShortCap} (Score: {suitabilityList[k].score:F1})"); // <-- LOG
+            }
+
+            
             int priorityToAssign = targetPriority;
             if (workType == WorkTypeDefOf.Doctor || workType == WorkTypeDefOf.Firefighter) { priorityToAssign = 1; }
             if (priorityToAssign < 1) priorityToAssign = 1;
             if (priorityToAssign > 4) priorityToAssign = 4;
 
+#if Degub
+            Log.Message($"[AutoWork Debug] Final priorityToAssign for '{workType.defName}' = {priorityToAssign}"); // <-- LOG
+#endif
+            
             HashSet<Pawn> assignedPawns = new HashSet<Pawn>();
-            for (int i = 0; i < suitabilityList.Count && i < desiredCount; i++) {
+#if Degub
+            Log.Message($"[AutoWork Debug] Assigning top {desiredCount} pawns for '{workType.defName}': (Loop condition: i < {suitabilityList.Count} && i < {desiredCount})"); // <-- LOG
+#endif
+            for (int i = 0; i < suitabilityList.Count && i < desiredCount; i++)
+            {
                 Pawn pawnToAssign = suitabilityList[i].pawn;
+#if Degub
+                Log.Message($"  LOOP i={i}: Assigning {pawnToAssign.LabelShortCap} (Rank {i+1}) -> Priority {priorityToAssign}"); // <-- LOG
+#endif
                 pawnToAssign.workSettings.SetPriority(workType, priorityToAssign);
                 assignedPawns.Add(pawnToAssign);
             }
 
-            foreach(var suitability in suitabilityList) {
-                if(!assignedPawns.Contains(suitability.pawn)) {
+#if Degub
+            Log.Message($"[AutoWork Debug] Setting default priority ({DefaultPriority}) for remaining {suitabilityList.Count - assignedPawns.Count} suitable pawns in '{workType.defName}':"); // <-- LOG
+#endif
+            foreach(var suitability in suitabilityList)
+            {
+                if(!assignedPawns.Contains(suitability.pawn))
+                {
+#if Degub
+                    Log.Message($"  Setting {suitability.pawn.LabelShortCap} -> Priority {DefaultPriority}"); // <-- LOG
+#endif
                     suitability.pawn.workSettings.SetPriority(workType, DefaultPriority);
                 }
             }
+            
+#if Degub
+            Log.Message($"[AutoWork Debug] AssignWorkPriorities END for '{workType.defName}'."); // <-- LOG
+#endif
         }
     }
 }
