@@ -73,6 +73,7 @@
         <Compile Include="HarmonyPatches.cs" />
         <Compile Include="ModDetector.cs" />
         <Compile Include="Properties\AssemblyInfo.cs"/>
+        <Compile Include="VSECompat.cs" />
         <Compile Include="WorkAssigner.cs" />
         <Compile Include="WorkSettingValues.cs" />
     </ItemGroup>
