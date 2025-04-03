@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Verse;
+using RimWorld; // Needed for Window specifics
 
 namespace Automated_Work_Assignment
 {
@@ -43,11 +44,11 @@ namespace Automated_Work_Assignment
             settings = currentSettings ?? throw new ArgumentNullException(nameof(currentSettings)); // Ensure settings are provided
 
             // Standard window properties
-            forcePause = true;      // Pauses the game while open
-            doCloseX = true;        // Show the 'X' close button
-            closeOnClickedOutside = true; // Close if user clicks outside the window
-            absorbInputAroundWindow = true; // Prevent clicks passing through to the game world
-            draggable = true;       // Allow the user to drag the window
+            forcePause = true;
+            doCloseX = true;
+            closeOnClickedOutside = true;
+            absorbInputAroundWindow = true;
+            draggable = true;
 
             // Set the window title using a translation key
             this.optionalTitle = "AWA_ExclusionDialogTitle".Translate();
@@ -68,8 +69,10 @@ namespace Automated_Work_Assignment
             {
                 // Safely access map pawns and filter
                 availablePawns = Find.CurrentMap?.mapPawns?.FreeColonistsSpawned?
-                                     .Where(p => p != null && !p.DevelopmentalStage.Baby()) // Ensure pawn exists and is not a baby
-                                     .OrderBy(p => p.LabelCap.ToString()) // Order by name (ensure LabelCap is converted to string if needed)
+                                     .Where(p => p != null && !p.DevelopmentalStage.Baby())
+                                     // --- CORRECCIÓN: Revertir a OrderBy(p => p.LabelCap) ---
+                                     .OrderBy(p => p.LabelCap) // Order by name using TaggedString directly
+                                     // --- FIN CORRECCIÓN ---
                                      .ToList()
                                  ?? new List<Pawn>(); // If any part of the chain is null, default to an empty list
             }
@@ -100,7 +103,6 @@ namespace Automated_Work_Assignment
                 Log.Error($"[AutoWork] Exception drawing top elements in exclusion dialog: {ex}");
             }
 
-
             // Check if the pawn list is valid before proceeding
             if (availablePawns == null)
             {
@@ -111,19 +113,32 @@ namespace Automated_Work_Assignment
             }
 
             // --- ScrollView Setup ---
-            // Define the outer rectangle for the scroll view area
-            // Use Gap() to reserve space instead of GetRect() if not adding more elements below
-            listing.Gap(inRect.height - listing.CurHeight - 50f); // Reserve remaining space minus bottom margin
-            Rect scrollViewOutRect = new Rect(inRect.x, listing.CurHeight - (inRect.height - listing.CurHeight - 50f), inRect.width, inRect.height - listing.CurHeight - 50f);
-            // Alternative calculation based on GetRect, assuming GetRect was the last call
-            // Rect scrollViewOutRect = listing.GetRect(inRect.height - listing.CurHeight - 50f); // Use appropriate height
+            Rect scrollViewOutRect = default;
+            Rect scrollViewViewRect = default;
+            const float rowHeight = 32f; // Height per pawn row + spacing (use const)
 
+            try // Exception handling for ScrollView setup
+            {
+                 // Define the outer rectangle for the scroll view area
+                float currentYPos = listing.CurHeight;
+                float availableHeight = inRect.height - currentYPos - 50f; // Reserve space at bottom
+                float scrollViewHeight = Mathf.Max(100f, availableHeight); // Min height 100
+                scrollViewOutRect = new Rect(inRect.x, currentYPos, inRect.width, scrollViewHeight);
 
-            // Calculate the total height needed for all pawn rows
-            float rowHeight = 32f; // Height per pawn row + spacing
-            float viewHeight = availablePawns.Count * rowHeight;
-            // Define the inner rectangle representing the total scrollable content size
-            Rect scrollViewViewRect = new Rect(0f, 0f, scrollViewOutRect.width - 16f, viewHeight); // Subtract scrollbar width
+                // Calculate the total height needed for all pawn rows
+                float viewHeight = availablePawns.Count * rowHeight;
+                // Define the inner rectangle representing the total scrollable content size
+                float viewWidth = Mathf.Max(0f, scrollViewOutRect.width - 16f); // Subtract scrollbar width safely
+                scrollViewViewRect = new Rect(0f, 0f, viewWidth, viewHeight);
+            }
+             catch (Exception ex)
+            {
+                Log.Error($"[AutoWork] Exception setting up ScrollView in exclusion dialog: {ex}");
+                listing.Label("Error setting up scroll view.");
+                listing.End();
+                return;
+            }
+
 
             // --- Draw ScrollView ---
             Widgets.BeginScrollView(scrollViewOutRect, ref scrollPosition, scrollViewViewRect);
@@ -136,62 +151,50 @@ namespace Automated_Work_Assignment
                 // --- Exception Handling for each pawn row ---
                 try
                 {
-                    // Basic null check, although list should already be filtered
                     if (pawn == null) continue;
 
-                    string pawnId = pawn.ThingID; // Get the pawn's unique ID
-
-                    // Check if the pawn is currently in the exclusion list (handle null list safely)
+                    string pawnId = pawn.ThingID;
                     bool isExcluded = settings.excludedPawnIDs?.Contains(pawnId) ?? false;
 
                     // Define the rectangle for the current pawn's row
                     Rect rowRect = new Rect(0f, currentY, scrollViewViewRect.width, 30f); // Height of the checkbox row
 
-                    // Store the current checkbox state to detect changes
                     bool checkboxState = isExcluded;
+                    // --- CORRECCIÓN: Usar LabelCap directamente en CheckboxLabeled ---
+                    // CheckboxLabeled puede manejar TaggedString directamente
+                    Widgets.CheckboxLabeled(rowRect, pawn.LabelCap, ref checkboxState);
+                    // --- FIN CORRECCIÓN ---
 
-                    // Draw the checkbox with the pawn's name
-                    Widgets.CheckboxLabeled(rowRect, pawn.LabelCap.ToString(), ref checkboxState); // Ensure LabelCap is string
-
-                    // Check if the checkbox state was changed by the user
                     if (checkboxState != isExcluded)
                     {
-                        // If checked (meaning exclude the pawn)
                         if (checkboxState)
                         {
-                            // Ensure the exclusion list exists before adding
                             if (settings.excludedPawnIDs == null)
                             {
                                 settings.excludedPawnIDs = new List<string>();
                             }
-                            // Add the pawn ID if not already present
                             if (!settings.excludedPawnIDs.Contains(pawnId))
                             {
                                 settings.excludedPawnIDs.Add(pawnId);
                             }
                         }
-                        // If unchecked (meaning include the pawn / remove from exclusion)
                         else
                         {
-                            // Safely attempt to remove the pawn ID from the list (handles null list)
                             settings.excludedPawnIDs?.Remove(pawnId);
                         }
-                        // Note: Settings are saved automatically when the ModSettings window is closed or via WriteSettings()
                     }
                 }
                 catch (Exception ex)
                 {
                     Log.Error($"[AutoWork] Exception processing exclusion row for pawn '{pawn?.ThingID ?? "NULL"}': {ex}");
-                    // Draw an error message? Difficult with manual Y positioning. Best to just log and continue.
                 }
                 // --- End Exception Handling ---
 
                 // Increment the vertical position for the next row
-                currentY += rowHeight; // Use the defined row height including spacing
+                currentY += rowHeight;
             }
 
             Widgets.EndScrollView(); // End the scroll view
-
             listing.End(); // End the main listing
         }
     }

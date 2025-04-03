@@ -22,6 +22,7 @@
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
+        <DocumentationFile>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.5\Assemblies\Automated_Work_Assignment.xml</DocumentationFile>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
@@ -31,6 +32,7 @@
         <DefineConstants>TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
+        <DocumentationFile>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.5\Assemblies\Automated_Work_Assignment.xml</DocumentationFile>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="0Harmony, Version=2.3.5.0, Culture=neutral, processorArchitecture=MSIL">
