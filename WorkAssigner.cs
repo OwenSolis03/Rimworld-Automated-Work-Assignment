@@ -13,7 +13,6 @@ namespace Automated_Work_Assignment
     /// </summary>
     public static class WorkAssigner
     {
-        // --- Constants for Suitability Calculation ---
         /// <summary>
         /// Bonus score added for Major Passion (Burning).
         /// </summary>
@@ -35,6 +34,7 @@ namespace Automated_Work_Assignment
         /// <summary>
         /// Main entry point for refreshing work assignments for all eligible colonists based on current settings.
         /// Called manually via button or automatically by AutoAssign_GameComponent.
+        /// Skips processing for any WorkTypeDefs marked as excluded in the mod settings.
         /// </summary>
         public static void RefreshAssignments()
         {
@@ -46,7 +46,7 @@ namespace Automated_Work_Assignment
             catch (Exception ex)
             {
                 Log.Error($"[AutoWork] Exception retrieving settings in RefreshAssignments: {ex}");
-                return; // Cannot proceed without settings
+                return;
             }
 
             if (settings == null)
@@ -72,7 +72,7 @@ namespace Automated_Work_Assignment
             catch (Exception ex)
             {
                 Log.Error($"[AutoWork] Exception retrieving WorkTypeDefs or Colonists: {ex}");
-                return; // Cannot proceed if basic data retrieval fails
+                return;
             }
 
             if (Find.CurrentMap == null || colonists == null || !colonists.Any())
@@ -80,12 +80,20 @@ namespace Automated_Work_Assignment
                 return;
             }
 
+            // Process each manageable work type
             foreach (WorkTypeDef workType in workTypesToManage)
             {
                 try
                 {
                     if (workType == null) continue;
 
+                    // Check if this WorkTypeDef is excluded in settings
+                    if (settings.excludedWorkTypeDefNames != null && settings.excludedWorkTypeDefNames.Contains(workType.defName))
+                    {
+                        continue; // Skip this work type if it's excluded
+                    }
+
+                    // Get the specific settings (count, priority) for this work type
                     WorkSettingValues workSetting = settings.GetWorkSetting(workType.defName);
                     if (workSetting == null)
                     {
@@ -96,10 +104,12 @@ namespace Automated_Work_Assignment
                     int desiredCount = workSetting.count;
                     int targetPriority = workSetting.priority;
 
+                    // If count is > 0, assign priorities based on suitability
                     if (desiredCount > 0)
                     {
                         AssignWorkPriorities(workType, desiredCount, targetPriority, colonists);
                     }
+                    // If count is 0, ensure all eligible colonists have priority 0 for this work type
                     else
                     {
                         foreach (Pawn pawn in colonists)
@@ -112,8 +122,9 @@ namespace Automated_Work_Assignment
                 {
                     Log.Error($"[AutoWork] Exception processing WorkTypeDef '{workType?.defName ?? "NULL"}' in RefreshAssignments: {ex}");
                 }
-            }
+            } // End foreach WorkTypeDef
 
+            // Optional check for MainButtonDef
             try
             {
                 if (DefDatabase<MainButtonDef>.GetNamed("Work", false) == null)
@@ -122,13 +133,14 @@ namespace Automated_Work_Assignment
                 }
             }
             catch (Exception ex) { Log.Error($"[AutoWork] Exception checking for Work MainButtonDef: {ex}"); }
-        }
+
+        } // End RefreshAssignments
 
         /// <summary>
         /// Gets a list of colonists who are eligible for automatic work assignment.
-        /// Filters out downed, mentally broken, excluded, and non-colonist pawns.
+        /// Filters out downed, mentally broken, excluded (by pawn ID), and non-colonist pawns.
         /// </summary>
-        /// <param name="settings">The current mod settings, used to access the exclusion list.</param>
+        /// <param name="settings">The current mod settings, used to access the pawn exclusion list.</param>
         /// <returns>A list of eligible Pawn objects.</returns>
         private static List<Pawn> GetEligibleColonists(AutomatedWorkSettings settings)
         {
@@ -158,15 +170,10 @@ namespace Automated_Work_Assignment
         {
             try
             {
-                // --- Initial Capability Checks ---
-                if (pawn == null || pawn.skills == null || pawn.WorkTypeIsDisabled(workType))
-                {
-                    return -1f;
-                }
+                if (pawn == null || pawn.skills == null || pawn.WorkTypeIsDisabled(workType)) return -1f;
 
                 // --- Placeholder for Alpha Skills compatibility ---
 
-                // --- Base Score ---
                 float score = 0f;
                 SkillDef relevantSkillDef = workType.relevantSkills?.FirstOrDefault();
                 SkillRecord skill = null;
@@ -175,24 +182,15 @@ namespace Automated_Work_Assignment
                 {
                     skill = pawn.skills.GetSkill(relevantSkillDef);
                     score = skill != null ? skill.Level : 1f;
-                }
-                else
-                {
-                    score = 1f; // Base score for unskilled work
-                }
+                } else { score = 1f; }
 
-                // --- Passion Bonus ---
                 float passionBonus = 0f;
                 if (skill != null)
                 {
                     Passion passionValue = skill.passion;
-
-                    // --- VSE Compatibility Logic ---
                     if (ModDetector.VSEIsActive)
                     {
                         ModDetector.EnsureReflectionInitialized();
-
-                        // Use VSE logic only if reflection succeeded
                         if (ModDetector.VSEReflectionSuccess && ModDetector.VSE_PassionToDefMethod != null && ModDetector.VSE_LearnRateFactorField != null)
                         {
                             try
@@ -200,13 +198,10 @@ namespace Automated_Work_Assignment
                                 object passionDefObj = ModDetector.VSE_PassionToDefMethod.Invoke(null, new object[] { passionValue });
                                 if (passionDefObj != null)
                                 {
-                                    // Use FieldInfo.GetValue
                                     object learnFactorObj = ModDetector.VSE_LearnRateFactorField.GetValue(passionDefObj);
-
                                     if (learnFactorObj is float learnRateFactor)
                                     {
-                                        float calculatedBonus = (learnRateFactor - 1.0f) * 10f;
-                                        passionBonus = Mathf.Max(0f, calculatedBonus);
+                                        passionBonus = Mathf.Max(0f, (learnRateFactor - 1.0f) * 10f);
 #if DEBUG
                                         // Log.Message($"[AutoWork VSE-Reflect] P:{pawn.LabelShort} S:{skill.def.defName} V:{passionValue} Def:{passionDefObj.GetType().Name} LF:{learnRateFactor:F2} -> Bonus:{passionBonus:F1}");
 #endif
@@ -225,31 +220,20 @@ namespace Automated_Work_Assignment
                                 passionBonus = 0f;
                             }
                         }
-                        // If VSE not active OR reflection failed, use vanilla logic (handled below)
                     }
-                    // --- End VSE Compatibility ---
 
-                    // --- Vanilla Passion Logic ---
-                    if (!ModDetector.VSEIsActive || !ModDetector.VSEReflectionSuccess) // Use if VSE inactive OR reflection failed
+                    // Use vanilla bonus if VSE not active OR reflection failed
+                    if (!ModDetector.VSEIsActive || !ModDetector.VSEReflectionSuccess)
                     {
                         passionBonus = passionValue == Passion.Major ? PassionBurningBonus : (passionValue == Passion.Minor ? PassionInterestedBonus : 0f);
                         passionBonus = Mathf.Max(0f, passionBonus);
 #if DEBUG
-                        // if (!ModDetector.VSEIsActive) Log.Message($"[AutoWork DEBUG] Using vanilla passion bonus (VSE not active)...");
-                        // else Log.Message($"[AutoWork DEBUG] Using vanilla passion bonus (VSE reflection failed)...");
+                        // Log vanilla bonus calculation
 #endif
                     }
-                    // --- End Vanilla Passion ---
-                } // End if(skill != null)
-
-                score += passionBonus;
-
-                // Ensure minimum score for capable pawns
-                if (score < 1f && relevantSkillDef != null)
-                {
-                    score = 1f;
                 }
-
+                score += passionBonus;
+                if (score < 1f && relevantSkillDef != null) score = 1f;
                 return score;
             }
             catch (Exception ex)
@@ -274,7 +258,6 @@ namespace Automated_Work_Assignment
 
             List<PawnSuitability> suitabilityList = new List<PawnSuitability>();
 
-            // --- Calculate Suitability for all Pawns ---
             try
             {
                 foreach (Pawn pawn in colonists)
@@ -291,36 +274,16 @@ namespace Automated_Work_Assignment
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                Log.Error($"[AutoWork] Exception calculating suitability list for WorkTypeDef '{workType.defName}': {ex}");
-                return;
-            }
-            // -----------------------------------------
+            catch (Exception ex) { Log.Error($"[AutoWork] Exception calculating suitability list for WorkTypeDef '{workType.defName}': {ex}"); return; }
 
-            // --- Sort Pawns by Suitability ---
-            try
-            {
-                suitabilityList.Sort((a, b) => b.score.CompareTo(a.score));
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"[AutoWork] Exception sorting suitability list for WorkTypeDef '{workType.defName}': {ex}");
-                return;
-            }
-            // ---------------------------------
+            try { suitabilityList.Sort((a, b) => b.score.CompareTo(a.score)); }
+            catch (Exception ex) { Log.Error($"[AutoWork] Exception sorting suitability list for WorkTypeDef '{workType.defName}': {ex}"); return; }
 
-            // --- Determine Final Priority ---
             int priorityToAssign = targetPriority;
-            if (workType == WorkTypeDefOf.Doctor || workType == WorkTypeDefOf.Firefighter)
-            {
-                priorityToAssign = 1;
-            }
+            if (workType == WorkTypeDefOf.Doctor || workType == WorkTypeDefOf.Firefighter) priorityToAssign = 1;
             if (priorityToAssign < 1) priorityToAssign = 1;
             if (priorityToAssign > 4) priorityToAssign = 4;
-            // --------------------------------
 
-            // --- Assign Priorities ---
             try
             {
                 HashSet<Pawn> assignedPawns = new HashSet<Pawn>();
@@ -328,10 +291,7 @@ namespace Automated_Work_Assignment
                 {
                     Pawn pawnToAssign = suitabilityList[i].pawn;
                     pawnToAssign?.workSettings?.SetPriority(workType, priorityToAssign);
-                    if (pawnToAssign != null)
-                    {
-                        assignedPawns.Add(pawnToAssign);
-                    }
+                    if (pawnToAssign != null) assignedPawns.Add(pawnToAssign);
                 }
 
                 foreach (var suitability in suitabilityList)
@@ -342,11 +302,8 @@ namespace Automated_Work_Assignment
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                Log.Error($"[AutoWork] Exception assigning priorities for WorkTypeDef '{workType.defName}': {ex}");
-            }
-            // -------------------------
+            catch (Exception ex) { Log.Error($"[AutoWork] Exception assigning priorities for WorkTypeDef '{workType.defName}': {ex}"); }
         }
-    }
+
+    } // End Class WorkAssigner
 }

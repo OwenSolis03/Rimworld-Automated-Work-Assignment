@@ -53,8 +53,6 @@ namespace Automated_Work_Assignment
             catch (Exception ex)
             {
                 Log.Error($"[AutoWork] Exception while loading settings in constructor: {ex}");
-                // Consider initializing Settings to a default instance if loading fails
-                // Settings = new AutomatedWorkSettings();
             }
         }
 
@@ -71,7 +69,6 @@ namespace Automated_Work_Assignment
         /// <param name="inRect">The rectangle area available for drawing the settings content.</param>
         public override void DoSettingsWindowContents(Rect inRect)
         {
-            // Ensure settings are loaded before proceeding
             if (Settings == null)
             {
                 Widgets.Label(inRect, "Error: Mod settings could not be loaded. Please check logs.");
@@ -82,132 +79,139 @@ namespace Automated_Work_Assignment
             Listing_Standard listingStandard = new Listing_Standard();
             listingStandard.Begin(inRect);
 
-            try // General exception handling for the top-level settings elements
+            try // General settings elements
             {
-                // --- General Mod Settings ---
                 listingStandard.CheckboxLabeled(
                     "AWA_EnableModLabel".Translate(),
                     ref Settings.modEnabled,
                     "AWA_EnableModTooltip".Translate()
                 );
-
                 listingStandard.CheckboxLabeled(
                     "AWA_EnableDailyRefreshLabel".Translate(),
                     ref Settings.enableDailyRefresh,
                     "AWA_EnableDailyRefreshTooltip".Translate()
                 );
-
                 listingStandard.GapLine(12f);
-
-                // --- Pawn Exclusions Button ---
                 if (listingStandard.ButtonText("AWA_ManageExclusionsButton".Translate()))
                 {
-                    // Open the pawn exclusion dialog
                     Find.WindowStack.Add(new Dialog_ManageExclusions(Settings));
                 }
-
                 listingStandard.GapLine(12f);
-
-                // --- Work Type Specific Settings Label ---
                 listingStandard.Label("AWA_DesiredPawnsLabel".Translate());
             }
             catch (Exception ex)
             {
                 Log.Error($"[AutoWork] Exception drawing general settings elements: {ex}");
                 listingStandard.Label($"Error drawing general settings: {ex.Message}");
-                // Attempt to continue if possible, or end here if critical
             }
 
             // --- ScrollView Setup ---
             Rect outRect = default;
             Rect viewRect = default;
             List<WorkTypeDef> relevantWorkTypes = null;
-            // Define rowHeight *before* the try block where it's used for calculations
-            // and where it might be needed in error handling later.
-            const float rowHeight = 50f; // Height allocated for each work type row (use const if it never changes)
+            const float rowHeight = 50f;
 
-            try // Exception handling for preparing the scroll view and work type list
+            try // ScrollView and WorkType list preparation
             {
-                // Calculate space remaining for the scroll view
                 float currentYPos = listingStandard.CurHeight;
-                // Ensure remainingHeight calculation doesn't result in negative values
-                float availableHeight = inRect.height - currentYPos - 30f; // Adjusted for potential bottom margin
-                float remainingHeight = Mathf.Max(100f, availableHeight); // Ensure a minimum height, prevent negative
-
+                float availableHeight = inRect.height - currentYPos - 30f;
+                float remainingHeight = Mathf.Max(100f, availableHeight);
                 outRect = new Rect(inRect.x, currentYPos, inRect.width, remainingHeight);
 
-                // --- Optimization: Cache relevant work types ---
                 if (cachedRelevantWorkTypes == null)
                 {
-                    // Log.Message("[AutoWork] Caching relevant work types for settings..."); // Optional log
                     cachedRelevantWorkTypes = DefDatabase<WorkTypeDef>.AllDefsListForReading
-                        .Where(wtd => wtd != null && wtd.workTags != WorkTags.None) // Added null check for safety
+                        .Where(wtd => wtd != null && wtd.workTags != WorkTags.None)
                         .OrderBy(wtd => wtd.labelShort)
                         .ToList();
                 }
-                relevantWorkTypes = cachedRelevantWorkTypes; // Use the cached list
-                // ---------------------------------------------
+                relevantWorkTypes = cachedRelevantWorkTypes;
 
-                // Calculate dimensions for the scrollable content using the pre-defined rowHeight
                 float totalContentHeight = relevantWorkTypes.Count * rowHeight;
-                // Ensure viewRect width isn't negative if outRect width is too small
-                float viewRectWidth = Mathf.Max(0f, outRect.width - 16f); // Subtract scrollbar width safely
+                float viewRectWidth = Mathf.Max(0f, outRect.width - 16f);
                 viewRect = new Rect(0f, 0f, viewRectWidth, totalContentHeight);
             }
             catch (Exception ex)
             {
                 Log.Error($"[AutoWork] Exception preparing ScrollView or WorkType list: {ex}");
                 listingStandard.Label($"Error preparing work type list: {ex.Message}");
-                listingStandard.End(); // End listing here if setup failed
-                return; // Exit drawing if we can't prepare the list/scrollview
+                listingStandard.End();
+                return;
             }
-
 
             // Begin ScrollView
             Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
-
-            Listing_Standard scrollListing = new Listing_Standard(GameFont.Small); // Use small font inside scroll view
+            Listing_Standard scrollListing = new Listing_Standard(GameFont.Small);
             scrollListing.Begin(viewRect);
 
-            // Iterate through each relevant work type to draw its settings row
-            if (relevantWorkTypes != null) // Check list again just in case
+            if (relevantWorkTypes != null)
             {
                 foreach (WorkTypeDef workDef in relevantWorkTypes)
                 {
-                    // --- Add Exception Handling around each row's drawing logic ---
-                    try
+                    try // Handle drawing individual row
                     {
-                        // Defensive check for null workDef, though unlikely from DefDatabase query
                         if (workDef == null) continue;
 
                         string defName = workDef.defName;
                         WorkSettingValues currentSetting = Settings.GetWorkSetting(defName);
-
-                        // Check if GetWorkSetting returned null (shouldn't happen with current implementation but good practice)
                         if (currentSetting == null)
                         {
                             Log.ErrorOnce($"[AutoWork] GetWorkSetting returned null for {defName}!", defName.GetHashCode());
                             scrollListing.Label($"Error: Null settings for {workDef.labelShort}");
-                            // Use the rowHeight defined outside the loop's try block
-                            scrollListing.Gap(rowHeight - 30f); // Allocate space even on error to maintain layout
-                            continue; // Skip this work type
+                            scrollListing.Gap(rowHeight - 30f);
+                            continue;
                         }
 
                         // --- Draw Row Elements ---
                         Rect rowRect = scrollListing.GetRect(rowHeight - scrollListing.verticalSpacing);
+                        float currentX = rowRect.x;
 
-                        // Work type label
-                        Rect labelRect = new Rect(rowRect.x, rowRect.y, rowRect.width * 0.4f, 30f);
+                        // 1. Work type label
+                        float labelWidth = rowRect.width * 0.35f;
+                        Rect labelRect = new Rect(currentX, rowRect.y, labelWidth, 30f);
                         Widgets.Label(labelRect, workDef.labelShort.CapitalizeFirst());
+                        currentX += labelWidth;
 
-                        // Calculate dimensions for input fields
-                        float controlWidth = rowRect.width * 0.25f;
-                        float spacing = 10f;
+                        // 2. Exclude Task Checkbox
+                        float checkboxSize = Widgets.CheckboxSize;
+                        float checkboxPadding = 5f;
+                        Rect excludeCheckboxRect = new Rect(currentX + checkboxPadding, rowRect.y + (30f - checkboxSize) / 2f, checkboxSize, checkboxSize);
+                        currentX += checkboxSize + checkboxPadding * 2;
 
-                        // --- Count Input ---
-                        Rect countLabelRect = new Rect(labelRect.xMax + spacing, rowRect.y, 50f, 30f);
+                        bool isWorkTypeExcluded = Settings.excludedWorkTypeDefNames?.Contains(defName) ?? false;
+                        bool checkboxState = isWorkTypeExcluded;
+                        Widgets.Checkbox(excludeCheckboxRect.position, ref checkboxState, checkboxSize);
+                        TooltipHandler.TipRegion(excludeCheckboxRect, "AWA_ExcludeTaskTooltip".Translate());
+
+                        if (checkboxState != isWorkTypeExcluded)
+                        {
+                            if (checkboxState)
+                            {
+                                if (Settings.excludedWorkTypeDefNames == null) Settings.excludedWorkTypeDefNames = new List<string>();
+                                if (!Settings.excludedWorkTypeDefNames.Contains(defName)) Settings.excludedWorkTypeDefNames.Add(defName);
+                            }
+                            else
+                            {
+                                Settings.excludedWorkTypeDefNames?.Remove(defName);
+                            }
+                        }
+
+                        // --- CORRECTION: Declare spacing *before* use ---
+                        const float spacing = 10f; // Define spacing between input groups
+
+                        // Calculate remaining width for count/priority controls
+                        float remainingRowWidth = rowRect.width - currentX;
+                        // Divide remaining space, subtracting spacing between groups
+                        float inputGroupWidth = (remainingRowWidth - spacing) / 2f;
+                        // --- FIN CORRECCIÓN ---
+
+                        // 3. Count Input
+                        const float countLabelWidth = 50f;
+                        Rect countLabelRect = new Rect(currentX + spacing, rowRect.y, countLabelWidth, 30f);
                         Widgets.Label(countLabelRect, "AWA_CountLabel".Translate());
-                        Rect countFieldRect = new Rect(countLabelRect.xMax, rowRect.y, controlWidth - 50f, 30f);
+                        float countFieldWidth = Mathf.Max(20f, inputGroupWidth - countLabelWidth);
+                        Rect countFieldRect = new Rect(countLabelRect.xMax, rowRect.y, countFieldWidth, 30f);
+                        currentX = countFieldRect.xMax;
 
                         if (!countBuffers.ContainsKey(defName)) { countBuffers[defName] = currentSetting.count.ToString(); }
                         string countBuffer = countBuffers[defName];
@@ -215,12 +219,14 @@ namespace Automated_Work_Assignment
                         Widgets.TextFieldNumeric<int>(countFieldRect, ref currentSetting.count, ref countBuffer, 0, 999);
                         if (currentSetting.count != countBefore) { countBuffers[defName] = currentSetting.count.ToString(); }
                         else { if (countBuffer != currentSetting.count.ToString()) { countBuffers[defName] = currentSetting.count.ToString(); } }
-                        if (currentSetting.count < 0) currentSetting.count = 0; // Clamping
+                        if (currentSetting.count < 0) currentSetting.count = 0;
 
-                        // --- Priority Input ---
-                        Rect priorityLabelRect = new Rect(countFieldRect.xMax + spacing, rowRect.y, 60f, 30f);
+                        // 4. Priority Input
+                        const float priorityLabelWidth = 60f;
+                        Rect priorityLabelRect = new Rect(currentX + spacing, rowRect.y, priorityLabelWidth, 30f);
                         Widgets.Label(priorityLabelRect, "AWA_PriorityFieldLabel".Translate());
-                        Rect priorityFieldRect = new Rect(priorityLabelRect.xMax, rowRect.y, controlWidth - 60f, 30f);
+                        float priorityFieldWidth = Mathf.Max(20f, inputGroupWidth - priorityLabelWidth);
+                        Rect priorityFieldRect = new Rect(priorityLabelRect.xMax, rowRect.y, priorityFieldWidth, 30f);
 
                         if (!priorityBuffers.ContainsKey(defName)) { priorityBuffers[defName] = currentSetting.priority.ToString(); }
                         string priorityBuffer = priorityBuffers[defName];
@@ -228,33 +234,30 @@ namespace Automated_Work_Assignment
                         Widgets.TextFieldNumeric<int>(priorityFieldRect, ref currentSetting.priority, ref priorityBuffer, 1, 4);
                         if (currentSetting.priority != priorityBefore) { priorityBuffers[defName] = currentSetting.priority.ToString(); }
                         else { if (priorityBuffer != currentSetting.priority.ToString()) { priorityBuffers[defName] = currentSetting.priority.ToString(); } }
-                        // Explicit Clamping (Defensive)
                         if (currentSetting.priority < 1) currentSetting.priority = 1;
                         if (currentSetting.priority > 4) currentSetting.priority = 4;
                     }
                     catch (Exception ex)
                     {
-                        // Log the error with details about which work type failed
                         Log.Error($"[AutoWork] Exception drawing settings row for WorkTypeDef '{workDef?.defName ?? "NULL"}': {ex}");
-                        // Optionally, draw an error message in place of the row
                         scrollListing.Label($"Error processing {workDef?.labelShort ?? "Unknown WorkType"}");
-                        // Try to advance the listing using the rowHeight defined outside the loop's try block
-                        scrollListing.Gap(rowHeight - 30f); // Approximate remaining height in the row
+                        scrollListing.Gap(rowHeight - 30f);
                     }
-                    // --- End of Exception Handling for the row ---
-                }
-            } // End if (relevantWorkTypes != null)
+                } // End foreach WorkTypeDef
+            } // End if relevantWorkTypes != null
 
             scrollListing.End();
-            Widgets.EndScrollView(); // End ScrollView
-
-            listingStandard.End(); // End main listing
+            Widgets.EndScrollView();
+            listingStandard.End();
         }
 
         /// <summary>
         /// Called by RimWorld when settings are to be saved.
-        /// Currently relies on the base implementation which handles ModSettings saving.
         /// </summary>
         public override void WriteSettings() => base.WriteSettings();
+
+        /* Example XML Key needed for the new checkbox tooltip:
+         * <AWA_ExcludeTaskTooltip>Check to exclude this task from automatic assignment. The mod will ignore this task completely.</AWA_ExcludeTaskTooltip>
+         */
     }
 }

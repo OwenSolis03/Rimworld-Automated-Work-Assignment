@@ -35,6 +35,13 @@ namespace Automated_Work_Assignment
         /// </summary>
         public List<string> excludedPawnIDs = new List<string>();
 
+        /// <summary>
+        /// List storing the defName (string) of WorkTypeDefs that should be excluded
+        /// from the mod's automatic assignment logic entirely.
+        /// Initialized after loading if null.
+        /// </summary>
+        public List<string> excludedWorkTypeDefNames = new List<string>(); // Field definition
+
         // --- Private working lists required by Scribe for dictionary serialization ---
 
         /// <summary>
@@ -56,7 +63,7 @@ namespace Automated_Work_Assignment
         /// <returns>The WorkSettingValues instance for the specified work type.</returns>
         public WorkSettingValues GetWorkSetting(string workTypeDefName)
         {
-            // Ensure the main dictionary is initialized (important if accessed before ExposeData runs, though unlikely)
+            // Ensure the main dictionary is initialized
             if (workSettings == null)
             {
                 Log.Warning("[AutoWork] workSettings dictionary was null in GetWorkSetting. Initializing.");
@@ -66,18 +73,15 @@ namespace Automated_Work_Assignment
             // Try to get existing settings
             if (!workSettings.TryGetValue(workTypeDefName, out WorkSettingValues setting))
             {
-                // If not found, create default settings and add them to the dictionary
-                setting = new WorkSettingValues(); // Uses default values (count=0, priority=3)
+                // If not found, create default settings and add them
+                setting = new WorkSettingValues();
                 workSettings.Add(workTypeDefName, setting);
             }
 
-            // --- Ensure data integrity after retrieving/creating ---
-            // Clamp priority to valid range (1-4)
+            // Ensure data integrity
             if (setting.priority < 1) setting.priority = 1;
             if (setting.priority > 4) setting.priority = 4;
-            // Ensure count is not negative
             if (setting.count < 0) setting.count = 0;
-            // ------------------------------------------------------
 
             return setting;
         }
@@ -91,21 +95,21 @@ namespace Automated_Work_Assignment
             base.ExposeData(); // Call base method first
 
             // Save/Load simple boolean values
-            Scribe_Values.Look(ref modEnabled, "modEnabled", true); // Default to true if not found
-            Scribe_Values.Look(ref enableDailyRefresh, "enableDailyRefresh", true); // Default to true
+            Scribe_Values.Look(ref modEnabled, "modEnabled", true);
+            Scribe_Values.Look(ref enableDailyRefresh, "enableDailyRefresh", true);
 
             // Save/Load the list of excluded pawn IDs
-            // LookMode.Value is correct for a list of strings
             Scribe_Collections.Look(ref excludedPawnIDs, "excludedPawnIDs", LookMode.Value);
 
+            // Save/Load the list of excluded work type defNames
+            Scribe_Collections.Look(ref excludedWorkTypeDefNames, "excludedWorkTypeDefNames", LookMode.Value); // Scribe call
+
             // Save/Load the dictionary of work settings
-            // LookMode.Value for keys (string), LookMode.Deep for values (WorkSettingValues needs its own ExposeData)
             Scribe_Collections.Look(ref workSettings, "workSettings", LookMode.Value, LookMode.Deep,
                 ref workSettingsKeysWorkingList, ref workSettingsValuesWorkingList);
 
             // --- Post Load Initialization ---
-            // After loading, ensure collections are not null to prevent NullReferenceExceptions later.
-            // Scribe_Collections.Look should handle nulls correctly, but this adds extra safety.
+            // After loading, ensure collections are not null
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 if (workSettings == null)
@@ -117,6 +121,12 @@ namespace Automated_Work_Assignment
                 {
                     Log.Warning("[AutoWork] excludedPawnIDs list was null after loading. Initializing to empty.");
                     excludedPawnIDs = new List<string>();
+                }
+                // Initialize the new list if it's null after loading
+                if (excludedWorkTypeDefNames == null)
+                {
+                    Log.Warning("[AutoWork] excludedWorkTypeDefNames list was null after loading. Initializing to empty.");
+                    excludedWorkTypeDefNames = new List<string>(); // Initialization
                 }
             }
         }
