@@ -160,10 +160,8 @@ namespace Automated_Work_Assignment
                     Rect rowRect = new Rect(0f, currentY, scrollViewViewRect.width, 30f); // Height of the checkbox row
 
                     bool checkboxState = isExcluded;
-                    // --- CORRECCIÓN: Usar LabelCap directamente en CheckboxLabeled ---
                     // CheckboxLabeled puede manejar TaggedString directamente
                     Widgets.CheckboxLabeled(rowRect, pawn.LabelCap, ref checkboxState);
-                    // --- FIN CORRECCIÓN ---
 
                     if (checkboxState != isExcluded)
                     {

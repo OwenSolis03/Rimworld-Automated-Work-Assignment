@@ -195,15 +195,13 @@ namespace Automated_Work_Assignment
                                 Settings.excludedWorkTypeDefNames?.Remove(defName);
                             }
                         }
-
-                        // --- CORRECTION: Declare spacing *before* use ---
+                        
                         const float spacing = 10f; // Define spacing between input groups
 
                         // Calculate remaining width for count/priority controls
                         float remainingRowWidth = rowRect.width - currentX;
                         // Divide remaining space, subtracting spacing between groups
                         float inputGroupWidth = (remainingRowWidth - spacing) / 2f;
-                        // --- FIN CORRECCIÓN ---
 
                         // 3. Count Input
                         const float countLabelWidth = 50f;
