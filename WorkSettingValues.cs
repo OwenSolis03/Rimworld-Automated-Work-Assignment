@@ -1,33 +1,40 @@
 ﻿using Verse;
 
-// Needed for IExposable and Scribe_Values
-
 namespace Automated_Work_Assignment
 {
     /// <summary>
-    /// Represents the specific settings (desired pawn count and target priority)
-    /// for a single WorkTypeDef within the Automated Work Assignment mod.
+    /// Represents the specific settings for a single WorkTypeDef within the Automated Work Assignment mod.
+    /// Now includes options for both fixed count and percentage-based assignment.
     /// Implements IExposable to allow saving and loading via RimWorld's Scribe system.
     /// </summary>
     public class WorkSettingValues : IExposable
     {
         /// <summary>
-        /// The desired number of pawns assigned to the associated WorkTypeDef.
-        /// A count of 0 typically means the mod should ensure no pawns have this work type enabled (priority 0).
-        /// Defaults to 0.
+        /// The desired number of pawns assigned when using fixed count mode.
+        /// Defaults to 0. Used when usePercentage is false.
         /// </summary>
         public int count = 0;
 
         /// <summary>
-        /// The target priority level (1-4, where 1 is highest) to assign to the selected pawns
-        /// for the associated WorkTypeDef.
+        /// The target priority level (1-4, where 1 is highest) to assign to the selected pawns.
         /// Defaults to 3.
         /// </summary>
         public int priority = 3;
 
         /// <summary>
+        /// The desired percentage (0.0 to 1.0) of eligible pawns to assign when using percentage mode.
+        /// Defaults to 0.1 (10%). Used when usePercentage is true.
+        /// </summary>
+        public float percentage = 0.1f;
+
+        /// <summary>
+        /// Determines whether to use the 'percentage' value (true) or the 'count' value (false).
+        /// Defaults to false (use fixed count).
+        /// </summary>
+        public bool usePercentage = false;
+
+        /// <summary>
         /// Default constructor. Required for Scribe loading and general instantiation.
-        /// Initializes with default values (count=0, priority=3).
         /// </summary>
         public WorkSettingValues() { }
 
@@ -43,15 +50,25 @@ namespace Automated_Work_Assignment
         }
 
         /// <summary>
-        /// Handles saving and loading the 'count' and 'priority' fields.
-        /// Called by the Scribe system (specifically when Scribe_Collections.Look uses LookMode.Deep).
+        /// Handles saving and loading the setting fields for this work type.
+        /// This method IMPLEMENTS the IExposable interface requirement.
         /// </summary>
         public void ExposeData()
         {
-            // Save/Load the count value, defaulting to 0 if not found on load.
             Scribe_Values.Look(ref count, "count", 0);
-            // Save/Load the priority value, defaulting to 3 if not found on load.
             Scribe_Values.Look(ref priority, "priority", 3);
+            Scribe_Values.Look(ref percentage, "percentage", 0.1f);
+            Scribe_Values.Look(ref usePercentage, "usePercentage", false);
+
+            // Post Load Clamping/Validation
+            if (Scribe.mode == LoadSaveMode.LoadingVars)
+            {
+                if (priority < 1) priority = 1;
+                if (priority > 4) priority = 4;
+                if (count < 0) count = 0;
+                if (percentage < 0f) percentage = 0f;
+                if (percentage > 1f) percentage = 1f;
+            }
         }
     }
 }
