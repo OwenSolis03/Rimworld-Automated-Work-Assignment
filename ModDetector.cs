@@ -32,7 +32,7 @@ namespace Automated_Work_Assignment
         internal static MethodInfo VSE_PassionToDefMethod { get; private set; } = null;
 
         /// <summary>
-        /// Cached FieldInfo for VSE's PassionDef.learnRateFactor. (Changed from PropertyInfo)
+        /// Cached FieldInfo for VSE's PassionDef.learnRateFactor.
         /// Null if VSE is not active or reflection failed.
         /// </summary>
         internal static FieldInfo VSE_LearnRateFactorField { get; private set; } = null;
@@ -53,7 +53,7 @@ namespace Automated_Work_Assignment
         static ModDetector()
         {
             VSEIsActive = ModLister.GetActiveModWithIdentifier("vanillaexpanded.skills", true) != null;
-            AlphaSkillsIsActive = ModLister.GetActiveModWithIdentifier("sarg.alphaskills", true) != null; // Example ID
+            AlphaSkillsIsActive = ModLister.GetActiveModWithIdentifier("sarg.alphaskills", true) != null;
 
             Log.Message($"[AutoWork] Compatibility: Vanilla Skills Expanded {(VSEIsActive ? "DETECTED" : "NOT detected")}.");
             Log.Message($"[AutoWork] Compatibility: Alpha Skills {(AlphaSkillsIsActive ? "DETECTED" : "NOT detected")}.");
@@ -80,25 +80,19 @@ namespace Automated_Work_Assignment
                     return;
                 }
 
-                // Get the method info
                 VSE_PassionToDefMethod = AccessTools.Method(passionManagerType, "PassionToDef", new Type[] { typeof(Passion) });
-
-                // Use AccessTools.Field to get the field
                 VSE_LearnRateFactorField = AccessTools.Field(passionDefType, "learnRateFactor");
 
-                // Update the success check to use FieldInfo
                 if (VSE_PassionToDefMethod != null && VSE_LearnRateFactorField != null)
                 {
-                    VSEReflectionSuccess = true; // Mark reflection as successful
+                    VSEReflectionSuccess = true;
                     // Log.Message("[AutoWork Compat] VSE reflection info successfully obtained (Method and Field).");
                 }
                 else
                 {
-                    // Log specific warnings
                     if (VSE_PassionToDefMethod == null) Log.Warning("[AutoWork Compat] Could not find VSE method PassionManager.PassionToDef via AccessTools.");
                     if (VSE_LearnRateFactorField == null) Log.Warning("[AutoWork Compat] Could not find VSE field PassionDef.learnRateFactor via AccessTools.");
-
-                    VSEReflectionSuccess = false; // Ensure flag is false on failure
+                    VSEReflectionSuccess = false;
                 }
             }
             catch (Exception ex)

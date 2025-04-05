@@ -70,7 +70,7 @@
     <ItemGroup>
         <Compile Include="AutoAssign_GameComponent.cs" />
         <Compile Include="AutomatedWorkAssignmentMod.cs" />
-        <Compile Include="AutomatedWorkSettings.cs" />
+        <Compile Include="AutomatedWork_SaveData.cs" />
         <Compile Include="Dialog_ManageExclusions.cs" />
         <Compile Include="HarmonyPatches.cs" />
         <Compile Include="ModDetector.cs" />

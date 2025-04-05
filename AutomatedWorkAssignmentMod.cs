@@ -8,110 +8,68 @@ namespace Automated_Work_Assignment
 {
     /// <summary>
     /// Main class for the Automated Work Assignment mod. Handles settings UI and initialization.
-    /// Inherits from Verse.Mod to integrate with RimWorld's mod system.
     /// </summary>
     public class AutomatedWorkAssignmentMod : Mod
     {
-        /// <summary>
-        /// Static reference to the mod's settings instance.
-        /// </summary>
-        public static AutomatedWorkSettings Settings;
+        /// <summary> Static reference to the mod's per-save data instance. </summary>
+        internal static AutomatedWork_SaveData CurrentData => Current.Game?.GetComponent<AutomatedWork_SaveData>();
 
-        /// <summary>
-        /// Buffer dictionary to store the string representation of the desired pawn count for each work type.
-        /// Used by TextFieldNumeric for the count input.
-        /// </summary>
-        private Dictionary<string, string> countBuffers = new Dictionary<string, string>();
-
-        /// <summary>
-        /// Buffer dictionary to store the string representation of the desired priority for each work type.
-        /// Used by TextFieldNumeric for the priority input.
-        /// </summary>
-        private Dictionary<string, string> priorityBuffers = new Dictionary<string, string>();
-
-        /// <summary>
-        /// Stores the current scroll position of the work type settings list.
-        /// </summary>
+        /// <summary> Stores the current scroll position of the work type settings list. </summary>
         private Vector2 scrollPosition = Vector2.zero;
 
-        /// <summary>
-        /// Cached list of relevant WorkTypeDefs to avoid querying DefDatabase repeatedly in DoSettingsWindowContents.
-        /// </summary>
+        /// <summary> Cached list of relevant WorkTypeDefs. </summary>
         private static List<WorkTypeDef> cachedRelevantWorkTypes = null;
 
-        /// <summary>
-        /// Constructor for the mod. Loads the settings.
-        /// Includes basic exception handling for settings loading.
-        /// </summary>
-        /// <param name="content">The mod content pack.</param>
-        public AutomatedWorkAssignmentMod(ModContentPack content) : base(content)
-        {
-            try
-            {
-                Settings = GetSettings<AutomatedWorkSettings>();
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"[AutoWork] Exception while loading settings in constructor: {ex}");
-            }
-        }
+        /// <summary> Constructor for the mod. </summary>
+        public AutomatedWorkAssignmentMod(ModContentPack content) : base(content) { }
 
-        /// <summary>
-        /// Provides the title for the mod's settings category in the game's mod settings list.
-        /// </summary>
-        /// <returns>The translated settings category title.</returns>
+        /// <summary> Provides the title for the mod's settings category. </summary>
         public override string SettingsCategory() => "AWA_SettingsCategory".Translate();
 
-        /// <summary>
-        /// Draws the content of the mod settings window.
-        /// Includes exception handling for drawing UI elements and processing work types.
-        /// </summary>
-        /// <param name="inRect">The rectangle area available for drawing the settings content.</param>
+        /// <summary> Draws the content of the mod settings window. </summary>
         public override void DoSettingsWindowContents(Rect inRect)
         {
-            if (Settings == null)
+            var saveData = CurrentData;
+            if (saveData == null)
             {
-                Widgets.Label(inRect, "Error: Mod settings could not be loaded. Please check logs.");
-                Log.ErrorOnce("[AutoWork] Settings object is null in DoSettingsWindowContents. Cannot draw settings.", 91827364);
+                Widgets.Label(inRect, "AWA_LoadSaveFirst".Translate());
                 return;
             }
 
             Listing_Standard listingStandard = new Listing_Standard();
             listingStandard.Begin(inRect);
 
-            try // General settings elements
+            // --- General Settings and Buttons ---
+            try
             {
-                listingStandard.CheckboxLabeled(
-                    "AWA_EnableModLabel".Translate(),
-                    ref Settings.modEnabled,
-                    "AWA_EnableModTooltip".Translate()
-                );
-                listingStandard.CheckboxLabeled(
-                    "AWA_EnableDailyRefreshLabel".Translate(),
-                    ref Settings.enableDailyRefresh,
-                    "AWA_EnableDailyRefreshTooltip".Translate()
-                );
+                listingStandard.CheckboxLabeled("AWA_EnableModLabel".Translate(), ref saveData.modEnabled, "AWA_EnableModTooltip".Translate());
+                listingStandard.CheckboxLabeled("AWA_EnableDailyRefreshLabel".Translate(), ref saveData.enableDailyRefresh, "AWA_EnableDailyRefreshTooltip".Translate());
                 listingStandard.GapLine(12f);
                 if (listingStandard.ButtonText("AWA_ManageExclusionsButton".Translate()))
                 {
-                    Find.WindowStack.Add(new Dialog_ManageExclusions(Settings));
+                    Find.WindowStack.Add(new Dialog_ManageExclusions(saveData));
                 }
                 listingStandard.GapLine(12f);
                 listingStandard.Label("AWA_DesiredPawnsLabel".Translate());
             }
-            catch (Exception ex)
+            catch (Exception ex) { Log.Error($"[AutoWork] Exception drawing general settings: {ex}"); }
+
+            // --- Calculate Max Value for Fixed Count Slider ---
+            int maxPawnCountForSlider = 10;
+            try
             {
-                Log.Error($"[AutoWork] Exception drawing general settings elements: {ex}");
-                listingStandard.Label($"Error drawing general settings: {ex.Message}");
+                int eligibleCount = WorkAssigner.GetEligibleColonistCount(saveData);
+                maxPawnCountForSlider = Mathf.Max(0, eligibleCount);
             }
+            catch (Exception ex) { Log.Error($"[AutoWork] Exception getting eligible count: {ex}"); }
 
             // --- ScrollView Setup ---
             Rect outRect = default;
             Rect viewRect = default;
             List<WorkTypeDef> relevantWorkTypes = null;
-            const float rowHeight = 50f;
+            const float rowHeight = 60f;
 
-            try // ScrollView and WorkType list preparation
+            try
             {
                 float currentYPos = listingStandard.CurHeight;
                 float availableHeight = inRect.height - currentYPos - 30f;
@@ -133,129 +91,123 @@ namespace Automated_Work_Assignment
             }
             catch (Exception ex)
             {
-                Log.Error($"[AutoWork] Exception preparing ScrollView or WorkType list: {ex}");
-                listingStandard.Label($"Error preparing work type list: {ex.Message}");
-                listingStandard.End();
-                return;
+                Log.Error($"[AutoWork] Exception preparing ScrollView: {ex}");
+                listingStandard.Label($"Error preparing list: {ex.Message}");
+                listingStandard.End(); return;
             }
 
-            // Begin ScrollView
+            // --- Draw ScrollView Content ---
             Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
-            Listing_Standard scrollListing = new Listing_Standard(GameFont.Small);
-            scrollListing.Begin(viewRect);
+            float currentY = viewRect.y;
 
             if (relevantWorkTypes != null)
             {
                 foreach (WorkTypeDef workDef in relevantWorkTypes)
                 {
-                    try // Handle drawing individual row
+                    try
                     {
                         if (workDef == null) continue;
-
                         string defName = workDef.defName;
-                        WorkSettingValues currentSetting = Settings.GetWorkSetting(defName);
-                        if (currentSetting == null)
-                        {
-                            Log.ErrorOnce($"[AutoWork] GetWorkSetting returned null for {defName}!", defName.GetHashCode());
-                            scrollListing.Label($"Error: Null settings for {workDef.labelShort}");
-                            scrollListing.Gap(rowHeight - 30f);
-                            continue;
-                        }
+                        WorkSettingValues currentSetting = saveData.GetWorkSetting(defName);
+                        if (currentSetting == null) continue;
 
-                        // --- Draw Row Elements ---
-                        Rect rowRect = scrollListing.GetRect(rowHeight - scrollListing.verticalSpacing);
+                        Rect rowRect = new Rect(viewRect.x, currentY, viewRect.width, rowHeight);
                         float currentX = rowRect.x;
+                        float controlAreaHeight = 30f;
+                        float rowCenterY = rowRect.y + (rowHeight - controlAreaHeight) / 2f;
 
                         // 1. Work type label
-                        float labelWidth = rowRect.width * 0.35f;
-                        Rect labelRect = new Rect(currentX, rowRect.y, labelWidth, 30f);
+                        float labelWidth = viewRect.width * 0.25f;
+                        Rect labelRect = new Rect(currentX, rowCenterY, labelWidth, controlAreaHeight);
                         Widgets.Label(labelRect, workDef.labelShort.CapitalizeFirst());
                         currentX += labelWidth;
 
                         // 2. Exclude Task Checkbox
                         float checkboxSize = Widgets.CheckboxSize;
                         float checkboxPadding = 5f;
-                        Rect excludeCheckboxRect = new Rect(currentX + checkboxPadding, rowRect.y + (30f - checkboxSize) / 2f, checkboxSize, checkboxSize);
+                        Rect excludeCheckboxRect = new Rect(currentX + checkboxPadding, rowCenterY + (controlAreaHeight - checkboxSize) / 2f, checkboxSize, checkboxSize);
                         currentX += checkboxSize + checkboxPadding * 2;
 
-                        bool isWorkTypeExcluded = Settings.excludedWorkTypeDefNames?.Contains(defName) ?? false;
+                        bool isWorkTypeExcluded = saveData.excludedWorkTypeDefNames?.Contains(defName) ?? false;
                         bool checkboxState = isWorkTypeExcluded;
                         Widgets.Checkbox(excludeCheckboxRect.position, ref checkboxState, checkboxSize);
                         TooltipHandler.TipRegion(excludeCheckboxRect, "AWA_ExcludeTaskTooltip".Translate());
 
                         if (checkboxState != isWorkTypeExcluded)
                         {
-                            if (checkboxState)
-                            {
-                                if (Settings.excludedWorkTypeDefNames == null) Settings.excludedWorkTypeDefNames = new List<string>();
-                                if (!Settings.excludedWorkTypeDefNames.Contains(defName)) Settings.excludedWorkTypeDefNames.Add(defName);
-                            }
-                            else
-                            {
-                                Settings.excludedWorkTypeDefNames?.Remove(defName);
-                            }
+                            if (checkboxState) {
+                                if (saveData.excludedWorkTypeDefNames == null) saveData.excludedWorkTypeDefNames = new List<string>();
+                                if (!saveData.excludedWorkTypeDefNames.Contains(defName)) saveData.excludedWorkTypeDefNames.Add(defName);
+                            } else { saveData.excludedWorkTypeDefNames?.Remove(defName); }
                         }
-                        
-                        const float spacing = 10f; // Define spacing between input groups
 
-                        // Calculate remaining width for count/priority controls
-                        float remainingRowWidth = rowRect.width - currentX;
-                        // Divide remaining space, subtracting spacing between groups
-                        float inputGroupWidth = (remainingRowWidth - spacing) / 2f;
+                        // 3. Mode Toggle Button
+                        float toggleWidth = 70f;
+                        Rect toggleRect = new Rect(currentX + checkboxPadding, rowCenterY, toggleWidth, controlAreaHeight);
+                        string toggleLabel = currentSetting.usePercentage ? "Mode: %" : "Mode: #";
+                        if(Widgets.ButtonText(toggleRect, toggleLabel))
+                        {
+                            currentSetting.usePercentage = !currentSetting.usePercentage;
+                        }
+                        TooltipHandler.TipRegion(toggleRect, "AWA_ToggleCountModeTooltip".Translate());
+                        currentX += toggleWidth + checkboxPadding;
 
-                        // 3. Count Input
-                        const float countLabelWidth = 50f;
-                        Rect countLabelRect = new Rect(currentX + spacing, rowRect.y, countLabelWidth, 30f);
-                        Widgets.Label(countLabelRect, "AWA_CountLabel".Translate());
-                        float countFieldWidth = Mathf.Max(20f, inputGroupWidth - countLabelWidth);
-                        Rect countFieldRect = new Rect(countLabelRect.xMax, rowRect.y, countFieldWidth, 30f);
-                        currentX = countFieldRect.xMax;
+                        // Calculate remaining width for sliders
+                        float sliderAreaWidth = viewRect.width - currentX - 10f;
+                        float sliderGroupWidth = sliderAreaWidth / 2f;
+                        const float spacing = 5f;
 
-                        if (!countBuffers.ContainsKey(defName)) { countBuffers[defName] = currentSetting.count.ToString(); }
-                        string countBuffer = countBuffers[defName];
-                        int countBefore = currentSetting.count;
-                        Widgets.TextFieldNumeric<int>(countFieldRect, ref currentSetting.count, ref countBuffer, 0, 999);
-                        if (currentSetting.count != countBefore) { countBuffers[defName] = currentSetting.count.ToString(); }
-                        else { if (countBuffer != currentSetting.count.ToString()) { countBuffers[defName] = currentSetting.count.ToString(); } }
-                        if (currentSetting.count < 0) currentSetting.count = 0;
+                        // 4. Count or Percentage Slider
+                        Rect countPercentGroupRect = new Rect(currentX + spacing, rowCenterY, sliderGroupWidth - spacing, controlAreaHeight);
+                        if (currentSetting.usePercentage)
+                        {
+                            // Percentage Slider
+                            currentSetting.percentage = Widgets.HorizontalSlider(
+                                countPercentGroupRect, currentSetting.percentage, 0f, 1f, true,
+                                "AWA_PercentageLabel".Translate(currentSetting.percentage.ToStringPercent()), roundTo: 0.01f
+                            );
+                        }
+                        else
+                        {
+                            // Fixed Count Slider
+                            float tempCount = Mathf.Clamp(currentSetting.count, 0, maxPawnCountForSlider);
+                            tempCount = Widgets.HorizontalSlider(
+                                countPercentGroupRect, tempCount, 0f, (float)maxPawnCountForSlider, true,
+                                "AWA_FixedCountLabel".Translate(currentSetting.count), roundTo: 1f
+                            );
+                            if((int)tempCount != currentSetting.count) { currentSetting.count = (int)tempCount; }
+                        }
+                        currentX += sliderGroupWidth;
 
-                        // 4. Priority Input
-                        const float priorityLabelWidth = 60f;
-                        Rect priorityLabelRect = new Rect(currentX + spacing, rowRect.y, priorityLabelWidth, 30f);
-                        Widgets.Label(priorityLabelRect, "AWA_PriorityFieldLabel".Translate());
-                        float priorityFieldWidth = Mathf.Max(20f, inputGroupWidth - priorityLabelWidth);
-                        Rect priorityFieldRect = new Rect(priorityLabelRect.xMax, rowRect.y, priorityFieldWidth, 30f);
+                        // 5. Priority Slider
+                        Rect priorityGroupRect = new Rect(currentX + spacing, rowCenterY, sliderGroupWidth - spacing, controlAreaHeight);
+                        float tempPriority = Mathf.Clamp(currentSetting.priority, 1, 4);
+                        tempPriority = Widgets.HorizontalSlider(
+                            priorityGroupRect, tempPriority, 1f, 4f, true,
+                            "AWA_PriorityFieldLabel".Translate(currentSetting.priority), roundTo: 1f
+                        );
+                        if((int)tempPriority != currentSetting.priority) { currentSetting.priority = (int)tempPriority; }
 
-                        if (!priorityBuffers.ContainsKey(defName)) { priorityBuffers[defName] = currentSetting.priority.ToString(); }
-                        string priorityBuffer = priorityBuffers[defName];
-                        int priorityBefore = currentSetting.priority;
-                        Widgets.TextFieldNumeric<int>(priorityFieldRect, ref currentSetting.priority, ref priorityBuffer, 1, 4);
-                        if (currentSetting.priority != priorityBefore) { priorityBuffers[defName] = currentSetting.priority.ToString(); }
-                        else { if (priorityBuffer != currentSetting.priority.ToString()) { priorityBuffers[defName] = currentSetting.priority.ToString(); } }
-                        if (currentSetting.priority < 1) currentSetting.priority = 1;
-                        if (currentSetting.priority > 4) currentSetting.priority = 4;
                     }
                     catch (Exception ex)
                     {
                         Log.Error($"[AutoWork] Exception drawing settings row for WorkTypeDef '{workDef?.defName ?? "NULL"}': {ex}");
-                        scrollListing.Label($"Error processing {workDef?.labelShort ?? "Unknown WorkType"}");
-                        scrollListing.Gap(rowHeight - 30f);
+                        Rect errorRect = new Rect(viewRect.x, currentY, viewRect.width, 30f);
+                        Widgets.Label(errorRect, $"Error processing {workDef?.labelShort ?? "Unknown WorkType"}");
                     }
-                } // End foreach WorkTypeDef
-            } // End if relevantWorkTypes != null
+                    finally
+                    {
+                        currentY += rowHeight;
+                    }
+                } // End foreach
+            } // End if
 
-            scrollListing.End();
+            // --- End ScrollView ---
             Widgets.EndScrollView();
             listingStandard.End();
         }
 
-        /// <summary>
-        /// Called by RimWorld when settings are to be saved.
-        /// </summary>
-        public override void WriteSettings() => base.WriteSettings();
-
-        /* Example XML Key needed for the new checkbox tooltip:
-         * <AWA_ExcludeTaskTooltip>Check to exclude this task from automatic assignment. The mod will ignore this task completely.</AWA_ExcludeTaskTooltip>
-         */
+        /// <summary> Called by RimWorld when settings are to be saved. </summary>
+        public override void WriteSettings() { }
     }
 }
