@@ -126,12 +126,21 @@ namespace Automated_Work_Assignment
 
         /// <summary>
         /// Calculates the integer number of pawns corresponding to a percentage.
+        /// Ensures at least 1 pawn is returned if percentage > 0 and totalEligibleCount > 0.
         /// </summary>
         private static int CalculateCountFromPercentage(float percentage, int totalEligibleCount)
         {
-            if (percentage <= 0f) return 0;
+
+            if (percentage <= 0f || totalEligibleCount <= 0) return 0;
             if (percentage >= 1f) return totalEligibleCount;
-            return Mathf.RoundToInt(percentage * totalEligibleCount);
+            float rawValue = percentage * totalEligibleCount;
+            int calculatedCount = Mathf.RoundToInt(rawValue);
+            
+            if (calculatedCount == 0 && percentage > 0f)
+            {
+                return 1;
+            }
+            return Mathf.Min(calculatedCount, totalEligibleCount);
         }
 
         /// <summary>

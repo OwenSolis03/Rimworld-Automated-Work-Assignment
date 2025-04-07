@@ -67,7 +67,7 @@ namespace Automated_Work_Assignment
             Rect outRect = default;
             Rect viewRect = default;
             List<WorkTypeDef> relevantWorkTypes = null;
-            const float rowHeight = 60f;
+            const float rowHeight = 45f;
 
             try
             {
@@ -122,23 +122,28 @@ namespace Automated_Work_Assignment
                         Widgets.Label(labelRect, workDef.labelShort.CapitalizeFirst());
                         currentX += labelWidth;
 
-                        // 2. Exclude Task Checkbox
+                        // 2. Include Task Checkbox (Logic Inverted)
                         float checkboxSize = Widgets.CheckboxSize;
                         float checkboxPadding = 5f;
-                        Rect excludeCheckboxRect = new Rect(currentX + checkboxPadding, rowCenterY + (controlAreaHeight - checkboxSize) / 2f, checkboxSize, checkboxSize);
+                        Rect includeCheckboxRect = new Rect(currentX + checkboxPadding, rowCenterY + (controlAreaHeight - checkboxSize) / 2f, checkboxSize, checkboxSize);
                         currentX += checkboxSize + checkboxPadding * 2;
 
-                        bool isWorkTypeExcluded = saveData.excludedWorkTypeDefNames?.Contains(defName) ?? false;
-                        bool checkboxState = isWorkTypeExcluded;
-                        Widgets.Checkbox(excludeCheckboxRect.position, ref checkboxState, checkboxSize);
-                        TooltipHandler.TipRegion(excludeCheckboxRect, "AWA_ExcludeTaskTooltip".Translate());
+                        bool isIncluded = !(saveData.excludedWorkTypeDefNames?.Contains(defName) ?? false);
+                        bool checkboxState = isIncluded;
+                        Widgets.Checkbox(includeCheckboxRect.position, ref checkboxState, checkboxSize);
+                        TooltipHandler.TipRegion(includeCheckboxRect, "AWA_IncludeTaskTooltip".Translate());
 
-                        if (checkboxState != isWorkTypeExcluded)
+                        if (checkboxState != isIncluded)
                         {
-                            if (checkboxState) {
+                            if (checkboxState)
+                            {
+                                saveData.excludedWorkTypeDefNames?.Remove(defName);
+                            }
+                            else
+                            {
                                 if (saveData.excludedWorkTypeDefNames == null) saveData.excludedWorkTypeDefNames = new List<string>();
                                 if (!saveData.excludedWorkTypeDefNames.Contains(defName)) saveData.excludedWorkTypeDefNames.Add(defName);
-                            } else { saveData.excludedWorkTypeDefNames?.Remove(defName); }
+                            }
                         }
 
                         // 3. Mode Toggle Button
@@ -161,7 +166,6 @@ namespace Automated_Work_Assignment
                         Rect countPercentGroupRect = new Rect(currentX + spacing, rowCenterY, sliderGroupWidth - spacing, controlAreaHeight);
                         if (currentSetting.usePercentage)
                         {
-                            // Percentage Slider
                             currentSetting.percentage = Widgets.HorizontalSlider(
                                 countPercentGroupRect, currentSetting.percentage, 0f, 1f, true,
                                 "AWA_PercentageLabel".Translate(currentSetting.percentage.ToStringPercent()), roundTo: 0.01f
@@ -169,7 +173,6 @@ namespace Automated_Work_Assignment
                         }
                         else
                         {
-                            // Fixed Count Slider
                             float tempCount = Mathf.Clamp(currentSetting.count, 0, maxPawnCountForSlider);
                             tempCount = Widgets.HorizontalSlider(
                                 countPercentGroupRect, tempCount, 0f, (float)maxPawnCountForSlider, true,
@@ -199,8 +202,8 @@ namespace Automated_Work_Assignment
                     {
                         currentY += rowHeight;
                     }
-                } // End foreach
-            } // End if
+                }
+            }
 
             // --- End ScrollView ---
             Widgets.EndScrollView();
@@ -208,6 +211,7 @@ namespace Automated_Work_Assignment
         }
 
         /// <summary> Called by RimWorld when settings are to be saved. </summary>
-        public override void WriteSettings() { }
+        public override void WriteSettings() { /* No longer used for per-save settings */ }
+
     }
 }

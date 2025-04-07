@@ -11,9 +11,9 @@ namespace Automated_Work_Assignment
     {
         /// <summary>
         /// The desired number of pawns assigned when using fixed count mode.
-        /// Defaults to 0. Used when usePercentage is false.
+        /// Defaults to 3. Used when usePercentage is false.
         /// </summary>
-        public int count = 0;
+        public int count = 3;
 
         /// <summary>
         /// The target priority level (1-4, where 1 is highest) to assign to the selected pawns.
@@ -23,9 +23,9 @@ namespace Automated_Work_Assignment
 
         /// <summary>
         /// The desired percentage (0.0 to 1.0) of eligible pawns to assign when using percentage mode.
-        /// Defaults to 0.1 (10%). Used when usePercentage is true.
+        /// Defaults to 1 (100%). Used when usePercentage is true.
         /// </summary>
-        public float percentage = 0.1f;
+        public float percentage = 1f;
 
         /// <summary>
         /// Determines whether to use the 'percentage' value (true) or the 'count' value (false).
@@ -55,9 +55,9 @@ namespace Automated_Work_Assignment
         /// </summary>
         public void ExposeData()
         {
-            Scribe_Values.Look(ref count, "count", 0);
+            Scribe_Values.Look(ref count, "count", 3);
             Scribe_Values.Look(ref priority, "priority", 3);
-            Scribe_Values.Look(ref percentage, "percentage", 0.1f);
+            Scribe_Values.Look(ref percentage, "percentage", 1f);
             Scribe_Values.Look(ref usePercentage, "usePercentage", false);
 
             // Post Load Clamping/Validation
