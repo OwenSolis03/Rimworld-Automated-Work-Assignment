@@ -7,145 +7,175 @@ using Verse;
 namespace Automated_Work_Assignment
 {
     /// <summary>
-    /// Represents the pop-up window dialog used for managing which pawns are excluded.
-    /// Now references the per-save data component (AutomatedWork_SaveData).
+    /// Defines the modal dialog window that allows users to select which pawns
+    /// should be excluded from the automatic work assignment system.
+    /// This window directly interacts with the per-save game data component (`AutomatedWork_SaveData`)
+    /// to read and update the list of excluded pawns.
     /// </summary>
     public class Dialog_ManageExclusions : Window
     {
         /// <summary>
-        /// A reference to the mod's per-save data component, used to read/modify the excluded pawns list.
+        /// A direct reference to the mod's data storage for the current save game.
+        /// Used to access and modify the list of pawn IDs marked as excluded.
         /// </summary>
         private readonly AutomatedWork_SaveData saveData;
 
-        /// <summary> Stores the current vertical scroll position of the pawn list. </summary>
+        /// <summary> Maintains the vertical scroll position within the pawn list view. </summary>
         private Vector2 scrollPosition = Vector2.zero;
 
-        /// <summary> Cached list of pawns eligible for exclusion/inclusion in this dialog. </summary>
+        /// <summary> A cached list of colonists currently eligible for exclusion management.
+        /// This list includes all free, non-baby colonists on the current map.
+        /// Refreshed when the dialog opens and potentially if the underlying pawn list changes.
+        /// </summary>
         private List<Pawn> availablePawns;
 
-        /// <summary> Defines the initial size of the dialog window. </summary>
+        /// <summary> Specifies the default dimensions of the dialog window when opened. </summary>
         public override Vector2 InitialSize => new Vector2(400f, 600f);
 
         /// <summary>
-        /// Constructor for the exclusion management dialog.
-        /// Now accepts AutomatedWork_SaveData.
+        /// Initializes a new instance of the <see cref="Dialog_ManageExclusions"/> window.
+        /// Requires the save data component for the current game session.
         /// </summary>
-        /// <param name="currentSaveData">A reference to the current save game's data component.</param>
+        /// <param name="currentSaveData">The active <see cref="AutomatedWork_SaveData"/> instance containing the exclusion list for the current save.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="currentSaveData"/> is null.</exception>
         public Dialog_ManageExclusions(AutomatedWork_SaveData currentSaveData)
         {
             saveData = currentSaveData ?? throw new ArgumentNullException(nameof(currentSaveData));
 
-            // Standard window properties
-            forcePause = true;
-            doCloseX = true;
-            closeOnClickedOutside = true;
-            absorbInputAroundWindow = true;
-            draggable = true;
+            // Standard RimWorld window configuration settings
+            forcePause = true; // Pauses the game while the dialog is open.
+            doCloseX = true; // Displays a close button (X) in the top-right corner.
+            closeOnClickedOutside = true; // Closes the dialog if the user clicks outside its bounds.
+            absorbInputAroundWindow = true; // Prevents clicks outside the dialog from interacting with the game world.
+            draggable = true; // Allows the user to drag the window around the screen.
 
-            this.optionalTitle = "AWA_ExclusionDialogTitle".Translate();
-            RefreshPawnList();
+            this.optionalTitle = "AWA_ExclusionDialogTitle".Translate(); // Sets the window title using translation keys.
+            RefreshPawnList(); // Populates the initial list of pawns.
         }
 
         /// <summary>
-        /// Refreshes the list of pawns available for exclusion.
+        /// Updates the internal list of `availablePawns` by querying the current map's state.
+        /// Filters for free colonists who are not babies and sorts them alphabetically by name.
+        /// Handles potential exceptions during pawn retrieval.
         /// </summary>
         private void RefreshPawnList()
         {
             try
             {
+                // Fetch all free colonists currently spawned on the map,
+                // exclude babies, order by name, and store them.
                 availablePawns = Find.CurrentMap?.mapPawns?.FreeColonistsSpawned?
                                      .Where(p => p != null && !p.DevelopmentalStage.Baby())
                                      .OrderBy(p => p.LabelCap)
                                      .ToList()
-                                 ?? new List<Pawn>();
+                                 ?? new List<Pawn>(); // Fallback to an empty list if map/pawns are inaccessible.
             }
             catch (Exception ex)
             {
                 Log.Error($"[AutoWork] Exception refreshing pawn list for exclusion dialog: {ex}");
-                availablePawns = new List<Pawn>();
+                availablePawns = new List<Pawn>(); // Ensure list is empty on error.
             }
         }
 
         /// <summary>
-        /// Draws the actual content of the dialog window.
-        /// Now uses the 'saveData' field to access the excluded pawns list.
+        /// Renders the content of the dialog window, including the description, pawn list, and checkboxes.
+        /// This method is called repeatedly by the UI system while the window is open.
+        /// It uses the `saveData` field to determine the current exclusion status for each pawn
+        /// and updates `saveData` when checkboxes are toggled.
         /// </summary>
-        /// <param name="inRect">The rectangle area available for drawing content.</param>
+        /// <param name="inRect">The rectangular area within the window where content should be drawn.</param>
         public override void DoWindowContents(Rect inRect)
         {
             Listing_Standard listing = new Listing_Standard();
-            listing.Begin(inRect);
+            listing.Begin(inRect); // Start UI element layout
 
             try {
+                // Display introductory text and a separator line.
                 listing.Label("AWA_ExclusionDialogDesc".Translate());
                 listing.GapLine();
             } catch (Exception ex) { Log.Error($"[AutoWork] Exception drawing top elements in exclusion dialog: {ex}"); }
 
+            // Error handling if pawn list failed to load
             if (availablePawns == null) {
                 listing.Label("Error: Could not load pawn list.");
-                listing.End(); return;
+                listing.End(); // Finalize layout
+                return;
             }
 
             // --- ScrollView Setup ---
-            Rect scrollViewOutRect = default;
-            Rect scrollViewViewRect = default;
-            const float rowHeight = 32f;
+            Rect scrollViewOutRect = default; // The visible container for the scroll view
+            Rect scrollViewViewRect = default; // The total area occupied by the scrollable content
+            const float rowHeight = 32f; // Height allocated for each pawn row
 
             try {
+                // Calculate remaining vertical space for the scroll view
                 float currentYPos = listing.CurHeight;
-                float availableHeight = inRect.height - currentYPos - 50f;
-                float scrollViewHeight = Mathf.Max(100f, availableHeight);
+                float availableHeight = inRect.height - currentYPos - 50f; // Reserve space for potential bottom buttons/margins
+                float scrollViewHeight = Mathf.Max(100f, availableHeight); // Ensure a minimum height
                 scrollViewOutRect = new Rect(inRect.x, currentYPos, inRect.width, scrollViewHeight);
 
+                // Calculate the total height required by all pawn rows
                 float viewHeight = availablePawns.Count * rowHeight;
+                // Calculate the width, accounting for the scrollbar width (16f)
                 float viewWidth = Mathf.Max(0f, scrollViewOutRect.width - 16f);
                 scrollViewViewRect = new Rect(0f, 0f, viewWidth, viewHeight);
             } catch (Exception ex) {
                 Log.Error($"[AutoWork] Exception setting up ScrollView in exclusion dialog: {ex}");
                 listing.Label("Error setting up scroll view.");
-                listing.End(); return;
+                listing.End(); // Finalize layout
+                return;
             }
 
             // --- Draw ScrollView ---
             Widgets.BeginScrollView(scrollViewOutRect, ref scrollPosition, scrollViewViewRect);
-            float currentY = 0f;
+            float currentY = 0f; // Tracks the vertical position for drawing the next row
 
             foreach (Pawn pawn in availablePawns)
             {
-                // --- Exception Handling for each pawn row ---
-                try
+                try // Individual try-catch for each pawn row to prevent one error from breaking the whole list
                 {
-                    if (pawn == null) continue;
-                    string pawnId = pawn.ThingID;
+                    if (pawn == null) continue; // Skip if pawn data is unexpectedly null
+                    string pawnId = pawn.ThingID; // Use the unique ThingID for identification
 
+                    // Check if this pawn's ID is present in the exclusion list from save data.
+                    // Uses null-conditional operator (?) for safety if excludedPawnIDs is null.
                     bool isExcluded = saveData.excludedPawnIDs?.Contains(pawnId) ?? false;
 
-                    Rect rowRect = new Rect(0f, currentY, scrollViewViewRect.width, 30f);
-                    bool checkboxState = isExcluded;
+                    // Define the rectangle for the current pawn's row
+                    Rect rowRect = new Rect(0f, currentY, scrollViewViewRect.width, 30f); // Use 30f height for the checkbox itself
+                    bool checkboxState = isExcluded; // Temporary variable to hold checkbox state
+
+                    // Draw the checkbox with the pawn's label. The 'ref checkboxState' allows modification.
                     Widgets.CheckboxLabeled(rowRect, pawn.LabelCap, ref checkboxState);
 
+                    // Detect if the checkbox state changed
                     if (checkboxState != isExcluded)
                     {
-                        if (checkboxState) {
+                        if (checkboxState) // If checked (now excluded)
+                        {
+                            // Ensure the exclusion list exists before adding
                             if (saveData.excludedPawnIDs == null) saveData.excludedPawnIDs = new List<string>();
+                            // Add the pawn's ID if not already present
                             if (!saveData.excludedPawnIDs.Contains(pawnId)) saveData.excludedPawnIDs.Add(pawnId);
-                        } else {
+                        } else // If unchecked (now included)
+                        {
+                            // Remove the pawn's ID from the exclusion list (safe if list is null or ID not found)
                             saveData.excludedPawnIDs?.Remove(pawnId);
                         }
+                        // Future enhancement: Could trigger an immediate refresh or notification if needed.
                     }
                 }
                 catch (Exception ex)
                 {
                     Log.Error($"[AutoWork] Exception processing exclusion row for pawn '{pawn?.ThingID ?? "NULL"}': {ex}");
                 }
-                // --- End Exception Handling ---
-                finally
+                finally // Ensure vertical position increments even if an error occurred
                 {
                     currentY += rowHeight;
                 }
             }
-            Widgets.EndScrollView();
-            listing.End();
+            Widgets.EndScrollView(); // End the scrollable area
+            listing.End(); // Finalize layout
         }
     }
 }

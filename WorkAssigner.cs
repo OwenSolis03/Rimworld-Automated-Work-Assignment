@@ -148,7 +148,7 @@ namespace Automated_Work_Assignment
         /// </summary>
         /// <param name="saveData">The current save game's data component containing the exclusion list.</param>
         /// <returns>A list of eligible Pawn objects.</returns>
-        internal static List<Pawn> GetEligibleColonists(AutomatedWork_SaveData saveData)
+        public static List<Pawn> GetEligibleColonists(AutomatedWork_SaveData saveData)
         {
             List<string> excludedIDs = saveData?.excludedPawnIDs ?? new List<string>();
             if (Find.CurrentMap == null) return new List<Pawn>();
