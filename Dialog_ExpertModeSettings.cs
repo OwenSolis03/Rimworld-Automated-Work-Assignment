@@ -209,7 +209,6 @@ namespace Automated_Work_Assignment
                 rules.Add(new SkillPriorityRule(0, 5, 4));
                 rules.Sort((a, b) => a.MinSkill.CompareTo(b.MinSkill));
             }
-            // Resolviendo el 'TODO' que tenías:
             TooltipHandler.TipRegion(addButtonRect, "Adds a new skill-based priority rule for this work type.");
 
             Rect scrollOuterRect = new Rect(rect.x, rect.y + headerHeight, rect.width, rect.height - headerHeight);
