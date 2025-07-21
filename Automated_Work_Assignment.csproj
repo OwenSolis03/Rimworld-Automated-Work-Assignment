@@ -13,81 +13,96 @@
         <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release 1.6|AnyCPU' ">
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <DefineConstants>TRACE;RIMWORLD_1_6</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+        <DocumentationFile>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.6\Assemblies\Automated_Work_Assignment.xml</DocumentationFile>
+        <OutputPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.6\Assemblies</OutputPath>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release 1.5|AnyCPU' ">
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <DefineConstants>TRACE;RIMWORLD_1_5</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+        <DocumentationFile>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.5\Assemblies\Automated_Work_Assignment.xml</DocumentationFile>
+        <OutputPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.5\Assemblies</OutputPath>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug 1.6|AnyCPU' ">
         <DebugSymbols>true</DebugSymbols>
         <DebugType>full</DebugType>
         <Optimize>false</Optimize>
-        <OutputPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.5\Assemblies\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <DefineConstants>DEBUG;TRACE;RIMWORLD_1_6</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+        <DocumentationFile>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.6\Assemblies\Automated_Work_Assignment.xml</DocumentationFile>
+        <OutputPath>bin\Debug 1.6\</OutputPath>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug 1.5|AnyCPU' ">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <DefineConstants>DEBUG;TRACE;RIMWORLD_1_5</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
         <DocumentationFile>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.5\Assemblies\Automated_Work_Assignment.xml</DocumentationFile>
+        <OutputPath>bin\Debug 1.5\</OutputPath>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-        <DebugType>pdbonly</DebugType>
-        <Optimize>true</Optimize>
-        <OutputPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.5\Assemblies</OutputPath>
-        <DefineConstants>TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <DocumentationFile>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.5\Assemblies\Automated_Work_Assignment.xml</DocumentationFile>
-    </PropertyGroup>
+
     <ItemGroup>
         <Reference Include="0Harmony, Version=2.3.5.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\Lib.Harmony.2.3.5\lib\net48\0Harmony.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>..\packages\Lib.Harmony.2.3.5\lib\net48\0Harmony.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="Assembly-CSharp">
-          <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\Assembly-CSharp.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\Assembly-CSharp.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="System"/>
         <Reference Include="System.Core"/>
         <Reference Include="System.Data"/>
         <Reference Include="System.Xml"/>
         <Reference Include="UnityEngine.CoreModule">
-          <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.IMGUIModule">
-          <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.InputLegacyModule">
-          <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.TextRenderingModule">
-          <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+            <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="VSE">
-          <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\workshop\content\294100\3400246558\1.5\Assemblies\VSE.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\workshop\content\294100\3400246558\1.5\Assemblies\VSE.dll</HintPath>
+            <Private>False</Private>
         </Reference>
     </ItemGroup>
+
     <ItemGroup>
         <Compile Include="AutoAssign_GameComponent.cs" />
         <Compile Include="AutomatedWorkAssignmentMod.cs" />
         <Compile Include="AutomatedWork_SaveData.cs" />
+        <Compile Include="Dialog_ExpertModeSettings.cs" />
         <Compile Include="Dialog_ManageExclusions.cs" />
+        <Compile Include="ExpertModeRuleManager.cs" />
         <Compile Include="HarmonyPatches.cs" />
         <Compile Include="ModDetector.cs" />
         <Compile Include="Properties\AssemblyInfo.cs"/>
+        <Compile Include="SkillPriorityRule.cs" />
         <Compile Include="WorkAssigner.cs" />
         <Compile Include="WorkSettingValues.cs" />
     </ItemGroup>
     <ItemGroup>
-      <None Include="packages.config" />
+        <None Include="packages.config" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
-    <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-         Other similar extension points exist, see Microsoft.Common.targets.
-    <Target Name="BeforeBuild">
-    </Target>
-    <Target Name="AfterBuild">
-    </Target>
-    -->
-
 </Project>

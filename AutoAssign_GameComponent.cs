@@ -10,6 +10,7 @@ namespace Automated_Work_Assignment
     /// to check for the start of a new in-game day. If a new day has begun and the daily refresh
     /// feature is enabled in the mod's save-specific settings (stored in <see cref="AutomatedWork_SaveData"/>),
     /// it triggers the <see cref="WorkAssigner.RefreshAssignments"/> method.
+    /// It is also responsible for ensuring the ExpertModeRuleManager component is added to the game.
     /// </summary>
     public class AutoAssign_GameComponent : GameComponent
     {
@@ -23,11 +24,16 @@ namespace Automated_Work_Assignment
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutoAssign_GameComponent"/>.
-        /// This constructor is required by the RimWorld game engine for creating game components
-        /// associated with a specific game instance.
+        /// This constructor ensures that the ExpertModeRuleManager is also present in the game's components.
         /// </summary>
         /// <param name="game">The current <see cref="Verse.Game"/> instance this component belongs to.</param>
-        public AutoAssign_GameComponent(Game game) { }
+        public AutoAssign_GameComponent(Game game) 
+        {
+            if (game.GetComponent<ExpertModeRuleManager>() == null)
+            {
+                game.components.Add(new ExpertModeRuleManager(game));
+            }
+        }
 
         /// <summary>
         /// Executed by the RimWorld game engine on every game tick. This method checks approximately
