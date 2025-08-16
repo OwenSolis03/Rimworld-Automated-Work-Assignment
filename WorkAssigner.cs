@@ -18,14 +18,17 @@ namespace Automated_Work_Assignment
         private const int DefaultPriority = 0;
 
         /// <summary>
-        /// A private helper struct to temporarily hold a pawn and their calculated suitability score, used for sorting.
+        /// A private helper struct to temporarily hold a pawn, their calculated suitability score, and passion for sorting.
         /// </summary>
-        private struct PawnSuitability { public Pawn pawn; public float score; }
+        private struct PawnSuitability { public Pawn pawn; public float score;
+            public Passion passion;
+        }
         
         /// <summary>
         /// The main entry point for the automatic work assignment logic. This method orchestrates the entire process
         /// of refreshing pawn work priorities based on the current mod settings for the active save game.
         /// It iterates through all manageable work types and applies either the simple or expert logic.
+        /// This method can be called manually from the UI, regardless of the mod's enabled state.
         /// </summary>
         public static void RefreshAssignments()
         {
@@ -43,10 +46,6 @@ namespace Automated_Work_Assignment
             if (saveData == null)
             {
                 Log.ErrorOnce("[AutoWork] Per-save data (AutomatedWork_SaveData) is null in RefreshAssignments.", 1984775);
-                return;
-            }
-            if (!saveData.modEnabled)
-            {
                 return;
             }
 
@@ -180,17 +179,17 @@ namespace Automated_Work_Assignment
         /// Calculates a numerical 'suitability' score for a given pawn and work type. This score determines the pawn's ranking for assignment.
         /// </summary>
         /// <remarks>
-        /// The scoring logic is as follows:
+        /// The scoring logic adapts based on active mods:
         /// 1. The base score is the pawn's skill level in the work type's relevant skill (or 1 if no skill is associated).
-        /// 2. If Vanilla Skills Expanded is not active, a passion multiplier is applied (1.25x for minor, 1.5x for major).
-        /// 3. If VSE is active, its own passion system is used to calculate a bonus.
-        /// 4. A small, random value (0.00-0.01) is added as a tie-breaker to prevent pawn overload.
+        /// 2. If Vanilla Skills Expanded (or a compatible mod) is active, it calculates an additive bonus based on the passion's `LearnRateFactor`.
+        /// 3. If VSE is not active, it applies a multiplicative bonus for vanilla passions (1.25x for minor, 1.5x for major).
+        /// 4. A small, random value (0.00-0.01) is added as a tie-breaker.
         /// Returns -1f for pawns who are incapable of the work type.
         /// </remarks>
         /// <param name="pawn">The pawn to evaluate.</param>
         /// <param name="workType">The work type to evaluate for.</param>
         /// <returns>The calculated suitability score, or -1f if ineligible.</returns>
-        private static float CalculateSuitability(Pawn pawn, WorkTypeDef workType)
+        internal static float CalculateSuitability(Pawn pawn, WorkTypeDef workType)
         {
             try
             {
@@ -239,7 +238,7 @@ namespace Automated_Work_Assignment
         /// Assigns work priorities to the most suitable colonists for a specific work type, integrating simple and expert mode logic.
         /// </summary>
         /// <remarks>
-        /// This method first calculates and sorts all eligible pawns by their suitability score for the given work type.
+        /// This method first calculates and sorts all eligible pawns by their suitability score for the given work type (using skill and passion).
         /// It then selects the top pawns based on the `desiredCount`. For each selected pawn, it determines the final priority:
         /// 1. It checks if an Expert Mode rule matches the pawn's skill level. If so, that rule's priority is used.
         /// 2. If no expert rule matches, it falls back to the `targetPriority` from the simple settings slider.
@@ -258,10 +257,24 @@ namespace Automated_Work_Assignment
             foreach (Pawn pawn in colonists) {
                 if (pawn?.workSettings == null) continue;
                 float score = CalculateSuitability(pawn, workType);
-                if (score >= 0) { suitabilityList.Add(new PawnSuitability { pawn = pawn, score = score }); }
+                if (score >= 0)
+                {
+                    Passion passion = Passion.None;
+                    SkillDef relevantSkillDef = workType.relevantSkills?.FirstOrDefault();
+                    if (relevantSkillDef != null)
+                    {
+                        passion = pawn.skills.GetSkill(relevantSkillDef)?.passion ??  Passion.None;
+                    }
+                    suitabilityList.Add(new PawnSuitability { pawn = pawn, score = score, passion = passion });
+                }
                 else { pawn.workSettings.SetPriority(workType, DefaultPriority); }
             }
-            suitabilityList.Sort((a, b) => b.score.CompareTo(a.score));
+            suitabilityList.Sort((a, b) =>
+            {
+                int scoreComparison = b.score.CompareTo(a.score);
+                if (scoreComparison != 0) return scoreComparison;
+                return b.passion.CompareTo(a.passion);
+            });
 
             var expertManager = Current.Game.GetComponent<ExpertModeRuleManager>();
             bool rulesForThisWorkTypeExist = expertManager?.workTypeRules.ContainsKey(workType) == true && expertManager.workTypeRules[workType].Any();

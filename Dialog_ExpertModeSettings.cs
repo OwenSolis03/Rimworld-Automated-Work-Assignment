@@ -12,6 +12,7 @@ namespace Automated_Work_Assignment
     /// for different work types within the Automated Work Assignment mod system.
     /// It displays a list of available work types and allows users to define skill range brackets
     /// and assign specific work priorities (1-4) to them for each selected work type.
+    /// It also includes controls for setting a global pawn limit for each work type.
     /// The rules configured here are managed by the <see cref="ExpertModeRuleManager"/>.
     /// </summary>
     public class Dialog_ExpertModeSettings : Window
@@ -210,8 +211,47 @@ namespace Automated_Work_Assignment
                 rules.Sort((a, b) => a.MinSkill.CompareTo(b.MinSkill));
             }
             TooltipHandler.TipRegion(addButtonRect, "Adds a new skill-based priority rule for this work type.");
+            
+            float limitControlsHeight = 35f;
+            Rect limitControlsRect = new Rect(headerRect.x, headerRect.yMax, headerRect.width, limitControlsHeight);
 
-            Rect scrollOuterRect = new Rect(rect.x, rect.y + headerHeight, rect.width, rect.height - headerHeight);
+            bool usePercentage = ruleManager.usePercentage_EM.TryGetValue(workDef, out var val) ? val : false;
+            int defaultCount = Find.CurrentMap?.mapPawns?.FreeColonistsSpawnedCount ?? 10;
+            int count = ruleManager.count_EM.TryGetValue(workDef, out var c) ? c : defaultCount;
+            float percentage = ruleManager.percentage_EM.TryGetValue(workDef, out var p) ? p : 1f;
+
+            float toggleWidth = 80f;
+            float sliderWidth = limitControlsRect.width - toggleWidth - 10f;
+
+            Rect toggleRect = new Rect(limitControlsRect.x, limitControlsRect.y, toggleWidth, 30f);
+            if(Widgets.ButtonText(toggleRect, usePercentage ? "Mode: %" : "Mode: #"))
+            {
+                ruleManager.usePercentage_EM[workDef] = !usePercentage;
+            }
+            TooltipHandler.TipRegion(toggleRect, "AWA_ToggleCountModeTooltip".Translate());
+
+            Rect sliderRect = new Rect(toggleRect.xMax + 10f, limitControlsRect.y, sliderWidth, 30f);
+            if (usePercentage)
+            {
+                float newPercentage = Widgets.HorizontalSlider(sliderRect, percentage, 0f, 1f, true, "AWA_PercentageLabel".Translate(percentage.ToStringPercent()), roundTo: 0.01f);
+                if (newPercentage != percentage)
+                {
+                    ruleManager.percentage_EM[workDef] = newPercentage;
+                }
+            }
+            else
+            {
+                int maxPawns = Find.CurrentMap?.mapPawns?.FreeColonistsSpawnedCount ?? 20;
+                int newCount = (int)Widgets.HorizontalSlider(sliderRect, count, 0f, maxPawns, true, "AWA_FixedCountLabel".Translate(count), roundTo: 1f);
+                if (newCount != count)
+                {
+                    ruleManager.count_EM[workDef] = newCount;
+                }
+            }
+            
+            float scrollStartY = limitControlsRect.yMax + 5f;
+            Rect scrollOuterRect = new Rect(rect.x, scrollStartY, rect.width, rect.height - (scrollStartY - rect.y));
+            
             float ruleRowHeight = 65f;
             float rowSpacing = 4f;
             float viewHeight = Mathf.Max(rules.Count * (ruleRowHeight + rowSpacing), scrollOuterRect.height);

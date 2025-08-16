@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace Automated_Work_Assignment 
@@ -20,6 +21,19 @@ namespace Automated_Work_Assignment
         /// </summary>
         public Dictionary<WorkTypeDef, List<SkillPriorityRule>> workTypeRules =
             new Dictionary<WorkTypeDef, List<SkillPriorityRule>>();
+        
+        /// <summary>
+        /// Stores the user's choice of assignment mode (fixed count or percentage) for each work type in Expert Mode.
+        /// </summary>
+        public Dictionary<WorkTypeDef, bool > usePercentage_EM = new Dictionary<WorkTypeDef, bool>();
+        /// <summary>
+        /// Stores the desired number of pawns to assign for each work type when using fixed count mode in Expert Mode.
+        /// </summary>
+        public Dictionary<WorkTypeDef, int > count_EM = new Dictionary<WorkTypeDef, int>();
+        /// <summary>
+        /// Stores the desired percentage of pawns to assign for each work type when using percentage mode in Expert Mode.
+        /// </summary>
+        public Dictionary<WorkTypeDef, float > percentage_EM = new Dictionary<WorkTypeDef, float>(); 
 
         /// <summary>
         /// A temporary list used by RimWorld's Scribe system to hold the dictionary keys (<c>WorkTypeDef</c>) during serialization.
@@ -32,6 +46,20 @@ namespace Automated_Work_Assignment
         private List<List<SkillPriorityRule>> skillPriorityRuleValuesWorkingList;
 
         /// <summary>
+        /// Temporary lists used by the Scribe system to serialize the Expert Mode pawn limit settings.
+        /// </summary>
+        private List<WorkTypeDef> usePercentageKeys, countKeys, percentageKeys;
+        private List<bool> usePercentageValues;
+        private List<int> countValues;
+        private List<float> percentageValues;
+
+        /// <summary>
+        /// A private helper struct to temporarily hold a pawn, their calculated suitability score, and passion for sorting.
+        /// </summary>
+        private struct PawnSuitability { public Pawn pawn; public float score; public Passion passion; }
+        
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ExpertModeRuleManager"/> class.
         /// This constructor is required by RimWorld's GameComponent system.
         /// </summary>
@@ -42,12 +70,10 @@ namespace Automated_Work_Assignment
         /// Applies all defined Expert Mode rules to eligible colonists. This is the core logic method for this system.
         /// </summary>
         /// <remarks>
-        /// This method is called by the main <c>WorkAssigner</c> after its simple logic has run. It iterates through
-        /// all pawns and all work types that have expert rules defined. For each, it checks:
-        /// 1. If the work type is excluded in the main mod settings.
-        /// 2. If the pawn has the work type disabled in the vanilla work tab.
-        /// 3. It finds a matching rule based on the pawn's skill level.
-        /// If a rule matches, it applies the priority from that rule. If no rule matches, it sets the priority to 0 (disabled).
+        /// This method first selects the best pawns for a job up to a user-defined limit (either a fixed number or a percentage).
+        /// It then applies the skill-based priority rules ONLY to that selected group of pawns.
+        /// Pawns who are not selected will have their priority for that work type set to 0. It uses the global
+        /// <see cref="WorkAssigner.CalculateSuitability"/> method to ensure consistent pawn ranking.
         /// </remarks>
         public void AssignPrioritiesBasedOnRules()
         {
@@ -63,47 +89,84 @@ namespace Automated_Work_Assignment
                 return;
             }
 
-            List<Pawn> colonists = GetEligibleColonistsForExpertMode(awaSaveData);
-            if (colonists == null || !colonists.Any())
+            List<Pawn> allColonists = GetEligibleColonistsForExpertMode(awaSaveData);
+            if (allColonists == null || !allColonists.Any())
             {
                 return;
             }
 
-            foreach (Pawn pawn in colonists)
+            foreach (var kvp in this.workTypeRules)
             {
-                if (pawn?.skills == null || pawn.workSettings == null || pawn.Dead || pawn.Downed) continue;
+                WorkTypeDef workDef = kvp.Key;
+                List<SkillPriorityRule> rules = kvp.Value;
 
-                foreach (var kvp in this.workTypeRules)
+                if (workDef == null || rules == null || !rules.Any() || (awaSaveData.excludedWorkTypeDefNames != null && awaSaveData.excludedWorkTypeDefNames.Contains(workDef.defName)))
                 {
-                    WorkTypeDef workDef = kvp.Key;
-                    List<SkillPriorityRule> rules = kvp.Value;
-                    
-                    if (awaSaveData.excludedWorkTypeDefNames != null && awaSaveData.excludedWorkTypeDefNames.Contains(workDef.defName))
+                    continue;
+                }
+                
+                List<PawnSuitability> suitabilityList = new List<PawnSuitability>();
+                foreach (Pawn pawn in allColonists)
+                {
+                    if (pawn.WorkTypeIsDisabled(workDef))
                     {
+                        pawn.workSettings.SetPriority(workDef, 0);
                         continue;
                     }
 
-                    if (workDef == null || rules == null || !rules.Any()) continue;
-
-                    int priorityToSet = 0; // Default to disabled
-
-                    if (pawn.WorkTypeIsDisabled(workDef))
+                    float score = WorkAssigner.CalculateSuitability(pawn, workDef);
+                    Passion passion = Passion.None;
+                    SkillDef relevantSkillDef = workDef.relevantSkills?.FirstOrDefault();
+                    if (relevantSkillDef != null)
                     {
-                        priorityToSet = 0;
+                        passion = pawn.skills.GetSkill(relevantSkillDef)?.passion ?? Passion.None;
                     }
-                    else
+                    suitabilityList.Add(new PawnSuitability { pawn = pawn, score = score, passion = passion });
+                }
+
+                suitabilityList.Sort((a, b) =>
+                {
+                    int scoreComparison = b.score.CompareTo(a.score);
+                    if (scoreComparison != 0) return scoreComparison;
+                    return b.passion.CompareTo(a.passion);
+                });
+
+                bool usePercentage = usePercentage_EM.TryGetValue(workDef, out var val) ? val : false;
+                int desiredCount;
+
+                if (usePercentage)
+                {
+                    float percentage = percentage_EM.TryGetValue(workDef, out var p) ? p : 1f;
+                    desiredCount = Mathf.RoundToInt(allColonists.Count * percentage);
+                }
+                else
+                {
+                    desiredCount = count_EM.TryGetValue(workDef, out var c) ? c : allColonists.Count;
+                }
+                desiredCount = Mathf.Clamp(desiredCount, 0, allColonists.Count);
+
+                HashSet<Pawn> assignedPawns = new HashSet<Pawn>();
+                for (int i = 0; i < desiredCount; i++)
+                {
+                    Pawn pawnToAssign = suitabilityList[i].pawn;
+                    SkillDef relevantSkill = workDef.relevantSkills?.FirstOrDefault();
+                    int skillLevel = (relevantSkill != null) ? pawnToAssign.skills.GetSkill(relevantSkill)?.Level ?? 0 : 0;
+
+                    SkillPriorityRule matchingRule = rules.FirstOrDefault(rule => skillLevel >= rule.MinSkill && skillLevel <= rule.MaxSkill);
+                    int priorityToSet = matchingRule?.Priority ?? 0;
+
+                    if (pawnToAssign.workSettings.GetPriority(workDef) != priorityToSet)
                     {
-                        SkillDef relevantSkill = workDef.relevantSkills?.FirstOrDefault();
-                        int skillLevel = (relevantSkill != null) ? pawn.skills.GetSkill(relevantSkill)?.Level ?? 0 : 0;
-
-                        SkillPriorityRule matchingRule = rules.FirstOrDefault(rule => skillLevel >= rule.MinSkill && skillLevel <= rule.MaxSkill);
-
-                        priorityToSet = matchingRule?.Priority ?? 0;
+                        pawnToAssign.workSettings.SetPriority(workDef, priorityToSet);
                     }
+                    assignedPawns.Add(pawnToAssign);
+                }
 
-                    if (pawn.workSettings.GetPriority(workDef) != priorityToSet)
+                foreach (var suitability in suitabilityList)
+                {
+                    if (!assignedPawns.Contains(suitability.pawn))
                     {
-                        pawn.workSettings.SetPriority(workDef, priorityToSet);
+                        suitability.pawn.workSettings.SetPriority(workDef, 0);
                     }
                 }
             }
@@ -149,8 +212,8 @@ namespace Automated_Work_Assignment
         /// Handles the serialization (saving and loading) of this component's data using RimWorld's Scribe system.
         /// </summary>
         /// <remarks>
-        /// This method saves the <c>workTypeRules</c> dictionary. It also performs post-load cleanup to ensure data integrity,
-        /// such as removing rules for <c>WorkTypeDef</c>s from uninstalled mods and clearing any null entries from rule lists.
+        /// This method saves the <c>workTypeRules</c> dictionary and the Expert Mode pawn limit settings. 
+        /// It also performs post-load cleanup to ensure data integrity.
         /// </remarks>
         public override void ExposeData()
         {
@@ -158,6 +221,10 @@ namespace Automated_Work_Assignment
             Scribe_Collections.Look(ref workTypeRules, "workTypeRules_EM",
                 LookMode.Def, LookMode.Deep,
                 ref workTypeDefKeysWorkingList, ref skillPriorityRuleValuesWorkingList);
+            
+            Scribe_Collections.Look(ref usePercentage_EM, "usePercentage_EM", LookMode.Def, LookMode.Value, ref usePercentageKeys, ref usePercentageValues);
+            Scribe_Collections.Look(ref count_EM, "count_EM", LookMode.Def, LookMode.Value, ref countKeys, ref countValues);
+            Scribe_Collections.Look(ref percentage_EM, "percentage_EM", LookMode.Def, LookMode.Value, ref percentageKeys, ref percentageValues);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -180,6 +247,10 @@ namespace Automated_Work_Assignment
                         }
                     }
                 }
+                
+                if (usePercentage_EM == null) usePercentage_EM = new Dictionary<WorkTypeDef, bool>();
+                if (count_EM == null) count_EM = new Dictionary<WorkTypeDef, int>();
+                if (percentage_EM == null) percentage_EM = new Dictionary<WorkTypeDef, float>();
             }
         }
     }

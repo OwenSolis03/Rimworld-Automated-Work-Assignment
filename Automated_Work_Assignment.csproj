@@ -39,7 +39,7 @@
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
         <DocumentationFile>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.6\Assemblies\Automated_Work_Assignment.xml</DocumentationFile>
-        <OutputPath>bin\Debug 1.6\</OutputPath>
+        <OutputPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.6\Assemblies\</OutputPath>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug 1.5|AnyCPU' ">
         <DebugSymbols>true</DebugSymbols>

@@ -72,7 +72,6 @@ namespace Automated_Work_Assignment
                 // If no save data is loaded (e.g., on the main menu), do nothing.
                 if (saveData == null)
                 {
-                    // Log.ErrorOnce("[AutoWork] Save data is null in WorkTabPostfix! Cannot draw UI.", 846522); // Example optional log
                     return;
                 }
 
@@ -125,19 +124,10 @@ namespace Automated_Work_Assignment
                 // Draw the refresh button.
                 if (Widgets.ButtonText(refreshButtonRect, "AWA_RefreshButton".Translate()))
                 {
-                    // Only allow manual refresh if the mod is currently enabled for this save.
-                    if (saveData.modEnabled)
-                    {
-                        Log.Message("[AutoWork] Manual refresh triggered via UI button.");
-                        WorkAssigner.RefreshAssignments(); // Trigger the assignment logic.
-                    }
-                    else
-                    {
-                        // Show a feedback message if the user clicks Refresh while the mod is disabled.
-                        Messages.Message("AWA_ModDisabledMessage".Translate(), MessageTypeDefOf.CautionInput);
-                    }
+                    Log.Message("[AutoWork] Manual refresh triggered via UI button.");
+                    WorkAssigner.RefreshAssignments(); // Trigger the assignment logic.
                 }
-
+                
                 // --- Settings Button ---
                 // Position it to the left of the refresh button.
                 Rect settingsButtonRect = new Rect(
