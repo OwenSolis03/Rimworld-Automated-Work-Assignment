@@ -3,52 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Verse;
+using RimWorld;
 
 namespace Automated_Work_Assignment
 {
     /// <summary>
-    /// Serves as the primary entry point and controller for the Automated Work Assignment mod.
-    /// This class inherits from <see cref="Verse.Mod"/> and is responsible for providing the mod's entry
-    /// in the game's mod settings menu and drawing the user interface for configuration.
+    /// Mod entry point with complete UI for all new features.
+    /// FINAL VERSION with fixed radio buttons, proper spacing, and clean layout.
     /// </summary>
     public class AutomatedWorkAssignmentMod : Mod
     {
-        /// <summary>
-        /// Provides convenient static access to the instance of <see cref="AutomatedWork_SaveData"/>
-        /// associated with the currently active game save. This component holds all per-save settings for the mod.
-        /// </summary>
         internal static AutomatedWork_SaveData CurrentData => Current.Game?.GetComponent<AutomatedWork_SaveData>();
 
-        /// <summary>
-        /// Stores the current vertical scroll position for the list of work types displayed within the mod settings window.
-        /// </summary>
         private Vector2 scrollPosition = Vector2.zero;
-
-        /// <summary>
-        /// A static cache holding the list of relevant <see cref="WorkTypeDef"/>s for display.
-        /// Caching this list avoids redundant filtering and sorting every time the settings window is drawn, improving performance.
-        /// </summary>
         private static List<WorkTypeDef> cachedRelevantWorkTypes = null;
 
-        /// <summary>
-        /// Standard constructor for RimWorld mods. Called by the game when loading the mod.
-        /// </summary>
-        /// <param name="content">The <see cref="ModContentPack"/> object containing metadata and file paths for this mod.</param>
         public AutomatedWorkAssignmentMod(ModContentPack content) : base(content) { }
 
-        /// <summary>
-        /// Overrides the base method to provide the localized display name for this mod's section
-        /// within RimWorld's main mod settings dialog.
-        /// </summary>
-        /// <returns>The translated string for the settings category.</returns>
         public override string SettingsCategory() => "AWA_SettingsCategory".Translate();
 
-        /// <summary>
-        /// Draws the user interface for the mod's settings window. This includes general toggles,
-        /// buttons for managing pawn exclusions and accessing the Expert Mode, and a detailed,
-        /// scrollable list for configuring each work type's simple assignment settings.
-        /// </summary>
-        /// <param name="inRect">The <see cref="Rect"/> representing the total available drawing area for the settings window content.</param>
         public override void DoSettingsWindowContents(Rect inRect)
         {
             var saveData = CurrentData;
@@ -61,19 +34,102 @@ namespace Automated_Work_Assignment
             Listing_Standard listingStandard = new Listing_Standard();
             listingStandard.Begin(inRect);
 
-            // --- Section 1: General Settings and Buttons ---
             try
             {
-#if RIMWORLD_1_5
-                listingStandard.CheckboxLabeled("AWA_EnableModLabel".Translate(), ref saveData.modEnabled, "AWA_EnableModTooltip".Translate());
-                listingStandard.CheckboxLabeled("AWA_EnableDailyRefreshLabel".Translate(), ref saveData.enableDailyRefresh, "AWA_EnableDailyRefreshTooltip".Translate());
-#else
-                listingStandard.CheckboxLabeled("AWA_EnableModLabel".Translate(), ref saveData.modEnabled, "AWA_EnableModTooltip".Translate());
-                listingStandard.CheckboxLabeled("AWA_EnableDailyRefreshLabel".Translate(), ref saveData.enableDailyRefresh, "AWA_EnableDailyRefreshTooltip".Translate());
-#endif
+                // --- Toggles básicos ---
+                listingStandard.CheckboxLabeled(
+                    "AWA_EnableModLabel".Translate(), 
+                    ref saveData.modEnabled, 
+                    "AWA_EnableModTooltip".Translate()
+                );
+                
+                listingStandard.CheckboxLabeled(
+                    "AWA_EnableDailyRefreshLabel".Translate(), 
+                    ref saveData.enableDailyRefresh, 
+                    "AWA_EnableDailyRefreshTooltip".Translate()
+                );
 
                 listingStandard.GapLine(12f);
 
+                // --- Assignment Mode Selector (FIXED: Radio buttons properly aligned) ---
+                listingStandard.Label("Assignment System Mode:");
+                
+                Rect modeRect = listingStandard.GetRect(30f);
+                float radioSize = 24f;
+                float gapBetweenRadioAndLabel = 5f;
+                float gapBetweenModes = 20f;
+                
+                // Calculate actual text widths for perfect alignment
+                GameFont previousFont = Text.Font;
+                Text.Font = GameFont.Small;
+                float simpleWidth = Text.CalcSize("Simple Mode").x;
+                float expertWidth = Text.CalcSize("Expert Mode").x;
+                float hybridWidth = Text.CalcSize("Hybrid Mode").x;
+                Text.Font = previousFont;
+                
+                float currentX = modeRect.x;
+                
+                // Simple Mode: (•) Simple Mode
+                Rect simpleRadioRect = new Rect(currentX, modeRect.y + 3f, radioSize, radioSize);
+                Rect simpleLabelRect = new Rect(simpleRadioRect.xMax + gapBetweenRadioAndLabel, modeRect.y, simpleWidth, modeRect.height);
+                bool isSimple = saveData.assignmentMode == AutomatedWork_SaveData.AssignmentMode.Simple;
+                if (Widgets.RadioButton(simpleRadioRect.position, isSimple))
+                {
+                    saveData.assignmentMode = AutomatedWork_SaveData.AssignmentMode.Simple;
+                }
+                Widgets.Label(simpleLabelRect, "Simple Mode");
+                Rect simpleTooltipRect = new Rect(simpleRadioRect.x, simpleRadioRect.y, simpleLabelRect.xMax - simpleRadioRect.x, modeRect.height);
+                TooltipHandler.TipRegion(simpleTooltipRect, "Uses only the Count/Priority sliders below. Expert Mode rules are ignored.");
+                
+                currentX = simpleLabelRect.xMax + gapBetweenModes;
+                
+                // Expert Mode: (•) Expert Mode
+                Rect expertRadioRect = new Rect(currentX, modeRect.y + 3f, radioSize, radioSize);
+                Rect expertLabelRect = new Rect(expertRadioRect.xMax + gapBetweenRadioAndLabel, modeRect.y, expertWidth, modeRect.height);
+                bool isExpert = saveData.assignmentMode == AutomatedWork_SaveData.AssignmentMode.Expert;
+                if (Widgets.RadioButton(expertRadioRect.position, isExpert))
+                {
+                    saveData.assignmentMode = AutomatedWork_SaveData.AssignmentMode.Expert;
+                }
+                Widgets.Label(expertLabelRect, "Expert Mode");
+                Rect expertTooltipRect = new Rect(expertRadioRect.x, expertRadioRect.y, expertLabelRect.xMax - expertRadioRect.x, modeRect.height);
+                TooltipHandler.TipRegion(expertTooltipRect, "Uses ONLY skill-based rules from Expert Mode. Simple sliders are ignored (except Count/Percentage).");
+                
+                currentX = expertLabelRect.xMax + gapBetweenModes;
+                
+                // Hybrid Mode: (•) Hybrid Mode
+                Rect hybridRadioRect = new Rect(currentX, modeRect.y + 3f, radioSize, radioSize);
+                Rect hybridLabelRect = new Rect(hybridRadioRect.xMax + gapBetweenRadioAndLabel, modeRect.y, hybridWidth, modeRect.height);
+                bool isHybrid = saveData.assignmentMode == AutomatedWork_SaveData.AssignmentMode.Hybrid;
+                if (Widgets.RadioButton(hybridRadioRect.position, isHybrid))
+                {
+                    saveData.assignmentMode = AutomatedWork_SaveData.AssignmentMode.Hybrid;
+                }
+                Widgets.Label(hybridLabelRect, "Hybrid Mode");
+                Rect hybridTooltipRect = new Rect(hybridRadioRect.x, hybridRadioRect.y, hybridLabelRect.xMax - hybridRadioRect.x, modeRect.height);
+                TooltipHandler.TipRegion(hybridTooltipRect, "Expert rules override when they match. Simple Mode is fallback for unmatched skills.");
+
+                listingStandard.Gap(6f);
+
+                // --- Advanced toggles ---
+                listingStandard.CheckboxLabeled(
+                    "Force Emergency Priorities (Doctor/Firefighter = P1)",
+                    ref saveData.forceEmergencyPriorities,
+                    "When enabled, Doctor and Firefighter are always forced to priority 1, overriding all other settings."
+                );
+
+                if (saveData.assignmentMode == AutomatedWork_SaveData.AssignmentMode.Expert)
+                {
+                    listingStandard.CheckboxLabeled(
+                        "Prioritize Passion in Expert Mode",
+                        ref saveData.prioritizePassionInExpertMode,
+                        "When enabled, pawns are sorted by passion FIRST, then skill. Useful for training passionate colonists."
+                    );
+                }
+
+                listingStandard.GapLine(12f);
+
+                // --- Management buttons ---
                 Rect buttonRowRect = listingStandard.GetRect(30f); 
                 float buttonWidth = (buttonRowRect.width - 10f) / 2f;
                 
@@ -82,20 +138,24 @@ namespace Automated_Work_Assignment
                 {
                     Find.WindowStack.Add(new Dialog_ManageExclusions(saveData));
                 }
+                TooltipHandler.TipRegion(exclusionsButtonRect, "Exclude specific colonists from ALL automatic assignments.");
 
                 Rect expertModeButtonRect = new Rect(exclusionsButtonRect.xMax + 10f, buttonRowRect.y, buttonWidth, buttonRowRect.height);
                 if (Widgets.ButtonText(expertModeButtonRect, "AWA_ConfigureExpertModeButton".Translate()))
                 {
                     Find.WindowStack.Add(new Dialog_ExpertModeSettings());
                 }
+                TooltipHandler.TipRegion(expertModeButtonRect, "Configure skill-based priority rules (Expert Mode).");
         
                 listingStandard.Gap(12f);
-
                 listingStandard.GapLine(12f);
         
                 listingStandard.Label("AWA_DesiredPawnsLabel".Translate());
             }
-            catch (Exception ex) { Log.Error($"[AutoWork] Exception drawing general settings: {ex}"); }
+            catch (Exception ex) 
+            { 
+                Log.Error($"[AutoWork] Exception drawing general settings: {ex}"); 
+            }
             
             int maxPawnCountForSlider = 10;
             try
@@ -103,14 +163,16 @@ namespace Automated_Work_Assignment
                 int eligibleCount = WorkAssigner.GetEligibleColonistCount(saveData);
                 maxPawnCountForSlider = Mathf.Max(0, eligibleCount);
             }
-            catch (Exception ex) { Log.Error($"[AutoWork] Exception getting eligible count: {ex}"); }
+            catch (Exception ex) 
+            { 
+                Log.Error($"[AutoWork] Exception getting eligible count: {ex}"); 
+            }
 
-
-            // --- Section 2: Scrollable List of Work Type Settings ---
+            // --- Scrollable work type list (FIXED: Proper spacing to avoid overlap) ---
             Rect outRect = default;
             Rect viewRect = default;
             List<WorkTypeDef> relevantWorkTypes = null;
-            const float rowHeight = 45f;
+            const float rowHeight = 70f; // Increased for proper spacing
 
             try
             {
@@ -136,10 +198,10 @@ namespace Automated_Work_Assignment
             {
                 Log.Error($"[AutoWork] Exception preparing ScrollView: {ex}");
                 listingStandard.Label($"Error preparing list: {ex.Message}");
-                listingStandard.End(); return;
+                listingStandard.End(); 
+                return;
             }
 
-            // --- Draw ScrollView Content ---
             Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
             float currentY = viewRect.y;
 
@@ -157,13 +219,15 @@ namespace Automated_Work_Assignment
                         Rect rowRect = new Rect(viewRect.x, currentY, viewRect.width, rowHeight);
                         float currentX = rowRect.x;
                         float controlAreaHeight = 30f;
-                        float rowCenterY = rowRect.y + (rowHeight - controlAreaHeight) / 2f;
+                        float rowCenterY = rowRect.y + 5f;
 
-                        float labelWidth = viewRect.width * 0.25f;
+                        // Label
+                        float labelWidth = viewRect.width * 0.20f;
                         Rect labelRect = new Rect(currentX, rowCenterY, labelWidth, controlAreaHeight);
                         Widgets.Label(labelRect, workDef.labelShort.CapitalizeFirst());
                         currentX += labelWidth;
 
+                        // Include checkbox
                         float checkboxSize = Widgets.CheckboxSize;
                         float checkboxPadding = 5f;
                         Rect includeCheckboxRect = new Rect(currentX + checkboxPadding, rowCenterY + (controlAreaHeight - checkboxSize) / 2f, checkboxSize, checkboxSize);
@@ -182,11 +246,14 @@ namespace Automated_Work_Assignment
                             }
                             else
                             {
-                                if (saveData.excludedWorkTypeDefNames == null) saveData.excludedWorkTypeDefNames = new List<string>();
-                                if (!saveData.excludedWorkTypeDefNames.Contains(defName)) saveData.excludedWorkTypeDefNames.Add(defName);
+                                if (saveData.excludedWorkTypeDefNames == null) 
+                                    saveData.excludedWorkTypeDefNames = new List<string>();
+                                if (!saveData.excludedWorkTypeDefNames.Contains(defName)) 
+                                    saveData.excludedWorkTypeDefNames.Add(defName);
                             }
                         }
 
+                        // Count/Percentage toggle
                         float toggleWidth = 70f;
                         Rect toggleRect = new Rect(currentX + checkboxPadding, rowCenterY, toggleWidth, controlAreaHeight);
                         string toggleLabel = currentSetting.usePercentage ? "Mode: %" : "Mode: #";
@@ -197,11 +264,12 @@ namespace Automated_Work_Assignment
                         TooltipHandler.TipRegion(toggleRect, "AWA_ToggleCountModeTooltip".Translate());
                         currentX += toggleWidth + checkboxPadding;
 
-                        float sliderAreaWidth = viewRect.width - currentX - 10f;
-                        float sliderGroupWidth = sliderAreaWidth / 2f;
+                        // First row: Count/Percentage and Priority sliders
+                        float remainingWidth = viewRect.width - currentX - 10f;
+                        float sliderWidth = remainingWidth / 2f;
                         const float spacing = 5f;
 
-                        Rect countPercentGroupRect = new Rect(currentX + spacing, rowCenterY, sliderGroupWidth - spacing, controlAreaHeight);
+                        Rect countPercentGroupRect = new Rect(currentX + spacing, rowCenterY, sliderWidth - spacing, controlAreaHeight);
                         if (currentSetting.usePercentage)
                         {
                             currentSetting.percentage = Widgets.HorizontalSlider(
@@ -224,11 +292,14 @@ namespace Automated_Work_Assignment
                                 "AWA_FixedCountLabel".Translate(currentSetting.count),
                                 roundTo: 1f
                             );
-                            if((int)tempCount != currentSetting.count) { currentSetting.count = (int)tempCount; }
+                            if((int)tempCount != currentSetting.count) 
+                            { 
+                                currentSetting.count = (int)tempCount; 
+                            }
                         }
-                        currentX += sliderGroupWidth;
+                        currentX += sliderWidth;
 
-                        Rect priorityGroupRect = new Rect(currentX + spacing, rowCenterY, sliderGroupWidth - spacing, controlAreaHeight);
+                        Rect priorityGroupRect = new Rect(currentX + spacing, rowCenterY, sliderWidth - spacing, controlAreaHeight);
                         float tempPriority = Mathf.Clamp(currentSetting.priority, 1, 4);
                         tempPriority = Widgets.HorizontalSlider(
                             priorityGroupRect,
@@ -238,13 +309,62 @@ namespace Automated_Work_Assignment
                             "AWA_PriorityFieldLabel".Translate(currentSetting.priority),
                             roundTo: 1f
                         );
-                        if((int)tempPriority != currentSetting.priority) { currentSetting.priority = (int)tempPriority; }
+                        if((int)tempPriority != currentSetting.priority) 
+                        { 
+                            currentSetting.priority = (int)tempPriority; 
+                        }
+
+                        // Second row: Passion Weight and Fallback Priority (FIXED: More vertical space)
+                        float secondRowY = rowCenterY + controlAreaHeight + 15f;
+                        currentX = rowRect.x + labelWidth + checkboxSize + checkboxPadding * 2 + toggleWidth + checkboxPadding;
+
+                        Rect passionWeightRect = new Rect(currentX + spacing, secondRowY, sliderWidth - spacing, 18f);
+                        string passionLabel = $"Passion: {currentSetting.passionWeight:F1}x";
+                        float newPassionWeight = Widgets.HorizontalSlider(
+                            passionWeightRect,
+                            currentSetting.passionWeight,
+                            0f, 3f,
+                            true,
+                            passionLabel,
+                            "0x", "3x",
+                            roundTo: 0.1f
+                        );
+                        if (Math.Abs(newPassionWeight - currentSetting.passionWeight) > 0.01f)
+                        {
+                            currentSetting.passionWeight = newPassionWeight;
+                        }
+                        TooltipHandler.TipRegion(passionWeightRect, 
+                            "How much passion affects assignment priority.\n" +
+                            "0x = Ignore passion entirely\n" +
+                            "1x = Default balance\n" +
+                            "3x = Strongly prefer passionate pawns");
+                        currentX += sliderWidth;
+
+                        Rect fallbackRect = new Rect(currentX + spacing, secondRowY, sliderWidth - spacing, 18f);
+                        string fallbackLabel = $"Backup: {(currentSetting.fallbackPriority == 0 ? "OFF" : "P" + currentSetting.fallbackPriority)}";
+                        float tempFallback = Widgets.HorizontalSlider(
+                            fallbackRect,
+                            currentSetting.fallbackPriority,
+                            0f, 4f,
+                            true,
+                            fallbackLabel,
+                            "OFF", "P4",
+                            roundTo: 1f
+                        );
+                        if((int)tempFallback != currentSetting.fallbackPriority)
+                        {
+                            currentSetting.fallbackPriority = (int)tempFallback;
+                        }
+                        TooltipHandler.TipRegion(fallbackRect,
+                            "Priority for colonists NOT in top selection.\n" +
+                            "0 = Disable work\n" +
+                            "1-4 = Backup priority (useful for Hauling/Cleaning)");
                     }
                     catch (Exception ex)
                     {
-                        Log.Error($"[AutoWork] Exception drawing settings row for WorkTypeDef '{workDef?.defName ?? "NULL"}': {ex}");
+                        Log.Error($"[AutoWork] Exception drawing row for '{workDef?.defName ?? "NULL"}': {ex}");
                         Rect errorRect = new Rect(viewRect.x, currentY, viewRect.width, 30f);
-                        Widgets.Label(errorRect, $"Error processing {workDef?.labelShort ?? "Unknown WorkType"}");
+                        Widgets.Label(errorRect, $"Error processing {workDef?.labelShort ?? "Unknown"}");
                     }
                     finally
                     {

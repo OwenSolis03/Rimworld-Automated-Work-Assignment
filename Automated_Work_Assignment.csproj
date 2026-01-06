@@ -12,6 +12,7 @@
         <AssemblyName>Automated_Work_Assignment</AssemblyName>
         <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release 1.6|AnyCPU' ">
         <DebugType>pdbonly</DebugType>
@@ -93,13 +94,16 @@
         <Compile Include="AutomatedWork_SaveData.cs" />
         <Compile Include="Dialog_ExpertModeSettings.cs" />
         <Compile Include="Dialog_ManageExclusions.cs" />
+        <Compile Include="Dialog_ManageJobExclusions.cs" />
         <Compile Include="ExpertModeRuleManager.cs" />
         <Compile Include="HarmonyPatches.cs" />
         <Compile Include="ModDetector.cs" />
         <Compile Include="Properties\AssemblyInfo.cs"/>
         <Compile Include="SkillPriorityRule.cs" />
+        <Compile Include="UnifiedSuitabilityCalculator.cs" />
         <Compile Include="WorkAssigner.cs" />
         <Compile Include="WorkSettingValues.cs" />
+        <Compile Include="WorkTypePriority.cs" />
     </ItemGroup>
     <ItemGroup>
         <None Include="packages.config" />
