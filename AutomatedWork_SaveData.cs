@@ -48,7 +48,7 @@ namespace Automated_Work_Assignment
         // --- Exclusion Lists ---
 
         /// <summary>
-        /// Lista global de IDs de colonos excluidos de TODO el sistema
+        /// Lista global de IDs de colonos excluidos completamente del sistema
         /// </summary>
         public List<string> excludedPawnIDs = new List<string>();
 
