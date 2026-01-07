@@ -25,7 +25,7 @@ namespace Automated_Work_Assignment
 
         /// <summary> A cached list of colonists currently eligible for exclusion management.
         /// This list includes all free, non-baby colonists on the current map.
-        /// Refreshed when the dialog opens and potentially if the underlying pawn list changes.
+        /// Refreshed when the dialog opens.
         /// </summary>
         private List<Pawn> availablePawns;
 
@@ -43,14 +43,14 @@ namespace Automated_Work_Assignment
             saveData = currentSaveData ?? throw new ArgumentNullException(nameof(currentSaveData));
 
             // Standard RimWorld window configuration settings
-            forcePause = true; // Pauses the game while the dialog is open.
-            doCloseX = true; // Displays a close button (X) in the top-right corner.
-            closeOnClickedOutside = true; // Closes the dialog if the user clicks outside its bounds.
-            absorbInputAroundWindow = true; // Prevents clicks outside the dialog from interacting with the game world.
-            draggable = true; // Allows the user to drag the window around the screen.
+            forcePause = true;
+            doCloseX = true;
+            closeOnClickedOutside = true;
+            absorbInputAroundWindow = true;
+            draggable = true;
 
-            this.optionalTitle = "AWA_ExclusionDialogTitle".Translate(); // Sets the window title using translation keys.
-            RefreshPawnList(); // Populates the initial list of pawns.
+            this.optionalTitle = "AWA_ExclusionDialogTitle".Translate();
+            RefreshPawnList();
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace Automated_Work_Assignment
         public override void DoWindowContents(Rect inRect)
         {
             Listing_Standard listing = new Listing_Standard();
-            listing.Begin(inRect); // Start UI element layout
+            listing.Begin(inRect);
 
             try {
                 // Display introductory text and a separator line.
@@ -98,20 +98,20 @@ namespace Automated_Work_Assignment
             // Error handling if pawn list failed to load
             if (availablePawns == null) {
                 listing.Label("Error: Could not load pawn list.");
-                listing.End(); // Finalize layout
+                listing.End();
                 return;
             }
 
             // --- ScrollView Setup ---
-            Rect scrollViewOutRect = default; // The visible container for the scroll view
-            Rect scrollViewViewRect = default; // The total area occupied by the scrollable content
-            const float rowHeight = 32f; // Height allocated for each pawn row
+            Rect scrollViewOutRect = default;
+            Rect scrollViewViewRect = default;
+            const float rowHeight = 32f;
 
             try {
                 // Calculate remaining vertical space for the scroll view
                 float currentYPos = listing.CurHeight;
-                float availableHeight = inRect.height - currentYPos - 50f; // Reserve space for potential bottom buttons/margins
-                float scrollViewHeight = Mathf.Max(100f, availableHeight); // Ensure a minimum height
+                float availableHeight = inRect.height - currentYPos - 50f;
+                float scrollViewHeight = Mathf.Max(100f, availableHeight);
                 scrollViewOutRect = new Rect(inRect.x, currentYPos, inRect.width, scrollViewHeight);
 
                 // Calculate the total height required by all pawn rows
@@ -122,60 +122,55 @@ namespace Automated_Work_Assignment
             } catch (Exception ex) {
                 Log.Error($"[AutoWork] Exception setting up ScrollView in exclusion dialog: {ex}");
                 listing.Label("Error setting up scroll view.");
-                listing.End(); // Finalize layout
+                listing.End();
                 return;
             }
 
             // --- Draw ScrollView ---
             Widgets.BeginScrollView(scrollViewOutRect, ref scrollPosition, scrollViewViewRect);
-            float currentY = 0f; // Tracks the vertical position for drawing the next row
+            float currentY = 0f;
 
             foreach (Pawn pawn in availablePawns)
             {
-                try // Individual try-catch for each pawn row to prevent one error from breaking the whole list
+                try
                 {
-                    if (pawn == null) continue; // Skip if pawn data is unexpectedly null
-                    string pawnId = pawn.ThingID; // Use the unique ThingID for identification
+                    if (pawn == null) continue;
+                    string pawnId = pawn.ThingID;
 
                     // Check if this pawn's ID is present in the exclusion list from save data.
-                    // Uses null-conditional operator (?) for safety if excludedPawnIDs is null.
                     bool isExcluded = saveData.excludedPawnIDs?.Contains(pawnId) ?? false;
 
                     // Define the rectangle for the current pawn's row
-                    Rect rowRect = new Rect(0f, currentY, scrollViewViewRect.width, 30f); // Use 30f height for the checkbox itself
-                    bool checkboxState = isExcluded; // Temporary variable to hold checkbox state
+                    Rect rowRect = new Rect(0f, currentY, scrollViewViewRect.width, 30f);
+                    bool checkboxState = isExcluded;
 
-                    // Draw the checkbox with the pawn's label. The 'ref checkboxState' allows modification.
+                    // Draw the checkbox with the pawn's label.
                     Widgets.CheckboxLabeled(rowRect, pawn.LabelCap, ref checkboxState);
 
                     // Detect if the checkbox state changed
                     if (checkboxState != isExcluded)
                     {
-                        if (checkboxState) // If checked (now excluded)
+                        if (checkboxState)
                         {
-                            // Ensure the exclusion list exists before adding
                             if (saveData.excludedPawnIDs == null) saveData.excludedPawnIDs = new List<string>();
-                            // Add the pawn's ID if not already present
                             if (!saveData.excludedPawnIDs.Contains(pawnId)) saveData.excludedPawnIDs.Add(pawnId);
-                        } else // If unchecked (now included)
+                        } else
                         {
-                            // Remove the pawn's ID from the exclusion list (safe if list is null or ID not found)
                             saveData.excludedPawnIDs?.Remove(pawnId);
                         }
-                        // Future enhancement: Could trigger an immediate refresh or notification if needed.
                     }
                 }
                 catch (Exception ex)
                 {
                     Log.Error($"[AutoWork] Exception processing exclusion row for pawn '{pawn?.ThingID ?? "NULL"}': {ex}");
                 }
-                finally // Ensure vertical position increments even if an error occurred
+                finally
                 {
                     currentY += rowHeight;
                 }
             }
-            Widgets.EndScrollView(); // End the scrollable area
-            listing.End(); // Finalize layout
+            Widgets.EndScrollView();
+            listing.End();
         }
     }
 }

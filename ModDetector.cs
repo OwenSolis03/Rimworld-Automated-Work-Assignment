@@ -16,6 +16,7 @@ namespace Automated_Work_Assignment
     public static class ModDetector
     {
         // --- Public detection flags ---
+        
         /// <summary>
         /// Gets a boolean value indicating whether the 'Vanilla Skills Expanded' mod
         /// is currently loaded and active in the game. Determined at startup.
@@ -32,25 +33,25 @@ namespace Automated_Work_Assignment
         
         /// <summary>
         /// Cached delegate for VSE's PassionManager.PassionToDef(Passion) method.
-        /// MUCH faster than MethodInfo.Invoke - uses direct function pointer.
+        /// Performance optimization: Uses a direct function pointer which is significantly faster than standard Reflection Invoke.
         /// </summary>
         internal static Func<Passion, object> VSE_PassionToDefDelegate { get; private set; } = null;
 
         /// <summary>
-        /// Cached delegate for getting VSE's PassionDef.learnRateFactor field.
-        /// MUCH faster than FieldInfo.GetValue - uses direct memory access.
+        /// Cached delegate for retrieving VSE's PassionDef.learnRateFactor field.
+        /// Wraps the reflection call to handle null checks and type casting safely.
         /// </summary>
         internal static Func<object, float> VSE_GetLearnRateDelegate { get; private set; } = null;
 
         /// <summary>
         /// DEPRECATED: Kept for backward compatibility but no longer used.
-        /// Use VSE_PassionToDefDelegate instead.
+        /// The mod now uses <see cref="VSE_PassionToDefDelegate"/> for improved performance.
         /// </summary>
         internal static MethodInfo VSE_PassionToDefMethod { get; private set; } = null;
 
         /// <summary>
         /// DEPRECATED: Kept for backward compatibility but no longer used.
-        /// Use VSE_GetLearnRateDelegate instead.
+        /// The mod now uses <see cref="VSE_GetLearnRateDelegate"/> for field access.
         /// </summary>
         internal static FieldInfo VSE_LearnRateFactorField { get; private set; } = null;
 
@@ -90,7 +91,7 @@ namespace Automated_Work_Assignment
         /// Ensures that the reflection process to find Vanilla Skills Expanded (VSE) members
         /// (methods and fields needed for compatibility) has been attempted. This method is designed
         /// to run only once. If VSE is active, it attempts to find the required members using
-        /// Harmony's AccessTools and creates fast delegates instead of using slow Invoke() calls.
+        /// Harmony's AccessTools and creates delegates for safer access.
         /// Updates <see cref="VSEReflectionSuccess"/> based on the outcome.
         /// Logs warnings or errors if reflection fails.
         /// </summary>
@@ -120,12 +121,13 @@ namespace Automated_Work_Assignment
                 VSE_PassionToDefMethod = AccessTools.Method(passionManagerType, "PassionToDef", new Type[] { typeof(Passion) });
                 VSE_LearnRateFactorField = AccessTools.Field(passionDefType, "learnRateFactor");
 
-                // Create fast delegates instead of using slow Invoke()
+                // Create fast delegate for the method if found
                 if (VSE_PassionToDefMethod != null)
                 {
                     try
                     {
-                        // Create a strongly-typed delegate for the static method
+                        // Create a strongly-typed delegate for the static method (Func<Passion, object>)
+                        // This allows invoking the method without the overhead of standard reflection
                         VSE_PassionToDefDelegate = (Func<Passion, object>)Delegate.CreateDelegate(
                             typeof(Func<Passion, object>), 
                             VSE_PassionToDefMethod
@@ -139,11 +141,12 @@ namespace Automated_Work_Assignment
                     }
                 }
 
+                // Create helper delegate for the field if found
                 if (VSE_LearnRateFactorField != null)
                 {
                     try
                     {
-                        // Create a lambda delegate for field access (faster than FieldInfo.GetValue)
+                        // Create a lambda delegate that wraps the field access
                         VSE_GetLearnRateDelegate = (obj) => 
                         {
                             if (obj == null) return 1f;
@@ -163,7 +166,7 @@ namespace Automated_Work_Assignment
                 if (VSE_PassionToDefDelegate != null && VSE_GetLearnRateDelegate != null)
                 {
                     VSEReflectionSuccess = true;
-                    Log.Message("[AutoWork Compat] VSE reflection delegates fully initialized. Performance optimization active.");
+                    Log.Message("[AutoWork Compat] VSE reflection delegates fully initialized.");
                 }
                 else
                 {
@@ -173,7 +176,7 @@ namespace Automated_Work_Assignment
                     if (VSE_GetLearnRateDelegate == null) 
                         Log.Warning("[AutoWork Compat] VSE LearnRateFactor delegate creation failed.");
                     
-                    // Still mark as success if we have the MethodInfo/FieldInfo (slower fallback)
+                    // Still mark as success if we have the raw MethodInfo/FieldInfo available as fallback
                     VSEReflectionSuccess = (VSE_PassionToDefMethod != null && VSE_LearnRateFactorField != null);
                 }
             }

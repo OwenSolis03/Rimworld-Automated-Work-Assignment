@@ -4,7 +4,7 @@ namespace Automated_Work_Assignment
 {
     /// <summary>
     /// Defines the configuration settings for a single work type.
-    /// UPDATED: Ahora incluye passionWeight y fallbackPriority.
+    /// Stores preferences for pawn count, priority, percentage mode, and advanced weighting options.
     /// </summary>
     public class WorkSettingValues : IExposable
     {
@@ -14,19 +14,19 @@ namespace Automated_Work_Assignment
         public bool usePercentage = false;
 
         /// <summary>
-        /// NUEVA FEATURE: Peso de la pasión en el cálculo de suitability
-        /// 0.0 = Ignora pasión completamente (solo skill)
-        /// 1.0 = Balance default (comportamiento original)
-        /// 2.0 = Doble peso a la pasión
-        /// 3.0 = Máximo énfasis en pasión
+        /// Determines the weight of passion in the suitability calculation.
+        /// 0.0 = Ignore passion completely (skill only).
+        /// 1.0 = Default balance.
+        /// 2.0 = Double weight.
+        /// 3.0 = Maximum emphasis on passion.
         /// </summary>
         public float passionWeight = 1f;
 
         /// <summary>
-        /// NUEVA FEATURE: Prioridad para colonos NO seleccionados
-        /// 0 = Deshabilitar (comportamiento actual)
-        /// 1-4 = Asignar prioridad de respaldo
-        /// Útil para Hauling/Cleaning donde quieres que todos ayuden si están libres
+        /// Priority assigned to colonists NOT selected for the primary assignment.
+        /// 0 = Disable work (default behavior).
+        /// 1-4 = Set backup priority.
+        /// Useful for tasks like Hauling/Cleaning where everyone should help if idle.
         /// </summary>
         public int fallbackPriority = 0;
 
