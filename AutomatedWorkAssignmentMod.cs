@@ -3,28 +3,54 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Verse;
-using RimWorld;
 
 namespace Automated_Work_Assignment
 {
     /// <summary>
-    /// Mod entry point with complete UI for all new features.
-    /// FINAL VERSION with fixed radio buttons, proper spacing, and clean layout.
+    /// The main entry point for the Automated Work Assignment mod.
+    /// It handles the mod settings window, including the UI for configuring global settings,
+    /// assignment modes, and specific work type priorities.
     /// </summary>
     public class AutomatedWorkAssignmentMod : Mod
     {
+        /// <summary>
+        /// Gets the save-specific data component for the current game.
+        /// Returns null if no game is currently loaded.
+        /// </summary>
         internal static AutomatedWork_SaveData CurrentData => Current.Game?.GetComponent<AutomatedWork_SaveData>();
 
+        /// <summary>
+        /// Current scroll position for the work type settings list.
+        /// </summary>
         private Vector2 scrollPosition = Vector2.zero;
+
+        /// <summary>
+        /// Cached list of work types relevant to the mod (excluding work types with no work tags).
+        /// </summary>
         private static List<WorkTypeDef> cachedRelevantWorkTypes = null;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AutomatedWorkAssignmentMod"/> class.
+        /// </summary>
+        /// <param name="content">The content pack associated with this mod.</param>
         public AutomatedWorkAssignmentMod(ModContentPack content) : base(content) { }
 
+        /// <summary>
+        /// Gets the name of the settings category to be displayed in the mod settings menu.
+        /// </summary>
+        /// <returns>The translated settings category name.</returns>
         public override string SettingsCategory() => "AWA_SettingsCategory".Translate();
 
+        /// <summary>
+        /// Draws the contents of the settings window.
+        /// This includes general toggles, assignment mode selection, and the scrollable list
+        /// of work type configurations.
+        /// </summary>
+        /// <param name="inRect">The rectangular area available for drawing the settings UI.</param>
         public override void DoSettingsWindowContents(Rect inRect)
         {
             var saveData = CurrentData;
+            // If no save data is available (e.g., main menu), display a warning.
             if (saveData == null)
             {
                 Widgets.Label(inRect, "AWA_LoadSaveFirst".Translate());
@@ -36,7 +62,7 @@ namespace Automated_Work_Assignment
 
             try
             {
-                // --- Toggles básicos ---
+                // --- Basic Toggles ---
                 listingStandard.CheckboxLabeled(
                     "AWA_EnableModLabel".Translate(), 
                     ref saveData.modEnabled, 
@@ -51,7 +77,7 @@ namespace Automated_Work_Assignment
 
                 listingStandard.GapLine(12f);
 
-                // --- Assignment Mode Selector (FIXED: Radio buttons properly aligned) ---
+                // --- Assignment Mode Selector ---
                 listingStandard.Label("Assignment System Mode:");
                 
                 Rect modeRect = listingStandard.GetRect(30f);
@@ -59,7 +85,7 @@ namespace Automated_Work_Assignment
                 float gapBetweenRadioAndLabel = 5f;
                 float gapBetweenModes = 20f;
                 
-                // Calculate actual text widths for perfect alignment
+                // Calculate actual text widths for proper alignment
                 GameFont previousFont = Text.Font;
                 Text.Font = GameFont.Small;
                 float simpleWidth = Text.CalcSize("Simple Mode").x;
@@ -69,7 +95,7 @@ namespace Automated_Work_Assignment
                 
                 float currentX = modeRect.x;
                 
-                // Simple Mode: (•) Simple Mode
+                // Option 1: Simple Mode
                 Rect simpleRadioRect = new Rect(currentX, modeRect.y + 3f, radioSize, radioSize);
                 Rect simpleLabelRect = new Rect(simpleRadioRect.xMax + gapBetweenRadioAndLabel, modeRect.y, simpleWidth, modeRect.height);
                 bool isSimple = saveData.assignmentMode == AutomatedWork_SaveData.AssignmentMode.Simple;
@@ -83,7 +109,7 @@ namespace Automated_Work_Assignment
                 
                 currentX = simpleLabelRect.xMax + gapBetweenModes;
                 
-                // Expert Mode: (•) Expert Mode
+                // Option 2: Expert Mode
                 Rect expertRadioRect = new Rect(currentX, modeRect.y + 3f, radioSize, radioSize);
                 Rect expertLabelRect = new Rect(expertRadioRect.xMax + gapBetweenRadioAndLabel, modeRect.y, expertWidth, modeRect.height);
                 bool isExpert = saveData.assignmentMode == AutomatedWork_SaveData.AssignmentMode.Expert;
@@ -97,7 +123,7 @@ namespace Automated_Work_Assignment
                 
                 currentX = expertLabelRect.xMax + gapBetweenModes;
                 
-                // Hybrid Mode: (•) Hybrid Mode
+                // Option 3: Hybrid Mode
                 Rect hybridRadioRect = new Rect(currentX, modeRect.y + 3f, radioSize, radioSize);
                 Rect hybridLabelRect = new Rect(hybridRadioRect.xMax + gapBetweenRadioAndLabel, modeRect.y, hybridWidth, modeRect.height);
                 bool isHybrid = saveData.assignmentMode == AutomatedWork_SaveData.AssignmentMode.Hybrid;
@@ -111,7 +137,7 @@ namespace Automated_Work_Assignment
 
                 listingStandard.Gap(6f);
 
-                // --- Advanced toggles ---
+                // --- Advanced Toggles ---
                 listingStandard.CheckboxLabeled(
                     "Force Emergency Priorities (Doctor/Firefighter = P1)",
                     ref saveData.forceEmergencyPriorities,
@@ -129,7 +155,7 @@ namespace Automated_Work_Assignment
 
                 listingStandard.GapLine(12f);
 
-                // --- Management buttons ---
+                // --- Management Buttons ---
                 Rect buttonRowRect = listingStandard.GetRect(30f); 
                 float buttonWidth = (buttonRowRect.width - 10f) / 2f;
                 
@@ -157,6 +183,7 @@ namespace Automated_Work_Assignment
                 Log.Error($"[AutoWork] Exception drawing general settings: {ex}"); 
             }
             
+            // Determine the maximum number of colonists for slider limits
             int maxPawnCountForSlider = 10;
             try
             {
@@ -168,11 +195,13 @@ namespace Automated_Work_Assignment
                 Log.Error($"[AutoWork] Exception getting eligible count: {ex}"); 
             }
 
-            // --- Scrollable work type list (FIXED: Proper spacing to avoid overlap) ---
+            // --- Scrollable Work Type List ---
+            // Fix: Increased row height to prevent overlapping elements.
+            const float rowHeight = 95f; 
+
             Rect outRect = default;
             Rect viewRect = default;
             List<WorkTypeDef> relevantWorkTypes = null;
-            const float rowHeight = 70f; // Increased for proper spacing
 
             try
             {
@@ -217,22 +246,29 @@ namespace Automated_Work_Assignment
                         if (currentSetting == null) continue;
 
                         Rect rowRect = new Rect(viewRect.x, currentY, viewRect.width, rowHeight);
+                        
+                        // Optional: Draw a subtle highlight on alternate rows for better readability
+                        if (relevantWorkTypes.IndexOf(workDef) % 2 == 1)
+                        {
+                            Widgets.DrawLightHighlight(rowRect);
+                        }
+
                         float currentX = rowRect.x;
-                        float controlAreaHeight = 30f;
-                        float rowCenterY = rowRect.y + 5f;
+                        float controlAreaHeight = 28f; // Slightly reduced for tighter packing
+                        float rowCenterY = rowRect.y + 6f; // Top padding
+
+                        // --- Row 1: Label, Checkbox, Mode Toggle, Main Sliders ---
 
                         // Label
                         float labelWidth = viewRect.width * 0.20f;
-                        Rect labelRect = new Rect(currentX, rowCenterY, labelWidth, controlAreaHeight);
+                        Rect labelRect = new Rect(currentX + 5f, rowCenterY, labelWidth, controlAreaHeight);
                         Widgets.Label(labelRect, workDef.labelShort.CapitalizeFirst());
-                        currentX += labelWidth;
+                        currentX += labelWidth + 5f;
 
-                        // Include checkbox
+                        // Include Checkbox
                         float checkboxSize = Widgets.CheckboxSize;
-                        float checkboxPadding = 5f;
-                        Rect includeCheckboxRect = new Rect(currentX + checkboxPadding, rowCenterY + (controlAreaHeight - checkboxSize) / 2f, checkboxSize, checkboxSize);
-                        currentX += checkboxSize + checkboxPadding * 2;
-
+                        Rect includeCheckboxRect = new Rect(currentX, rowCenterY + (controlAreaHeight - checkboxSize) / 2f, checkboxSize, checkboxSize);
+                        
                         bool isIncluded = !(saveData.excludedWorkTypeDefNames?.Contains(defName) ?? false);
                         bool checkboxState = isIncluded;
                         Widgets.Checkbox(includeCheckboxRect.position, ref checkboxState, checkboxSize);
@@ -252,24 +288,25 @@ namespace Automated_Work_Assignment
                                     saveData.excludedWorkTypeDefNames.Add(defName);
                             }
                         }
+                        currentX += checkboxSize + 10f;
 
-                        // Count/Percentage toggle
+                        // Count/Percentage Mode Toggle
                         float toggleWidth = 70f;
-                        Rect toggleRect = new Rect(currentX + checkboxPadding, rowCenterY, toggleWidth, controlAreaHeight);
+                        Rect toggleRect = new Rect(currentX, rowCenterY, toggleWidth, controlAreaHeight);
                         string toggleLabel = currentSetting.usePercentage ? "Mode: %" : "Mode: #";
                         if(Widgets.ButtonText(toggleRect, toggleLabel))
                         {
                             currentSetting.usePercentage = !currentSetting.usePercentage;
                         }
                         TooltipHandler.TipRegion(toggleRect, "AWA_ToggleCountModeTooltip".Translate());
-                        currentX += toggleWidth + checkboxPadding;
+                        currentX += toggleWidth + 10f;
 
-                        // First row: Count/Percentage and Priority sliders
+                        // Calculate width for sliders (shared by both rows)
                         float remainingWidth = viewRect.width - currentX - 10f;
-                        float sliderWidth = remainingWidth / 2f;
-                        const float spacing = 5f;
-
-                        Rect countPercentGroupRect = new Rect(currentX + spacing, rowCenterY, sliderWidth - spacing, controlAreaHeight);
+                        float sliderWidth = (remainingWidth / 2f) - 5f;
+                        
+                        // First Row Sliders: Count/Percentage & Priority
+                        Rect countPercentGroupRect = new Rect(currentX, rowCenterY, sliderWidth, controlAreaHeight);
                         if (currentSetting.usePercentage)
                         {
                             currentSetting.percentage = Widgets.HorizontalSlider(
@@ -297,9 +334,8 @@ namespace Automated_Work_Assignment
                                 currentSetting.count = (int)tempCount; 
                             }
                         }
-                        currentX += sliderWidth;
 
-                        Rect priorityGroupRect = new Rect(currentX + spacing, rowCenterY, sliderWidth - spacing, controlAreaHeight);
+                        Rect priorityGroupRect = new Rect(currentX + sliderWidth + 5f, rowCenterY, sliderWidth, controlAreaHeight);
                         float tempPriority = Mathf.Clamp(currentSetting.priority, 1, 4);
                         tempPriority = Widgets.HorizontalSlider(
                             priorityGroupRect,
@@ -314,11 +350,16 @@ namespace Automated_Work_Assignment
                             currentSetting.priority = (int)tempPriority; 
                         }
 
-                        // Second row: Passion Weight and Fallback Priority (FIXED: More vertical space)
-                        float secondRowY = rowCenterY + controlAreaHeight + 15f;
-                        currentX = rowRect.x + labelWidth + checkboxSize + checkboxPadding * 2 + toggleWidth + checkboxPadding;
-
-                        Rect passionWeightRect = new Rect(currentX + spacing, secondRowY, sliderWidth - spacing, 18f);
+                        // --- Row 2: Passion Weight & Fallback Priority ---
+                        // Fix: Proper vertical offset and alignment with sliders above
+                        
+                        float secondRowY = rowCenterY + controlAreaHeight + 4f; 
+                        
+                        // Align start of second row with the sliders of the first row
+                        float secondRowStartX = currentX; 
+                        
+                        // Passion Slider
+                        Rect passionWeightRect = new Rect(secondRowStartX, secondRowY, sliderWidth, 22f);
                         string passionLabel = $"Passion: {currentSetting.passionWeight:F1}x";
                         float newPassionWeight = Widgets.HorizontalSlider(
                             passionWeightRect,
@@ -338,9 +379,9 @@ namespace Automated_Work_Assignment
                             "0x = Ignore passion entirely\n" +
                             "1x = Default balance\n" +
                             "3x = Strongly prefer passionate pawns");
-                        currentX += sliderWidth;
 
-                        Rect fallbackRect = new Rect(currentX + spacing, secondRowY, sliderWidth - spacing, 18f);
+                        // Fallback Priority Slider
+                        Rect fallbackRect = new Rect(secondRowStartX + sliderWidth + 5f, secondRowY, sliderWidth, 22f);
                         string fallbackLabel = $"Backup: {(currentSetting.fallbackPriority == 0 ? "OFF" : "P" + currentSetting.fallbackPriority)}";
                         float tempFallback = Widgets.HorizontalSlider(
                             fallbackRect,

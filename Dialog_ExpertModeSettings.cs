@@ -10,7 +10,7 @@ namespace Automated_Work_Assignment
     /// <summary>
     /// Provides a dialog window for configuring skill-based priority rules (Expert Mode)
     /// for different work types within the Automated Work Assignment mod system.
-    /// SIMPLIFIED: No longer includes count/percentage sliders - uses Simple Mode settings.
+    /// This window allows users to create granular rules (e.g., "If Cooking skill is 10-20, set priority to 2").
     /// </summary>
     public class Dialog_ExpertModeSettings : Window
     {
@@ -20,8 +20,15 @@ namespace Automated_Work_Assignment
         private WorkTypeDef selectedWorkDef = null;
         private List<WorkTypeDef> relevantWorkTypesCache = new List<WorkTypeDef>();
 
+        /// <summary>
+        /// Defines the initial dimensions of the window.
+        /// </summary>
         public override Vector2 InitialSize => new Vector2(800f, 600f);
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Dialog_ExpertModeSettings"/> class.
+        /// Sets up window properties and caches relevant work types.
+        /// </summary>
         public Dialog_ExpertModeSettings()
         {
             forcePause = true;
@@ -32,12 +39,13 @@ namespace Automated_Work_Assignment
 
             ruleManager = Current.Game?.GetComponent<ExpertModeRuleManager>();
 
+            // Cache work types that have work tags (exclude hidden/internal types)
             relevantWorkTypesCache = DefDatabase<WorkTypeDef>.AllDefsListForReading
                 .Where(wtd => wtd != null && wtd.workTags != WorkTags.None)
                 .OrderBy(wtd => wtd.labelShort)
                 .ToList();
 
-            // Dynamic title showing skill cap if extended
+            // Dynamic title showing skill cap if extended skills are detected
             int maxCap = SkillPriorityRule.MaxSkillLevel;
             if (maxCap > 20)
             {
@@ -49,15 +57,19 @@ namespace Automated_Work_Assignment
             }
         }
 
+        /// <summary>
+        /// Called before the window opens.
+        /// Automatically selects the first valid work type to avoid an empty selection state.
+        /// </summary>
         public override void PreOpen()
         {
             base.PreOpen();
             if (selectedWorkDef == null && relevantWorkTypesCache.Any())
             {
-                // Pre-select first work type with associated skill (skip skillless jobs)
+                // Pre-select first work type with associated skill (skip skillless jobs if possible)
                 selectedWorkDef = relevantWorkTypesCache
-                    .FirstOrDefault(w => w.relevantSkills != null && w.relevantSkills.Any())
-                    ?? relevantWorkTypesCache.First();
+                                      .FirstOrDefault(w => w.relevantSkills != null && w.relevantSkills.Any())
+                                  ?? relevantWorkTypesCache.First();
             }
             else if (selectedWorkDef != null && !relevantWorkTypesCache.Contains(selectedWorkDef))
             {
@@ -65,6 +77,11 @@ namespace Automated_Work_Assignment
             }
         }
         
+        /// <summary>
+        /// Draws the main content of the window.
+        /// Splits the view into a left sidebar (work type list) and a right content area (rule editor).
+        /// </summary>
+        /// <param name="inRect">The available drawing area.</param>
         public override void DoWindowContents(Rect inRect)
         {
             if (ruleManager == null)
@@ -97,6 +114,10 @@ namespace Automated_Work_Assignment
             }
         }
 
+        /// <summary>
+        /// Draws the scrollable list of work types on the left side.
+        /// </summary>
+        /// <param name="rect">The area allocated for the list.</param>
         private void DrawWorkTypeDefList(Rect rect)
         {
             Widgets.DrawMenuSection(rect);
@@ -129,18 +150,18 @@ namespace Automated_Work_Assignment
                     Widgets.DrawHighlightSelected(entryRect);
                 }
 
-                // Visual indicator for skillless work types
+                // Visual indicator for skillless work types (grayed out text)
                 GUI.color = hasSkill ? Color.white : new Color(0.7f, 0.7f, 0.7f);
                 
                 string label = workDef.labelShort.CapitalizeFirst();
-                if (!hasSkill) label += "*"; // FIX: Usar asterisco en lugar de paréntesis
+                if (!hasSkill) label += "*"; // Asterisk indicates fallback behavior
 
                 if (Widgets.ButtonText(entryRect, label, drawBackground: false, doMouseoverSound: true, active: true))
                 {
                     if (!isSelected)
                     {
                         selectedWorkDef = workDef;
-                        scrollPositionRight = Vector2.zero;
+                        scrollPositionRight = Vector2.zero; // Reset scroll for new selection
                         SoundDefOf.Click?.PlayOneShotOnCamera();
                     }
                 }
@@ -157,6 +178,12 @@ namespace Automated_Work_Assignment
             Widgets.EndScrollView();
         }
 
+        /// <summary>
+        /// Draws the rule editor interface for the selected work type on the right side.
+        /// Includes header, warnings, instructional text, and the dynamic list of rules.
+        /// </summary>
+        /// <param name="rect">The area allocated for the editor.</param>
+        /// <param name="workDef">The currently selected work type.</param>
         private void DrawRuleEditor(Rect rect, WorkTypeDef workDef)
         {
             if (ruleManager == null) {
@@ -166,12 +193,14 @@ namespace Automated_Work_Assignment
             
             Widgets.DrawMenuSection(rect);
 
+            // Ensure the dictionary entry exists
             if (!ruleManager.workTypeRules.ContainsKey(workDef))
             {
                 ruleManager.workTypeRules[workDef] = new List<SkillPriorityRule>();
             }
             List<SkillPriorityRule> rules = ruleManager.workTypeRules[workDef];
 
+            // --- Header Section ---
             float headerHeight = 35f;
             Rect headerRect = new Rect(rect.x + 10f, rect.y, rect.width - 20f, headerHeight);
             
@@ -181,7 +210,7 @@ namespace Automated_Work_Assignment
             Text.Font = GameFont.Small;
             Text.Anchor = TextAnchor.UpperLeft;
 
-            // Button to exclude specific pawns from this job
+            // "Exclude Pawns" button
             Rect excludePawnsButtonRect = new Rect(headerRect.xMax - 210f, headerRect.y + (headerHeight - 30f)/2f, 100f, 30f);
             if (Widgets.ButtonText(excludePawnsButtonRect, "Exclude Pawns"))
             {
@@ -193,6 +222,7 @@ namespace Automated_Work_Assignment
             }
             TooltipHandler.TipRegion(excludePawnsButtonRect, "Select specific pawns to exclude from this job type.");
             
+            // "Add Rule" button
             Rect addButtonRect = new Rect(headerRect.xMax - 100f, headerRect.y + (headerHeight - 30f)/2f, 100f, 30f);
             if (Widgets.ButtonText(addButtonRect, "AWA_ExpertMode_AddRule".Translate()))
             {
@@ -201,7 +231,7 @@ namespace Automated_Work_Assignment
             }
             TooltipHandler.TipRegion(addButtonRect, "Adds a new skill-based priority rule for this work type.");
 
-            // Warning for skillless work types
+            // --- Warning Section (for skill-less jobs) ---
             bool hasRelevantSkill = workDef.relevantSkills != null && workDef.relevantSkills.Any();
             float warningHeight = 0f;
             
@@ -217,16 +247,28 @@ namespace Automated_Work_Assignment
                 GUI.color = Color.white;
             }
             
-            // Info message about count/percentage
-            float infoHeight = 50f;
+            // --- Info Text Section (FIXED OVERLAP) ---
+            string infoText = "Expert Mode uses the Count/Percentage settings from the main Simple Mode sliders.\n" +
+                              "Rules below define which priorities (1-4) to assign based on skill levels.";
+
+            // FIX: Calculate exact height needed for text to avoid overlap with sliders below.
+            // We use Text.CalcHeight with the actual width available.
+            GameFont prevFont = Text.Font;
+            Text.Font = GameFont.Small;
+            float infoHeight = Text.CalcHeight(infoText, headerRect.width) + 10f; // +10f buffer
+            Text.Font = prevFont;
+
+            // Enforce a sensible minimum height
+            infoHeight = Mathf.Max(infoHeight, 40f);
+
             Rect infoRect = new Rect(headerRect.x, headerRect.yMax + warningHeight + 5f, headerRect.width, infoHeight);
             GUI.color = new Color(0.8f, 0.8f, 1f);
-            Widgets.Label(infoRect, 
-                "Expert Mode uses the Count/Percentage settings from the main Simple Mode sliders.\n" +
-                "Rules below define which priorities (1-4) to assign based on skill levels.");
+            Widgets.Label(infoRect, infoText);
             GUI.color = Color.white;
             
-            float scrollStartY = infoRect.yMax + 5f;
+            // --- Rules Scroll View ---
+            // Start position is now dynamically based on infoRect.yMax
+            float scrollStartY = infoRect.yMax + 10f;
             Rect scrollOuterRect = new Rect(rect.x, scrollStartY, rect.width, rect.height - (scrollStartY - rect.y));
             
             float ruleRowHeight = 65f;
@@ -255,6 +297,7 @@ namespace Automated_Work_Assignment
 
                     Rect rowRect = listing.GetRect(ruleRowHeight);
 
+                    // Layout calculations for rule row
                     float totalDrawableWidth = rowRect.width;
                     float deleteButtonWidth = 24f;
                     float deleteButtonPadding = 5f;
@@ -272,22 +315,27 @@ namespace Automated_Work_Assignment
 
                     float skillSliderYStart = skillAreaRect.y + (skillAreaRect.height - (sliderHeight * 2 + verticalSpacing)) / 2f;
                     
+                    // Min Skill Slider
                     Rect minSliderRect = new Rect(skillAreaRect.x, skillSliderYStart, skillAreaRect.width, sliderHeight);
                     string minLabel = $"Min Skill: {rule.MinSkill}";
                     rule.MinSkill = (int)Widgets.HorizontalSlider(minSliderRect, rule.MinSkill, 0f, (float)maxSkillCap, true, minLabel, null, null, 1f);
                     
+                    // Max Skill Slider
                     Rect maxSliderRect = new Rect(skillAreaRect.x, minSliderRect.yMax + verticalSpacing, skillAreaRect.width, sliderHeight);
                     string maxLabel = $"Max Skill: {rule.MaxSkill}";
                     rule.MaxSkill = (int)Widgets.HorizontalSlider(maxSliderRect, rule.MaxSkill, 0f, (float)maxSkillCap, true, maxLabel, null, null, 1f);
                     
+                    // Validation
                     if (rule.MinSkill > rule.MaxSkill) rule.MinSkill = rule.MaxSkill;
                     if (rule.MaxSkill < rule.MinSkill) rule.MaxSkill = rule.MinSkill;
 
+                    // Priority Slider
                     Rect prioritySliderRect = new Rect(priorityAreaRect.x, priorityAreaRect.y + (priorityAreaRect.height - sliderHeight) / 2f, priorityAreaRect.width, sliderHeight);
                     string priorityLabel = "P:" + rule.Priority;
                     rule.Priority = (int)Widgets.HorizontalSlider(prioritySliderRect, rule.Priority, 1f, 4f, true, priorityLabel, null, null, 1f);
                     TooltipHandler.TipRegion(prioritySliderRect, "AWA_ExpertMode_Priority".Translate());
 
+                    // Delete Button
                     if (Widgets.ButtonImage(deleteRect, TexButton.Delete, Color.white, GenUI.SubtleMouseoverColor)) {
                         ruleToDelete = rule;
                     }
