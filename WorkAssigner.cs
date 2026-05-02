@@ -65,6 +65,17 @@ namespace Automated_Work_Assignment
 
             if (Find.CurrentMap == null) return;
 
+            // PERFORMANCE OPTIMIZATION: Retrieve the ExpertManager once here instead of inside the loop
+            ExpertModeRuleManager expertManager = null;
+            try
+            {
+                expertManager = Current.Game.GetComponent<ExpertModeRuleManager>();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[AutoWork] Failed to retrieve ExpertModeRuleManager: {ex}");
+            }
+
             foreach (WorkTypeDef workType in workTypesToManage)
             {
                 try
@@ -104,7 +115,7 @@ namespace Automated_Work_Assignment
 
                     if (finalDesiredCount > 0)
                     {
-                        AssignWorkPriorities(workType, finalDesiredCount, targetPriority, fallbackPriority, eligibleForThisJob, saveData);
+                        AssignWorkPriorities(workType, finalDesiredCount, targetPriority, fallbackPriority, eligibleForThisJob, saveData, expertManager);
                     }
                     else
                     {
@@ -142,24 +153,34 @@ namespace Automated_Work_Assignment
         /// <summary>
         /// Retrieves a list of colonists eligible for general work assignment.
         /// Excludes pawns that are dead, downed, in a mental state, or globally excluded.
+        /// PERFORMANCE OPTIMIZATION: Replaced LINQ with foreach loop.
         /// </summary>
         /// <param name="saveData">The current save data containing exclusion lists.</param>
         /// <returns>A list of eligible pawns.</returns>
         public static List<Pawn> GetEligibleColonists(AutomatedWork_SaveData saveData)
         {
+            List<Pawn> eligiblePawns = new List<Pawn>();
             List<string> excludedIDs = saveData?.excludedPawnIDs ?? new List<string>();
-            if (Find.CurrentMap == null) return new List<Pawn>();
+            
+            if (Find.CurrentMap == null) return eligiblePawns;
 
             try
             {
-                return Find.CurrentMap.mapPawns.FreeColonists
-                    .Where(p => p != null
-                                && p.Spawned
-                                && !p.Downed
-                                && p.MentalStateDef == null
-                                && p.workSettings != null
-                                && !excludedIDs.Contains(p.ThingID))
-                    .ToList();
+                List<Pawn> mapPawns = Find.CurrentMap.mapPawns.FreeColonists;
+                for (int i = 0; i < mapPawns.Count; i++)
+                {
+                    Pawn p = mapPawns[i];
+                    if (p != null
+                        && p.Spawned
+                        && !p.Downed
+                        && p.MentalStateDef == null
+                        && p.workSettings != null
+                        && !excludedIDs.Contains(p.ThingID))
+                    {
+                        eligiblePawns.Add(p);
+                    }
+                }
+                return eligiblePawns;
             }
             catch (Exception ex)
             {
@@ -171,6 +192,7 @@ namespace Automated_Work_Assignment
         /// <summary>
         /// Retrieves eligible colonists specifically for a target work type.
         /// Applies both global exclusions and per-job exclusions.
+        /// PERFORMANCE OPTIMIZATION: Replaced LINQ with foreach loop.
         /// </summary>
         /// <param name="saveData">The current save data.</param>
         /// <param name="workType">The work type being processed.</param>
@@ -179,6 +201,7 @@ namespace Automated_Work_Assignment
         {
             if (workType == null) return new List<Pawn>();
             
+            List<Pawn> eligiblePawns = new List<Pawn>();
             List<string> globalExcludedIDs = saveData?.excludedPawnIDs ?? new List<string>();
             List<string> jobExcludedIDs = new List<string>();
             
@@ -188,19 +211,26 @@ namespace Automated_Work_Assignment
                 jobExcludedIDs = jobExclusions ?? new List<string>();
             }
             
-            if (Find.CurrentMap == null) return new List<Pawn>();
+            if (Find.CurrentMap == null) return eligiblePawns;
 
             try
             {
-                return Find.CurrentMap.mapPawns.FreeColonists
-                    .Where(p => p != null
-                                && p.Spawned
-                                && !p.Downed
-                                && p.MentalStateDef == null
-                                && p.workSettings != null
-                                && !globalExcludedIDs.Contains(p.ThingID)
-                                && !jobExcludedIDs.Contains(p.ThingID))
-                    .ToList();
+                List<Pawn> mapPawns = Find.CurrentMap.mapPawns.FreeColonists;
+                for (int i = 0; i < mapPawns.Count; i++)
+                {
+                    Pawn p = mapPawns[i];
+                    if (p != null
+                        && p.Spawned
+                        && !p.Downed
+                        && p.MentalStateDef == null
+                        && p.workSettings != null
+                        && !globalExcludedIDs.Contains(p.ThingID)
+                        && !jobExcludedIDs.Contains(p.ThingID))
+                    {
+                        eligiblePawns.Add(p);
+                    }
+                }
+                return eligiblePawns;
             }
             catch (Exception ex)
             {
@@ -238,7 +268,10 @@ namespace Automated_Work_Assignment
                 WorkSettingValues workSetting = saveData?.GetWorkSetting(workType.defName);
                 float passionWeight = workSetting?.passionWeight ?? 1f;
 
-                SkillDef relevantSkillDef = workType.relevantSkills?.FirstOrDefault();
+                // PERFORMANCE OPTIMIZATION: Use direct indexing instead of LINQ FirstOrDefault
+                SkillDef relevantSkillDef = (workType.relevantSkills != null && workType.relevantSkills.Count > 0) 
+                    ? workType.relevantSkills[0] : null;
+
                 SkillRecord skill = relevantSkillDef != null ? pawn.skills.GetSkill(relevantSkillDef) : null;
                 float score = skill?.Level ?? 1f;
 
@@ -309,20 +342,34 @@ namespace Automated_Work_Assignment
         /// Applies priority settings to the list of eligible colonists.
         /// Sorts the colonists by suitability/passion and assigns priorities based on the selected mode.
         /// </summary>
-        private static void AssignWorkPriorities(WorkTypeDef workType, int desiredCount, int targetPriority, int fallbackPriority, List<Pawn> colonists, AutomatedWork_SaveData saveData)
+        private static void AssignWorkPriorities(
+            WorkTypeDef workType, 
+            int desiredCount, 
+            int targetPriority, 
+            int fallbackPriority, 
+            List<Pawn> colonists, 
+            AutomatedWork_SaveData saveData,
+            ExpertModeRuleManager expertManager) // ADDED: Passed expertManager directly
         {
             if (workType == null || colonists == null || saveData == null) return;
             
             // 1. Calculate suitability for all candidates
             List<PawnSuitability> suitabilityList = new List<PawnSuitability>();
-            foreach (Pawn pawn in colonists) 
+            
+            // PERFORMANCE: Using standard for loop for potential slight speedup on list iteration
+            for (int i = 0; i < colonists.Count; i++)
             {
+                Pawn pawn = colonists[i];
                 if (pawn?.workSettings == null) continue;
+                
                 float score = CalculateSuitability(pawn, workType, saveData);
                 if (score >= 0)
                 {
                     Passion passion = Passion.None;
-                    SkillDef relevantSkillDef = workType.relevantSkills?.FirstOrDefault();
+                    // Directly access index 0 safely
+                    SkillDef relevantSkillDef = (workType.relevantSkills != null && workType.relevantSkills.Count > 0) 
+                        ? workType.relevantSkills[0] : null;
+
                     if (relevantSkillDef != null)
                     {
                         passion = pawn.skills.GetSkill(relevantSkillDef)?.passion ?? Passion.None;
@@ -359,8 +406,9 @@ namespace Automated_Work_Assignment
             }
 
             // 3. Prepare Expert Mode data if needed
-            var expertManager = Current.Game.GetComponent<ExpertModeRuleManager>();
-            bool expertRulesExist = expertManager?.workTypeRules.ContainsKey(workType) == true 
+            // OPTIMIZATION: expertManager is now passed in, no GetComponent call needed
+            bool expertRulesExist = expertManager != null 
+                                    && expertManager.workTypeRules.ContainsKey(workType)
                                     && expertManager.workTypeRules[workType].Any();
 
             HashSet<Pawn> assignedPawns = new HashSet<Pawn>();
@@ -380,7 +428,10 @@ namespace Automated_Work_Assignment
                     case AutomatedWork_SaveData.AssignmentMode.Expert:
                         if (expertRulesExist)
                         {
-                            SkillDef relevantSkill = workType.relevantSkills?.FirstOrDefault();
+                            // Optimized skill retrieval
+                            SkillDef relevantSkill = (workType.relevantSkills != null && workType.relevantSkills.Count > 0)
+                                ? workType.relevantSkills[0] : null;
+                            
                             int skillLevel;
                             
                             // Fallback to Social if work type has no skill (e.g., Cleaning/Hauling in some mods)
@@ -399,6 +450,7 @@ namespace Automated_Work_Assignment
                             }
                             
                             // Find matching rule for skill level
+                            // Note: List iteration is fine here as rules list is tiny (max 3-4 items)
                             SkillPriorityRule matchingRule = expertManager.workTypeRules[workType]
                                 .FirstOrDefault(rule => skillLevel >= rule.MinSkill && skillLevel <= rule.MaxSkill);
                             
@@ -416,7 +468,9 @@ namespace Automated_Work_Assignment
                         
                         if (expertRulesExist)
                         {
-                            SkillDef relevantSkill = workType.relevantSkills?.FirstOrDefault();
+                            SkillDef relevantSkill = (workType.relevantSkills != null && workType.relevantSkills.Count > 0)
+                                ? workType.relevantSkills[0] : null;
+                            
                             int skillLevel;
                             
                             if (relevantSkill == null)

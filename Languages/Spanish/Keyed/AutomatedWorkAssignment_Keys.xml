@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <AWA_SettingsCategory>Asignación Automática de Trabajo</AWA_SettingsCategory>
+  <AWA_EnableModLabel>Habilitar Mod:</AWA_EnableModLabel>
+  <AWA_EnableModTooltip>Si está marcado, el mod gestionará las prioridades de trabajo.</AWA_EnableModTooltip>
+  <AWA_EnableDailyRefreshLabel>Habilitar Recarga Diaria Automática</AWA_EnableDailyRefreshLabel>
+  <AWA_EnableDailyRefreshTooltip>Si está habilitado, las asignaciones se recargarán automáticamente al inicio de cada día.</AWA_EnableDailyRefreshTooltip>
+  <AWA_ManageExclusionsButton>Gestionar Peones Excluidos</AWA_ManageExclusionsButton>
+  <AWA_DesiredPawnsLabel>Configurar Cantidad (0=desactivado) y Prioridad (1=Máxima, 4=Mínima) por Trabajo:</AWA_DesiredPawnsLabel>
+  <AWA_CountLabel>Cantidad:</AWA_CountLabel>
+  <AWA_PriorityFieldLabel>Prioridad: {0}</AWA_PriorityFieldLabel>
+  <AWA_PercentageLabel>Porcentaje: {0}</AWA_PercentageLabel>
+  <AWA_FixedCountLabel>Cantidad: {0}</AWA_FixedCountLabel>
+  <AWA_ModOn>AutoWork: ON</AWA_ModOn>
+  <AWA_ModOff>AutoWork: OFF</AWA_ModOff>
+  <AWA_RefreshButton>Recargar Ahora</AWA_RefreshButton>
+  <AWA_SettingsButton>Opciones del Mod</AWA_SettingsButton>
+  <AWA_ModDisabledMessage>La Asignación Automática de Trabajo está desactivada actualmente.</AWA_ModDisabledMessage>
+  <AWA_ExclusionDialogTitle>Gestionar Peones Excluidos</AWA_ExclusionDialogTitle>
+  <AWA_ExclusionDialogDesc>Selecciona los peones a excluir de la asignación automática:</AWA_ExclusionDialogDesc>
+  <AWA_IncludeTaskTooltip>Marcado = INCLUIDO en la asignación automática. Desmarcar para EXCLUIR esta tarea por completo.</AWA_IncludeTaskTooltip>
+  <AWA_ToggleCountModeTooltip>Clic para cambiar entre modo Cantidad Fija (#) y Porcentaje (%) para las asignaciones.</AWA_ToggleCountModeTooltip>
+  <AWA_LoadSaveFirst>Carga una partida guardada para configurar los ajustes de Automated Work Assignment.</AWA_LoadSaveFirst>
+  
+  <AWA_ConfigureExpertModeButton>Configurar Modo Experto</AWA_ConfigureExpertModeButton>
+  <AWA_ConfigureExpertModeTooltip>Clic para abrir el editor de reglas avanzadas y asignar prioridades por rangos de habilidad.</AWA_ConfigureExpertModeTooltip>
+  
+  <AWA_ExpertMode_RuleWindowTitle>AWA: Reglas del Modo Experto</AWA_ExpertMode_RuleWindowTitle>
+  <AWA_ExpertMode_SelectWorkTypePrompt>Selecciona un tipo de trabajo de la lista izquierda para configurar sus reglas.</AWA_ExpertMode_SelectWorkTypePrompt>
+  <AWA_ExpertMode_AddRule>Añadir Regla</AWA_ExpertMode_AddRule>
+  <AWA_ExpertMode_DeleteRule>Eliminar Regla</AWA_ExpertMode_DeleteRule>
+  <AWA_ExpertMode_Priority>Prioridad</AWA_ExpertMode_Priority>
+  <AWA_ExpertMode_NoRulesDefined>Aún no hay reglas definidas para este tipo de trabajo.</AWA_ExpertMode_NoRulesDefined>
+  <AWA_ExpertMode_LoadSaveFirst>Carga una partida para configurar las reglas del Modo Experto.</AWA_ExpertMode_LoadSaveFirst>
+  
+  <!-- Assignment Modes -->
+  <AWA_AssignmentMode_Simple>Modo Simple</AWA_AssignmentMode_Simple>
+  <AWA_AssignmentMode_Simple_Tooltip>Usa solo las barras de Cantidad/Prioridad de abajo. Se ignoran las reglas del Modo Experto.</AWA_AssignmentMode_Simple_Tooltip>
+  <AWA_AssignmentMode_Expert>Modo Experto</AWA_AssignmentMode_Expert>
+  <AWA_AssignmentMode_Expert_Tooltip>Usa SOLO reglas basadas en habilidades del Modo Experto. Se ignoran las barras simples (excepto Cantidad/Porcentaje).</AWA_AssignmentMode_Expert_Tooltip>
+  <AWA_AssignmentMode_Hybrid>Modo Híbrido</AWA_AssignmentMode_Hybrid>
+  <AWA_AssignmentMode_Hybrid_Tooltip>Las reglas expertas anulan cuando coinciden. El Modo Simple se usa si no hay coincidencia de habilidad.</AWA_AssignmentMode_Hybrid_Tooltip>
+
+  <!-- Advanced Settings -->
+  <AWA_ForceEmergencyPriorities>Forzar Prioridades de Emergencia (Médico/Bombero = P1)</AWA_ForceEmergencyPriorities>
+  <AWA_ForceEmergencyPriorities_Tooltip>Si se activa, Médicos y Bomberos siempre tendrán prioridad 1, ignorando cualquier otro ajuste.</AWA_ForceEmergencyPriorities_Tooltip>
+  <AWA_PrioritizePassion>Priorizar Pasión en Modo Experto</AWA_PrioritizePassion>
+  <AWA_PrioritizePassion_Tooltip>Si se activa, los peones se ordenan PRIMERO por pasión, luego por habilidad. Útil para entrenar colonos apasionados.</AWA_PrioritizePassion_Tooltip>
+  
+  <!-- Sliders & Buttons -->
+  <AWA_ModeToggle_Percentage>Modo: %</AWA_ModeToggle_Percentage>
+  <AWA_ModeToggle_Count>Modo: #</AWA_ModeToggle_Count>
+  <AWA_PassionWeightLabel>Pasión: {0}x</AWA_PassionWeightLabel>
+  <AWA_PassionWeight_Tooltip>Cuánto afecta la pasión a la prioridad de asignación.\n0x = Ignorar pasión totalmente\n1x = Equilibrio por defecto\n3x = Preferir fuertemente peones apasionados</AWA_PassionWeight_Tooltip>
+  <AWA_BackupPriorityLabel>Respaldo: {0}</AWA_BackupPriorityLabel>
+  <AWA_Off>OFF</AWA_Off>
+  <AWA_BackupPriority_Tooltip>Prioridad para colonos NO seleccionados en el grupo principal.\n0 = Trabajo deshabilitado\n1-4 = Prioridad de respaldo (útil para Limpieza/Transporte)</AWA_BackupPriority_Tooltip>
+
+  <!-- Expert Mode Dialog -->
+  <AWA_ExcludePawnsButton>Excluir Peones</AWA_ExcludePawnsButton>
+  <AWA_ExcludePawns_Tooltip>Selecciona peones específicos para excluirlos de este tipo de trabajo.</AWA_ExcludePawns_Tooltip>
+  <AWA_AddRule_Tooltip>Añade una nueva regla de prioridad basada en habilidad para este trabajo.</AWA_AddRule_Tooltip>
+  <AWA_NoSkillWarning>⚠ ADVERTENCIA: {0} no tiene habilidad asociada.\nEl Modo Experto usará Social como base.\nConsidera usar el Modo Simple para este trabajo.</AWA_NoSkillWarning>
+  <AWA_ExpertMode_Info>El Modo Experto usa los ajustes de Cantidad/Porcentaje de las barras principales.\nLas reglas definen qué prioridad (1-4) asignar según el nivel de habilidad.</AWA_ExpertMode_Info>
+  <AWA_WorkTypeSelect_Tooltip>Selecciona {0} para editar reglas.</AWA_WorkTypeSelect_Tooltip>
+  <AWA_WorkTypeNoSkill_Tooltip>{0} no tiene habilidad asociada. El Modo Experto usará la habilidad Social como base.</AWA_WorkTypeNoSkill_Tooltip>
+
+</LanguageData>

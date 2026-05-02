@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <AWA_SettingsCategory>Automated Work Assignment</AWA_SettingsCategory>
+  <AWA_EnableModLabel>Enable Mod Logic:</AWA_EnableModLabel>
+  <AWA_EnableModTooltip>When checked, the mod will manage work priorities.</AWA_EnableModTooltip>
+  <AWA_EnableDailyRefreshLabel>Enable Automatic Daily Refresh</AWA_EnableDailyRefreshLabel>
+  <AWA_EnableDailyRefreshTooltip>If enabled, assignments will be refreshed automatically at the start of each day.</AWA_EnableDailyRefreshTooltip>
+  <AWA_ManageExclusionsButton>Manage Excluded Pawns</AWA_ManageExclusionsButton>
+  <AWA_DesiredPawnsLabel>Configure Count (0=disabled) and Priority (1=Highest, 4=Lowest) per Job:</AWA_DesiredPawnsLabel>
+  <AWA_CountLabel>Count:</AWA_CountLabel>
+  <AWA_PriorityFieldLabel>Priority: {0}</AWA_PriorityFieldLabel>
+  <AWA_PercentageLabel>Percentage: {0}</AWA_PercentageLabel>
+  <AWA_FixedCountLabel>Count: {0}</AWA_FixedCountLabel>
+  <AWA_ModOn>AutoWork: ON</AWA_ModOn>
+  <AWA_ModOff>AutoWork: OFF</AWA_ModOff>
+  <AWA_RefreshButton>Refresh Now</AWA_RefreshButton>
+  <AWA_SettingsButton>Mod Settings</AWA_SettingsButton>
+  <AWA_ModDisabledMessage>Automated Work Assignment is currently disabled.</AWA_ModDisabledMessage>
+  <AWA_ExclusionDialogTitle>Manage Excluded Pawns</AWA_ExclusionDialogTitle>
+  <AWA_ExclusionDialogDesc>Select pawns to exclude from automatic assignment:</AWA_ExclusionDialogDesc>
+  <AWA_IncludeTaskTooltip>Uncheck to exclude this task from automatic assignment. The mod will ignore this task completely.</AWA_IncludeTaskTooltip>
+  <AWA_ToggleCountModeTooltip>Click to switch between Fixed Count (#) and Percentage (%) mode for assignments.</AWA_ToggleCountModeTooltip>
+  <AWA_LoadSaveFirst>Load a save game to configure Automated Work Assignment settings.</AWA_LoadSaveFirst>
+
+  <AWA_ConfigureExpertModeButton>Configure Expert Mode</AWA_ConfigureExpertModeButton>
+  <AWA_ConfigureExpertModeTooltip>Click to open the advanced rule editor to assign priorities based on skill ranges.</AWA_ConfigureExpertModeTooltip>
+
+  <AWA_ExpertMode_RuleWindowTitle>AWA: Expert Mode Rules</AWA_ExpertMode_RuleWindowTitle>
+  <AWA_ExpertMode_SelectWorkTypePrompt>Select a work type from the left list to configure its rules.</AWA_ExpertMode_SelectWorkTypePrompt>
+  <AWA_ExpertMode_AddRule>Add Rule</AWA_ExpertMode_AddRule>
+  <AWA_ExpertMode_DeleteRule>Delete Rule</AWA_ExpertMode_DeleteRule>
+  <AWA_ExpertMode_Priority>Priority</AWA_ExpertMode_Priority>
+  <AWA_ExpertMode_NoRulesDefined>No rules defined for this work type yet.</AWA_ExpertMode_NoRulesDefined>
+  <AWA_ExpertMode_LoadSaveFirst>Load a save game first to configure Expert Mode rules.</AWA_ExpertMode_LoadSaveFirst>
+
+  <!-- Assignment Modes -->
+  <AWA_AssignmentMode_Simple>Simple Mode</AWA_AssignmentMode_Simple>
+  <AWA_AssignmentMode_Simple_Tooltip>Uses only the Count/Priority sliders below. Expert Mode rules are ignored.</AWA_AssignmentMode_Simple_Tooltip>
+  <AWA_AssignmentMode_Expert>Expert Mode</AWA_AssignmentMode_Expert>
+  <AWA_AssignmentMode_Expert_Tooltip>Uses ONLY skill-based rules from Expert Mode. Simple sliders are ignored (except Count/Percentage).</AWA_AssignmentMode_Expert_Tooltip>
+  <AWA_AssignmentMode_Hybrid>Hybrid Mode</AWA_AssignmentMode_Hybrid>
+  <AWA_AssignmentMode_Hybrid_Tooltip>Expert rules override when they match. Simple Mode is fallback for unmatched skills.</AWA_AssignmentMode_Hybrid_Tooltip>
+
+  <!-- Advanced Settings -->
+  <AWA_ForceEmergencyPriorities>Force Emergency Priorities (Doctor/Firefighter = P1)</AWA_ForceEmergencyPriorities>
+  <AWA_ForceEmergencyPriorities_Tooltip>When enabled, Doctor and Firefighter are always forced to priority 1, overriding all other settings.</AWA_ForceEmergencyPriorities_Tooltip>
+  <AWA_PrioritizePassion>Prioritize Passion in Expert Mode</AWA_PrioritizePassion>
+  <AWA_PrioritizePassion_Tooltip>When enabled, pawns are sorted by passion FIRST, then skill. Useful for training passionate colonists.</AWA_PrioritizePassion_Tooltip>
+  
+  <!-- Sliders & Buttons -->
+  <AWA_ModeToggle_Percentage>Mode: %</AWA_ModeToggle_Percentage>
+  <AWA_ModeToggle_Count>Mode: #</AWA_ModeToggle_Count>
+  <AWA_PassionWeightLabel>Passion: {0}x</AWA_PassionWeightLabel>
+  <AWA_PassionWeight_Tooltip>How much passion affects assignment priority.\n0x = Ignore passion entirely\n1x = Default balance\n3x = Strongly prefer passionate pawns</AWA_PassionWeight_Tooltip>
+  <AWA_BackupPriorityLabel>Backup: {0}</AWA_BackupPriorityLabel>
+  <AWA_Off>OFF</AWA_Off>
+  <AWA_BackupPriority_Tooltip>Priority for colonists NOT in top selection.\n0 = Disable work\n1-4 = Backup priority (useful for Hauling/Cleaning)</AWA_BackupPriority_Tooltip>
+
+  <!-- Expert Mode Dialog -->
+  <AWA_ExcludePawnsButton>Exclude Pawns</AWA_ExcludePawnsButton>
+  <AWA_ExcludePawns_Tooltip>Select specific pawns to exclude from this job type.</AWA_ExcludePawns_Tooltip>
+  <AWA_AddRule_Tooltip>Adds a new skill-based priority rule for this work type.</AWA_AddRule_Tooltip>
+  <AWA_NoSkillWarning>⚠ WARNING: {0} has no skill associated.\nExpert Mode rules will use Social skill as fallback.\nConsider using Simple Mode for this work type instead.</AWA_NoSkillWarning>
+  <AWA_ExpertMode_Info>Expert Mode uses the Count/Percentage settings from the main Simple Mode sliders.\nRules below define which priorities (1-4) to assign based on skill levels.</AWA_ExpertMode_Info>
+  <AWA_WorkTypeSelect_Tooltip>Select {0} to edit rules.</AWA_WorkTypeSelect_Tooltip>
+  <AWA_WorkTypeNoSkill_Tooltip>{0} has no associated skill. Expert rules will use Social skill as fallback.</AWA_WorkTypeNoSkill_Tooltip>
+
+</LanguageData>

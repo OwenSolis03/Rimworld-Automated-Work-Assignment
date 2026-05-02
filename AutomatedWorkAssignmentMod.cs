@@ -104,9 +104,9 @@ namespace Automated_Work_Assignment
                 {
                     saveData.assignmentMode = AutomatedWork_SaveData.AssignmentMode.Simple;
                 }
-                Widgets.Label(simpleLabelRect, "Simple Mode");
+                Widgets.Label(simpleLabelRect, "AWA_AssignmentMode_Simple".Translate());
                 Rect simpleTooltipRect = new Rect(simpleRadioRect.x, simpleRadioRect.y, simpleLabelRect.xMax - simpleRadioRect.x, modeRect.height);
-                TooltipHandler.TipRegion(simpleTooltipRect, "Uses only the Count/Priority sliders below. Expert Mode rules are ignored.");
+                TooltipHandler.TipRegion(simpleTooltipRect, "AWA_AssignmentMode_Simple_Tooltip".Translate());
                 
                 currentX = simpleLabelRect.xMax + gapBetweenModes;
                 
@@ -118,9 +118,9 @@ namespace Automated_Work_Assignment
                 {
                     saveData.assignmentMode = AutomatedWork_SaveData.AssignmentMode.Expert;
                 }
-                Widgets.Label(expertLabelRect, "Expert Mode");
+                Widgets.Label(expertLabelRect, "AWA_AssignmentMode_Expert".Translate());
                 Rect expertTooltipRect = new Rect(expertRadioRect.x, expertRadioRect.y, expertLabelRect.xMax - expertRadioRect.x, modeRect.height);
-                TooltipHandler.TipRegion(expertTooltipRect, "Uses ONLY skill-based rules from Expert Mode. Simple sliders are ignored (except Count/Percentage).");
+                TooltipHandler.TipRegion(expertTooltipRect, "AWA_AssignmentMode_Expert_Tooltip".Translate());
                 
                 currentX = expertLabelRect.xMax + gapBetweenModes;
                 
@@ -132,25 +132,25 @@ namespace Automated_Work_Assignment
                 {
                     saveData.assignmentMode = AutomatedWork_SaveData.AssignmentMode.Hybrid;
                 }
-                Widgets.Label(hybridLabelRect, "Hybrid Mode");
+                Widgets.Label(hybridLabelRect, "AWA_AssignmentMode_Hybrid".Translate());
                 Rect hybridTooltipRect = new Rect(hybridRadioRect.x, hybridRadioRect.y, hybridLabelRect.xMax - hybridRadioRect.x, modeRect.height);
-                TooltipHandler.TipRegion(hybridTooltipRect, "Expert rules override when they match. Simple Mode is fallback for unmatched skills.");
+                TooltipHandler.TipRegion(hybridTooltipRect, "AWA_AssignmentMode_Hybrid_Tooltip".Translate());
 
                 listingStandard.Gap(6f);
 
                 // --- Advanced Toggles ---
                 listingStandard.CheckboxLabeled(
-                    "Force Emergency Priorities (Doctor/Firefighter = P1)",
+                    "AWA_ForceEmergencyPriorities".Translate(),
                     ref saveData.forceEmergencyPriorities,
-                    "When enabled, Doctor and Firefighter are always forced to priority 1, overriding all other settings."
+                    "AWA_ForceEmergencyPriorities_Tooltip".Translate()
                 );
 
                 if (saveData.assignmentMode == AutomatedWork_SaveData.AssignmentMode.Expert)
                 {
                     listingStandard.CheckboxLabeled(
-                        "Prioritize Passion in Expert Mode",
+                        "AWA_PrioritizePassion".Translate(),
                         ref saveData.prioritizePassionInExpertMode,
-                        "When enabled, pawns are sorted by passion FIRST, then skill. Useful for training passionate colonists."
+                        "AWA_PrioritizePassion_Tooltip".Translate()
                     );
                 }
 
@@ -165,14 +165,14 @@ namespace Automated_Work_Assignment
                 {
                     Find.WindowStack.Add(new Dialog_ManageExclusions(saveData));
                 }
-                TooltipHandler.TipRegion(exclusionsButtonRect, "Exclude specific colonists from ALL automatic assignments.");
+                TooltipHandler.TipRegion(exclusionsButtonRect, "AWA_ExcludePawns_Tooltip".Translate());
 
                 Rect expertModeButtonRect = new Rect(exclusionsButtonRect.xMax + 10f, buttonRowRect.y, buttonWidth, buttonRowRect.height);
                 if (Widgets.ButtonText(expertModeButtonRect, "AWA_ConfigureExpertModeButton".Translate()))
                 {
                     Find.WindowStack.Add(new Dialog_ExpertModeSettings());
                 }
-                TooltipHandler.TipRegion(expertModeButtonRect, "Configure skill-based priority rules (Expert Mode).");
+                TooltipHandler.TipRegion(expertModeButtonRect, "AWA_ConfigureExpertModeTooltip".Translate());
         
                 listingStandard.Gap(12f);
                 listingStandard.GapLine(12f);
@@ -294,7 +294,7 @@ namespace Automated_Work_Assignment
                         // Count/Percentage Mode Toggle
                         float toggleWidth = 70f;
                         Rect toggleRect = new Rect(currentX, rowCenterY, toggleWidth, controlAreaHeight);
-                        string toggleLabel = currentSetting.usePercentage ? "Mode: %" : "Mode: #";
+                        string toggleLabel = currentSetting.usePercentage ? "AWA_ModeToggle_Percentage".Translate() : "AWA_ModeToggle_Count".Translate();
                         if(Widgets.ButtonText(toggleRect, toggleLabel))
                         {
                             currentSetting.usePercentage = !currentSetting.usePercentage;
@@ -361,7 +361,7 @@ namespace Automated_Work_Assignment
                         
                         // Passion Slider
                         Rect passionWeightRect = new Rect(secondRowStartX, secondRowY, sliderWidth, 22f);
-                        string passionLabel = $"Passion: {currentSetting.passionWeight:F1}x";
+                        string passionLabel = "AWA_PassionWeightLabel".Translate(currentSetting.passionWeight.ToString("F1"));
                         float newPassionWeight = Widgets.HorizontalSlider(
                             passionWeightRect,
                             currentSetting.passionWeight,
@@ -375,15 +375,11 @@ namespace Automated_Work_Assignment
                         {
                             currentSetting.passionWeight = newPassionWeight;
                         }
-                        TooltipHandler.TipRegion(passionWeightRect, 
-                            "How much passion affects assignment priority.\n" +
-                            "0x = Ignore passion entirely\n" +
-                            "1x = Default balance\n" +
-                            "3x = Strongly prefer passionate pawns");
+                        TooltipHandler.TipRegion(passionWeightRect, "AWA_PassionWeight_Tooltip".Translate());
 
                         // Fallback Priority Slider
                         Rect fallbackRect = new Rect(secondRowStartX + sliderWidth + 5f, secondRowY, sliderWidth, 22f);
-                        string fallbackLabel = $"Backup: {(currentSetting.fallbackPriority == 0 ? "OFF" : "P" + currentSetting.fallbackPriority)}";
+                        string fallbackLabel = "AWA_BackupPriorityLabel".Translate(currentSetting.fallbackPriority == 0 ? "AWA_Off".Translate() : ("P" + currentSetting.fallbackPriority));
                         float tempFallback = Widgets.HorizontalSlider(
                             fallbackRect,
                             currentSetting.fallbackPriority,
@@ -397,10 +393,7 @@ namespace Automated_Work_Assignment
                         {
                             currentSetting.fallbackPriority = (int)tempFallback;
                         }
-                        TooltipHandler.TipRegion(fallbackRect,
-                            "Priority for colonists NOT in top selection.\n" +
-                            "0 = Disable work\n" +
-                            "1-4 = Backup priority (useful for Hauling/Cleaning)");
+                        TooltipHandler.TipRegion(fallbackRect, "AWA_BackupPriority_Tooltip".Translate());
                     }
                     catch (Exception ex)
                     {

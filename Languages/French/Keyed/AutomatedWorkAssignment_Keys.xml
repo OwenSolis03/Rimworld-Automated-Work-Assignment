@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+
+  <!-- EN: Automated Work Assignment -->
+  <AWA_SettingsCategory>Attribution Automatique des Tâches (AAT)</AWA_SettingsCategory>
+  <!-- EN: Enable Mod Logic: -->
+  <AWA_EnableModLabel>Activer l’attribution automatique</AWA_EnableModLabel>
+  <!-- EN: When checked, the mod will manage work priorities. -->
+  <AWA_EnableModTooltip>Si cette option est cochée, le module gérera automatiquement les priorités de travail.</AWA_EnableModTooltip>
+  <!-- EN: Enable Automatic Daily Refresh -->
+  <AWA_EnableDailyRefreshLabel>Activer le rafraîchissement quotidien automatique</AWA_EnableDailyRefreshLabel>
+  <!-- EN: If enabled, assignments will be refreshed automatically near the start of each day. -->
+  <AWA_EnableDailyRefreshTooltip>Si activé, les assignations seront actualisées automatiquement au début de chaque journée.</AWA_EnableDailyRefreshTooltip>
+  <!-- EN: Manage Excluded Pawns -->
+  <AWA_ManageExclusionsButton>Gérer les colons exclus</AWA_ManageExclusionsButton>
+  <!-- EN: Configure Count (0=disabled) and Priority (1=Highest, 4=Lowest) per Job: -->
+  <AWA_DesiredPawnsLabel>Définir la quantité (0 = désactivé) et la priorité (1 = maximale, 4 = minimale) pour chaque tâche :</AWA_DesiredPawnsLabel>
+  <!-- EN: Count: -->
+  <AWA_CountLabel>Quantité :</AWA_CountLabel>
+  <!-- EN: Priority: {0} -->
+  <AWA_PriorityFieldLabel>Priorité : {0}</AWA_PriorityFieldLabel>
+  <!-- EN: Percentage: {0} -->
+  <AWA_PercentageLabel>Pourcentage : {0}</AWA_PercentageLabel>
+  <!-- EN: Count: {0} -->
+  <AWA_FixedCountLabel>Quantité : {0}</AWA_FixedCountLabel>
+  <!-- EN: AutoWork: ON -->
+  <AWA_ModOn>Auto - Oui</AWA_ModOn>
+  <!-- EN: AutoWork: OFF -->
+  <AWA_ModOff>Auto - Non</AWA_ModOff>
+  <!-- EN: Refresh Now -->
+  <AWA_RefreshButton>Rafraîchir</AWA_RefreshButton>
+  <!-- EN: Mod Settings -->
+  <AWA_SettingsButton>Options</AWA_SettingsButton>
+  <!-- EN: Automated Work Assignment is currently disabled. -->
+  <AWA_ModDisabledMessage>Le module « Tâches automatiques » est actuellement désactivé.</AWA_ModDisabledMessage>
+  <!-- EN: Manage Excluded Pawns -->
+  <AWA_ExclusionDialogTitle>Gérer les colons exclus</AWA_ExclusionDialogTitle>
+  <!-- EN: Select pawns to exclude from automatic assignment: -->
+  <AWA_ExclusionDialogDesc>Sélectionnez les colons à exclure de l’assignation automatique :</AWA_ExclusionDialogDesc>
+  <!-- EN: Uncheck to exclude this task from automatic assignment. The mod will ignore this task completely. -->
+  <AWA_IncludeTaskTooltip>Coché = INCLUS dans l'assignation auto. Décocher pour EXCLURE complètement cette tâche.</AWA_IncludeTaskTooltip>
+  <!-- EN: Click to switch between Fixed Count (#) and Percentage (%) mode for assignments. -->
+  <AWA_ToggleCountModeTooltip>Cliquez pour basculer entre le mode Quantité Fixe (#) et Pourcentage (%) pour les assignations.</AWA_ToggleCountModeTooltip>
+  <!-- EN: Load a save game to configure Automated Work Assignment settings. -->
+  <AWA_LoadSaveFirst>Chargez une partie sauvegardée pour configurer les paramètres.</AWA_LoadSaveFirst>
+
+  <!-- EN: Configure Expert Mode -->
+  <AWA_ConfigureExpertModeButton>Configurer le mode Expert</AWA_ConfigureExpertModeButton>
+  <!-- EN: Click to open the advanced rule editor to assign priorities based on skill ranges. -->
+  <AWA_ConfigureExpertModeTooltip>Cliquez pour ouvrir l'éditeur de règles avancées et assigner des priorités basées sur les niveaux de compétence.</AWA_ConfigureExpertModeTooltip>
+
+  <!-- EN: AWA: Expert Mode Rules -->
+  <AWA_ExpertMode_RuleWindowTitle>AAT : Règles du mode Expert</AWA_ExpertMode_RuleWindowTitle>
+  <!-- EN: Select a work type from the left list to configure its rules. -->
+  <AWA_ExpertMode_SelectWorkTypePrompt>Sélectionnez un type de travail dans la liste de gauche pour configurer ses règles.</AWA_ExpertMode_SelectWorkTypePrompt>
+  <!-- EN: Add Rule -->
+  <AWA_ExpertMode_AddRule>Ajouter une règle</AWA_ExpertMode_AddRule>
+  <!-- EN: Delete Rule -->
+  <AWA_ExpertMode_DeleteRule>Supprimer la règle</AWA_ExpertMode_DeleteRule>
+  <!-- EN: Priority -->
+  <AWA_ExpertMode_Priority>Priorité</AWA_ExpertMode_Priority>
+  <!-- EN: No rules defined for this work type yet. -->
+  <AWA_ExpertMode_NoRulesDefined>Aucune règle n'est encore définie pour ce type de travail.</AWA_ExpertMode_NoRulesDefined>
+  <!-- EN: Load a save game first to configure Expert Mode rules. -->
+  <AWA_ExpertMode_LoadSaveFirst>Chargez une partie pour configurer les règles du mode Expert.</AWA_ExpertMode_LoadSaveFirst>
+
+  <!-- Assignment Modes -->
+  <AWA_AssignmentMode_Simple>Mode Simple</AWA_AssignmentMode_Simple>
+  <AWA_AssignmentMode_Simple_Tooltip>Utilise uniquement les barres de Quantité/Priorité ci-dessous. Les règles du mode Expert sont ignorées.</AWA_AssignmentMode_Simple_Tooltip>
+  <AWA_AssignmentMode_Expert>Mode Expert</AWA_AssignmentMode_Expert>
+  <AWA_AssignmentMode_Expert_Tooltip>Utilise UNIQUEMENT les règles basées sur les compétences du mode Expert. Les barres simples sont ignorées (sauf Quantité/Pourcentage).</AWA_AssignmentMode_Expert_Tooltip>
+  <AWA_AssignmentMode_Hybrid>Mode Hybride</AWA_AssignmentMode_Hybrid>
+  <AWA_AssignmentMode_Hybrid_Tooltip>Les règles expertes prévalent si elles correspondent. Le mode Simple est utilisé par défaut si aucune compétence ne correspond.</AWA_AssignmentMode_Hybrid_Tooltip>
+
+  <!-- Advanced Settings -->
+  <AWA_ForceEmergencyPriorities>Forcer les priorités d'urgence (Médecin/Pompier = P1)</AWA_ForceEmergencyPriorities>
+  <AWA_ForceEmergencyPriorities_Tooltip>Si activé, les Médecins et Pompiers auront toujours la priorité 1, ignorant tous les autres réglages.</AWA_ForceEmergencyPriorities_Tooltip>
+  <AWA_PrioritizePassion>Prioriser la passion en mode Expert</AWA_PrioritizePassion>
+  <AWA_PrioritizePassion_Tooltip>Si activé, les colons sont triés par passion D'ABORD, puis par compétence. Utile pour former des colons passionnés.</AWA_PrioritizePassion_Tooltip>
+  
+  <!-- Sliders & Buttons -->
+  <AWA_ModeToggle_Percentage>Mode : %</AWA_ModeToggle_Percentage>
+  <AWA_ModeToggle_Count>Mode : #</AWA_ModeToggle_Count>
+  <AWA_PassionWeightLabel>Passion : {0}x</AWA_PassionWeightLabel>
+  <AWA_PassionWeight_Tooltip>Influence de la passion sur la priorité d'assignation.\n0x = Ignorer complètement la passion\n1x = Équilibre par défaut\n3x = Préférer fortement les colons passionnés</AWA_PassionWeight_Tooltip>
+  <AWA_BackupPriorityLabel>Secours : {0}</AWA_BackupPriorityLabel>
+  <AWA_Off>OFF</AWA_Off>
+  <AWA_BackupPriority_Tooltip>Priorité pour les colons NON sélectionnés dans le groupe principal.\n0 = Travail désactivé\n1-4 = Priorité de secours (utile pour Nettoyage/Transport)</AWA_BackupPriority_Tooltip>
+
+  <!-- Expert Mode Dialog -->
+  <AWA_ExcludePawnsButton>Exclure des colons</AWA_ExcludePawnsButton>
+  <AWA_ExcludePawns_Tooltip>Sélectionner des colons spécifiques à exclure de ce type de travail.</AWA_ExcludePawns_Tooltip>
+  <AWA_AddRule_Tooltip>Ajoute une nouvelle règle de priorité basée sur la compétence pour ce travail.</AWA_AddRule_Tooltip>
+  <AWA_NoSkillWarning>⚠ ATTENTION : {0} n'a aucune compétence associée.\nLe mode Expert utilisera la compétence Social comme base.\nEnvisagez d'utiliser le mode Simple pour ce travail.</AWA_NoSkillWarning>
+  <AWA_ExpertMode_Info>Le mode Expert utilise les réglages de Quantité/Pourcentage des barres principales.\nLes règles ci-dessous définissent quelle priorité (1-4) assigner selon le niveau de compétence.</AWA_ExpertMode_Info>
+  <AWA_WorkTypeSelect_Tooltip>Sélectionnez {0} pour modifier les règles.</AWA_WorkTypeSelect_Tooltip>
+  <AWA_WorkTypeNoSkill_Tooltip>{0} n'a aucune compétence associée. Le mode Expert utilisera la compétence Social par défaut.</AWA_WorkTypeNoSkill_Tooltip>
+
+</LanguageData>

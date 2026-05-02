@@ -177,8 +177,8 @@ namespace Automated_Work_Assignment
                 GUI.color = Color.white;
                 
                 string tooltip = hasSkill 
-                    ? $"Select {workDef.labelShort} to edit rules." 
-                    : $"{workDef.labelShort} has no associated skill. Expert rules will use Social skill as fallback.";
+                    ? "AWA_WorkTypeSelect_Tooltip".Translate(workDef.labelShort)
+                    : "AWA_WorkTypeNoSkill_Tooltip".Translate(workDef.labelShort);
                 TooltipHandler.TipRegion(entryRect, tooltip);
             }
 
@@ -220,7 +220,7 @@ namespace Automated_Work_Assignment
 
             // "Exclude Pawns" button
             Rect excludePawnsButtonRect = new Rect(headerRect.xMax - 210f, headerRect.y + (headerHeight - 30f)/2f, 100f, 30f);
-            if (Widgets.ButtonText(excludePawnsButtonRect, "Exclude Pawns"))
+            if (Widgets.ButtonText(excludePawnsButtonRect, "AWA_ExcludePawnsButton".Translate()))
             {
                 var saveData = Current.Game?.GetComponent<AutomatedWork_SaveData>();
                 if (saveData != null)
@@ -228,7 +228,7 @@ namespace Automated_Work_Assignment
                     Find.WindowStack.Add(new Dialog_ManageJobExclusions(saveData, workDef));
                 }
             }
-            TooltipHandler.TipRegion(excludePawnsButtonRect, "Select specific pawns to exclude from this job type.");
+            TooltipHandler.TipRegion(excludePawnsButtonRect, "AWA_ExcludePawns_Tooltip".Translate());
             
             // "Add Rule" button
             Rect addButtonRect = new Rect(headerRect.xMax - 100f, headerRect.y + (headerHeight - 30f)/2f, 100f, 30f);
@@ -237,7 +237,7 @@ namespace Automated_Work_Assignment
                 rules.Add(new SkillPriorityRule(0, 5, 4));
                 rules.Sort((a, b) => a.MinSkill.CompareTo(b.MinSkill));
             }
-            TooltipHandler.TipRegion(addButtonRect, "Adds a new skill-based priority rule for this work type.");
+            TooltipHandler.TipRegion(addButtonRect, "AWA_AddRule_Tooltip".Translate());
 
             // --- Warning Section (for skill-less jobs) ---
             bool hasRelevantSkill = workDef.relevantSkills != null && workDef.relevantSkills.Any();
@@ -248,16 +248,12 @@ namespace Automated_Work_Assignment
                 warningHeight = 60f;
                 Rect warningRect = new Rect(headerRect.x, headerRect.yMax + 5f, headerRect.width, warningHeight);
                 GUI.color = new Color(1f, 0.8f, 0f); // Yellow warning color
-                Widgets.Label(warningRect, 
-                    $"⚠ WARNING: {workDef.labelShort} has no skill associated.\n" +
-                    "Expert Mode rules will use Social skill as fallback.\n" +
-                    "Consider using Simple Mode for this work type instead.");
+                Widgets.Label(warningRect, "AWA_NoSkillWarning".Translate(workDef.labelShort));
                 GUI.color = Color.white;
             }
             
             // --- Info Text Section ---
-            string infoText = "Expert Mode uses the Count/Percentage settings from the main Simple Mode sliders.\n" +
-                              "Rules below define which priorities (1-4) to assign based on skill levels.";
+            string infoText = "AWA_ExpertMode_Info".Translate();
 
             // Calculate exact height needed for text to avoid overlap with sliders below.
             GameFont prevFont = Text.Font;
