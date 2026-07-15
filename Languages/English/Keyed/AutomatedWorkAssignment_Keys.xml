@@ -70,7 +70,7 @@
   <AWA_Experimental_Title>Experimental Feature: Player Profiling</AWA_Experimental_Title>
   <AWA_Experimental_Warning>WARNING: This feature collects context data (Biome, Resources, Temperature) when you manually assign priorities to create a profile of your playstyle. It may impact game performance.</AWA_Experimental_Warning>
   <AWA_Experimental_UpdateFreq>Update Frequency: Every {0} hours</AWA_Experimental_UpdateFreq>
-  <AWA_Experimental_CPUWarning><color=gray>Lower values mean it reacts faster to situation changes but consumes more CPU.</color></AWA_Experimental_CPUWarning>
+  <AWA_Experimental_CPUWarning>Lower values mean it reacts faster to situation changes but consumes more CPU.</AWA_Experimental_CPUWarning>
   <AWA_EnableExperimentalHeuristics>Enable Experimental Heuristics</AWA_EnableExperimentalHeuristics>
   <AWA_EnableExperimentalHeuristics_Tooltip>Activates the profiling and heuristic assignment logic.</AWA_EnableExperimentalHeuristics_Tooltip>
   <AWA_JobExclusion_Desc>Select pawns to exclude from {0}:</AWA_JobExclusion_Desc>

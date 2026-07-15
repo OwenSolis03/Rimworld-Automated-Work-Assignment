@@ -96,7 +96,8 @@ namespace Automated_Work_Assignment.Experimental.UI
                 
                 float freq = listing.Slider((float)saveData.heuristicsUpdateFrequencyHours, 1f, 48f);
                 saveData.heuristicsUpdateFrequencyHours = Mathf.RoundToInt(freq);
-                
+
+                GUI.color = Color.gray;
 #if RIMWORLD_1_6
                 listing.Label("AWA_Experimental_CPUWarning".Translate());
 #elif RIMWORLD_1_5
@@ -104,6 +105,7 @@ namespace Automated_Work_Assignment.Experimental.UI
                 Widgets.Label(rect4, "AWA_Experimental_CPUWarning".Translate());
                 listing.Gap(listing.verticalSpacing);
 #endif
+                GUI.color = Color.white;
             }
 
             listing.End();

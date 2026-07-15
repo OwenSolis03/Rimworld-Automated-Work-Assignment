@@ -99,7 +99,7 @@
   <AWA_Experimental_Title>Fonctionnalité Expérimentale : Profilage du Joueur</AWA_Experimental_Title>
   <AWA_Experimental_Warning>AVERTISSEMENT : Cette fonctionnalité recueille des données de contexte (Biome, Ressources, Température) lorsque vous assignez manuellement des priorités pour créer un profil de votre style de jeu. Cela peut affecter les performances du jeu.</AWA_Experimental_Warning>
   <AWA_Experimental_UpdateFreq>Fréquence de mise à jour : Toutes les {0} heures</AWA_Experimental_UpdateFreq>
-  <AWA_Experimental_CPUWarning><color=gray>Des valeurs plus faibles signifient qu'il réagit plus vite aux changements de situation mais consomme plus de CPU.</color></AWA_Experimental_CPUWarning>
+  <AWA_Experimental_CPUWarning>Des valeurs plus faibles signifient qu'il réagit plus vite aux changements de situation mais consomme plus de CPU.</AWA_Experimental_CPUWarning>
   <AWA_EnableExperimentalHeuristics>Activer les Heuristiques Expérimentales</AWA_EnableExperimentalHeuristics>
   <AWA_EnableExperimentalHeuristics_Tooltip>Active le profilage et la logique d'affectation heuristique.</AWA_EnableExperimentalHeuristics_Tooltip>
   <AWA_JobExclusion_Desc>Sélectionner les colons à exclure de {0} :</AWA_JobExclusion_Desc>
