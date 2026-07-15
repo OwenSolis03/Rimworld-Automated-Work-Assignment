@@ -29,9 +29,6 @@ namespace Automated_Work_Assignment
         /// </summary>
         private List<Pawn> availablePawns;
 
-        // --- Position/Size Persistence ---
-        private static Rect? savedWindowRect = null;
-
         /// <summary> Specifies the default dimensions of the dialog window when opened. </summary>
         public override Vector2 InitialSize => new Vector2(400f, 600f);
 
@@ -51,31 +48,9 @@ namespace Automated_Work_Assignment
             closeOnClickedOutside = true;
             absorbInputAroundWindow = true;
             draggable = true;
-            resizeable = true;
 
             this.optionalTitle = "AWA_ExclusionDialogTitle".Translate();
             RefreshPawnList();
-        }
-
-        /// <summary>
-        /// Restores saved window position/size on open.
-        /// </summary>
-        public override void PostOpen()
-        {
-            base.PostOpen();
-            if (savedWindowRect.HasValue)
-            {
-                windowRect = savedWindowRect.Value;
-            }
-        }
-
-        /// <summary>
-        /// Saves window position/size on close.
-        /// </summary>
-        public override void PostClose()
-        {
-            savedWindowRect = windowRect;
-            base.PostClose();
         }
 
         /// <summary>
@@ -116,13 +91,25 @@ namespace Automated_Work_Assignment
 
             try {
                 // Display introductory text and a separator line.
+#if RIMWORLD_1_6
                 listing.Label("AWA_ExclusionDialogDesc".Translate());
+#elif RIMWORLD_1_5
+                string t1 = "AWA_ExclusionDialogDesc".Translate();
+                Widgets.Label(listing.GetRect(Text.CalcHeight(t1, listing.ColumnWidth)), t1);
+                listing.Gap(listing.verticalSpacing);
+#endif
                 listing.GapLine();
             } catch (Exception ex) { Log.Error($"[AutoWork] Exception drawing top elements in exclusion dialog: {ex}"); }
 
             // Error handling if pawn list failed to load
             if (availablePawns == null) {
+#if RIMWORLD_1_6
                 listing.Label("Error: Could not load pawn list.");
+#elif RIMWORLD_1_5
+                string t2 = "Error: Could not load pawn list.";
+                Widgets.Label(listing.GetRect(Text.CalcHeight(t2, listing.ColumnWidth)), t2);
+                listing.Gap(listing.verticalSpacing);
+#endif
                 listing.End();
                 return;
             }
@@ -146,7 +133,13 @@ namespace Automated_Work_Assignment
                 scrollViewViewRect = new Rect(0f, 0f, viewWidth, viewHeight);
             } catch (Exception ex) {
                 Log.Error($"[AutoWork] Exception setting up ScrollView in exclusion dialog: {ex}");
+#if RIMWORLD_1_6
                 listing.Label("Error setting up scroll view.");
+#elif RIMWORLD_1_5
+                string t3 = "Error setting up scroll view.";
+                Widgets.Label(listing.GetRect(Text.CalcHeight(t3, listing.ColumnWidth)), t3);
+                listing.Gap(listing.verticalSpacing);
+#endif
                 listing.End();
                 return;
             }

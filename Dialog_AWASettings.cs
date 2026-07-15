@@ -156,7 +156,13 @@ namespace Automated_Work_Assignment
                     listingStandard.Gap(6f);
 
                     // --- Assignment Mode Selector ---
+#if RIMWORLD_1_6
                     listingStandard.Label("Assignment System Mode:");
+#elif RIMWORLD_1_5
+                    string t1 = "Assignment System Mode:";
+                    Widgets.Label(listingStandard.GetRect(Text.CalcHeight(t1, listingStandard.ColumnWidth)), t1);
+                    listingStandard.Gap(listingStandard.verticalSpacing);
+#endif
                     
                     Rect modeRect = listingStandard.GetRect(30f);
                     float radioSize = 24f;
@@ -396,7 +402,13 @@ namespace Automated_Work_Assignment
             catch (Exception ex)
             {
                 Log.Error($"[AutoWork] Exception preparing ScrollView: {ex}");
+#if RIMWORLD_1_6
                 listingStandard.Label($"Error preparing list: {ex.Message}");
+#elif RIMWORLD_1_5
+                string t2 = $"Error preparing list: {ex.Message}";
+                Widgets.Label(listingStandard.GetRect(Text.CalcHeight(t2, listingStandard.ColumnWidth)), t2);
+                listingStandard.Gap(listingStandard.verticalSpacing);
+#endif
                 listingStandard.End(); 
                 return;
             }
