@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Verse;
 
 namespace Automated_Work_Assignment
@@ -14,6 +14,10 @@ namespace Automated_Work_Assignment
         
         public bool modEnabled = true;
         public bool enableDailyRefresh = true;
+
+        // --- Experimental Settings ---
+        public bool enableExperimentalHeuristics = false;
+        public int heuristicsUpdateFrequencyHours = 24;
 
         /// <summary>
         /// Defines the active assignment mode for the automated work system.
@@ -50,6 +54,12 @@ namespace Automated_Work_Assignment
         /// Useful for prioritizing the training of passionate pawns even if their current skill is lower.
         /// </summary>
         public bool prioritizePassionInExpertMode = false;
+
+        // --- UI Simplification Settings ---
+        public bool useMasterPassion = false;
+        public float masterPassionWeight = 1f;
+        public bool combineSimilarWorkTypes = false;
+        public bool gradualBackupScaling = false;
 
         // --- Work Type Settings ---
 
@@ -136,10 +146,20 @@ namespace Automated_Work_Assignment
             Scribe_Values.Look(ref modEnabled, "modEnabled_perSave", true);
             Scribe_Values.Look(ref enableDailyRefresh, "enableDailyRefresh_perSave", true);
             
+            // Experimental
+            Scribe_Values.Look(ref enableExperimentalHeuristics, "enableExperimentalHeuristics", false);
+            Scribe_Values.Look(ref heuristicsUpdateFrequencyHours, "heuristicsUpdateFrequencyHours", 24);
+            
             // Advanced Features
             Scribe_Values.Look(ref assignmentMode, "assignmentMode", AssignmentMode.Simple);
             Scribe_Values.Look(ref forceEmergencyPriorities, "forceEmergencyPriorities", true);
             Scribe_Values.Look(ref prioritizePassionInExpertMode, "prioritizePassionInExpertMode", false);
+
+            // UI Simplification Settings
+            Scribe_Values.Look(ref useMasterPassion, "useMasterPassion", false);
+            Scribe_Values.Look(ref masterPassionWeight, "masterPassionWeight", 1f);
+            Scribe_Values.Look(ref combineSimilarWorkTypes, "combineSimilarWorkTypes", false);
+            Scribe_Values.Look(ref gradualBackupScaling, "gradualBackupScaling", false);
 
             // Global Exclusion Lists
             Scribe_Collections.Look(ref excludedPawnIDs, "excludedPawnIDs_perSave", LookMode.Value);

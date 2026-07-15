@@ -1,24 +1,52 @@
-# Compiled assemblies and intermediate files
+# === Existing .NET / Rider Rules ===
 [Aa]ssemblies/
 [Oo]bj/
 [Bb]in/
 *.dll
 *.exe
 *.pdb
-
-# Rider / VS specific
 .idea/
 *.suo
 *.user
 *.sln.dotsettings.user
 *.csproj.user
 
-# OS generated files
+# === OS & IDE Cleanliness ===
 Thumbs.db
 .DS_Store
-
-# Logs
 *.log
+.vscode/
+.history/
 
-# Packages folder
-# packages/
+# === GitNexus & AI Optimization ===
+# Ignora la propia base de datos de grafos para evitar recursión
+.gitnexus/
+# Ignora modelos pesados y archivos de embeddings locales
+*.bin
+*.onnx
+*.pt
+*.h5
+
+# === Node.js (Crucial para GitNexus) ===
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# === Python & ML (Basado en flujos de trabajo de CS) ===
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+.ipynb_checkpoints/
+
+# === Data & Datasets (Archivos que suelen pesar >512KB) ===
+*.csv
+*.jsonl
+*.parquet
+*.sql
+*.sqlite
+# Bloquear paquetes de NuGet y sus binarios
+packages/
+*.nupkg

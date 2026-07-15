@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using RimWorld;
 using Verse;
 
@@ -21,6 +21,7 @@ namespace Automated_Work_Assignment
         /// the check runs on the first day loaded or started. Persisted via <see cref="ExposeData"/>.
         /// </summary>
         private int lastCheckDay = -1;
+        private int lastHeuristicTick = -1;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutoAssign_GameComponent"/>.
@@ -33,6 +34,10 @@ namespace Automated_Work_Assignment
             if (game.GetComponent<ExpertModeRuleManager>() == null)
             {
                 game.components.Add(new ExpertModeRuleManager(game));
+            }
+            if (game.GetComponent<Experimental.Heuristics.HeuristicManager>() == null)
+            {
+                game.components.Add(new Experimental.Heuristics.HeuristicManager(game));
             }
         }
 
@@ -83,6 +88,31 @@ namespace Automated_Work_Assignment
                         }
                     }
                 }
+
+                // --- Experimental Heuristics Check ---
+                var currentSaveData = Current.Game.GetComponent<AutomatedWork_SaveData>();
+                if (currentSaveData != null && currentSaveData.enableExperimentalHeuristics)
+                {
+                    int ticksSinceLast = Find.TickManager.TicksGame - lastHeuristicTick;
+                    int freqTicks = currentSaveData.heuristicsUpdateFrequencyHours * GenDate.TicksPerHour;
+                    
+                    if (lastHeuristicTick == -1 || ticksSinceLast >= freqTicks)
+                    {
+                        lastHeuristicTick = Find.TickManager.TicksGame;
+                        try
+                        {
+                            var hm = Current.Game.GetComponent<Experimental.Heuristics.HeuristicManager>();
+                            if (hm != null && Find.CurrentMap != null)
+                            {
+                                hm.ApplyHeuristics(Find.CurrentMap);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error($"[AutoWork] Exception during heuristics refresh: {ex}");
+                        }
+                    }
+                }
             }
         }
 
@@ -97,6 +127,7 @@ namespace Automated_Work_Assignment
             base.ExposeData();
             // Persist the lastCheckDay field using the standard RimWorld Scribe system
             Scribe_Values.Look(ref lastCheckDay, "lastCheckDay", -1);
+            Scribe_Values.Look(ref lastHeuristicTick, "lastHeuristicTick", -1);
         }
     }
 }

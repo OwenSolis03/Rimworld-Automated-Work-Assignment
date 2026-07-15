@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
 using UnityEngine;
@@ -21,6 +21,9 @@ namespace Automated_Work_Assignment
         private WorkTypeDef selectedWorkDef = null;
         private List<WorkTypeDef> relevantWorkTypesCache = new List<WorkTypeDef>();
 
+        // --- Position/Size Persistence ---
+        private static Rect? savedWindowRect = null;
+
         /// <summary>
         /// Defines the initial dimensions of the window.
         /// </summary>
@@ -38,6 +41,7 @@ namespace Automated_Work_Assignment
             closeOnClickedOutside = true;
             absorbInputAroundWindow = true;
             draggable = true;
+            resizeable = true;
 
             ruleManager = Current.Game?.GetComponent<ExpertModeRuleManager>();
 
@@ -79,6 +83,27 @@ namespace Automated_Work_Assignment
                 // If the previously selected def is no longer valid, reset to the first available
                 selectedWorkDef = relevantWorkTypesCache.FirstOrDefault();
             }
+        }
+
+        /// <summary>
+        /// Restores saved window position/size on open.
+        /// </summary>
+        public override void PostOpen()
+        {
+            base.PostOpen();
+            if (savedWindowRect.HasValue)
+            {
+                windowRect = savedWindowRect.Value;
+            }
+        }
+
+        /// <summary>
+        /// Saves window position/size on close.
+        /// </summary>
+        public override void PostClose()
+        {
+            savedWindowRect = windowRect;
+            base.PostClose();
         }
         
         /// <summary>

@@ -1,4 +1,4 @@
-﻿using Verse;
+using Verse;
 
 namespace Automated_Work_Assignment
 {
@@ -50,7 +50,7 @@ namespace Automated_Work_Assignment
             // Post-Load Validation
             if (Scribe.mode == LoadSaveMode.LoadingVars)
             {
-                if (priority < 1) priority = 1;
+                if (priority < 0) priority = 0;
                 if (priority > 4) priority = 4;
                 if (count < 0) count = 0;
                 if (percentage < 0f) percentage = 0f;

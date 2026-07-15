@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -43,6 +43,16 @@ namespace Automated_Work_Assignment
                 else
                 {
                     Log.Error("[AutoWork] Failed to find method or postfix for MainTabWindow_Work patch. UI buttons will not be added.");
+                }
+                // -------------------------------------------------------
+
+                // --- Patch for Experimental Heuristics ---
+                var originalSetPriority = AccessTools.Method(typeof(Pawn_WorkSettings), nameof(Pawn_WorkSettings.SetPriority));
+                var postfixSetPriority = new HarmonyMethod(typeof(HarmonyPatches), nameof(SetPriorityPostfix));
+                if (originalSetPriority != null && postfixSetPriority != null)
+                {
+                    harmony.Patch(originalSetPriority, postfix: postfixSetPriority);
+                    Log.Message("[AutoWork] Patched Pawn_WorkSettings.SetPriority for heuristics.");
                 }
                 // -------------------------------------------------------
 
@@ -156,6 +166,36 @@ namespace Automated_Work_Assignment
             {
                 // Log any unexpected errors during the UI drawing process.
                 Log.Error($"[AutoWork] Exception in WorkTabPostfix UI drawing: {ex}");
+            }
+        }
+
+        /// <summary>
+        /// Harmony Postfix patch for Pawn_WorkSettings.SetPriority.
+        /// Intercepts manual priority changes made by the player to feed into the heuristic learning module.
+        /// </summary>
+        public static void SetPriorityPostfix(Pawn_WorkSettings __instance, WorkTypeDef w, int priority)
+        {
+            if (WorkAssigner.IsRunningAutomatedRefresh) return; // Ignore automated changes
+
+            var saveData = AutomatedWorkAssignmentMod.CurrentData;
+            if (saveData == null || !saveData.enableExperimentalHeuristics) return;
+
+            try
+            {
+                // Access the private 'pawn' field in Pawn_WorkSettings
+                Pawn pawn = Traverse.Create(__instance).Field("pawn").GetValue<Pawn>();
+                if (pawn != null && pawn.Map != null)
+                {
+                    var hm = Current.Game.GetComponent<Experimental.Heuristics.HeuristicManager>();
+                    if (hm != null)
+                    {
+                        hm.OnPlayerChangedPriority(pawn.Map, pawn, w, priority);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[AutoWork] Exception in SetPriorityPostfix heuristics: {ex}");
             }
         }
     }

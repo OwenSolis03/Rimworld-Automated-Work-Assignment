@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -29,6 +29,9 @@ namespace Automated_Work_Assignment
         /// </summary>
         private List<Pawn> availablePawns;
 
+        // --- Position/Size Persistence ---
+        private static Rect? savedWindowRect = null;
+
         /// <summary> Specifies the default dimensions of the dialog window when opened. </summary>
         public override Vector2 InitialSize => new Vector2(400f, 600f);
 
@@ -48,9 +51,31 @@ namespace Automated_Work_Assignment
             closeOnClickedOutside = true;
             absorbInputAroundWindow = true;
             draggable = true;
+            resizeable = true;
 
             this.optionalTitle = "AWA_ExclusionDialogTitle".Translate();
             RefreshPawnList();
+        }
+
+        /// <summary>
+        /// Restores saved window position/size on open.
+        /// </summary>
+        public override void PostOpen()
+        {
+            base.PostOpen();
+            if (savedWindowRect.HasValue)
+            {
+                windowRect = savedWindowRect.Value;
+            }
+        }
+
+        /// <summary>
+        /// Saves window position/size on close.
+        /// </summary>
+        public override void PostClose()
+        {
+            savedWindowRect = windowRect;
+            base.PostClose();
         }
 
         /// <summary>

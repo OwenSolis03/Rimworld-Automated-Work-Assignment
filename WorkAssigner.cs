@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
@@ -17,6 +17,12 @@ namespace Automated_Work_Assignment
         private const int DefaultPriority = 0;
 
         /// <summary>
+        /// Flag set to true while the automated assignment logic is running,
+        /// so Harmony patches can distinguish automated changes from manual player input.
+        /// </summary>
+        public static bool IsRunningAutomatedRefresh { get; private set; } = false;
+
+        /// <summary>
         /// Internal structure used to sort pawns based on their suitability score and passion.
         /// </summary>
         private struct PawnSuitability 
@@ -33,6 +39,7 @@ namespace Automated_Work_Assignment
         /// </summary>
         public static void RefreshAssignments()
         {
+            IsRunningAutomatedRefresh = true;
             AutomatedWork_SaveData saveData = null;
             try
             {
@@ -131,6 +138,8 @@ namespace Automated_Work_Assignment
                     Log.Error($"[AutoWork] Exception processing '{workType?.defName ?? "NULL"}': {ex}");
                 }
             }
+
+            IsRunningAutomatedRefresh = false;
         }
 
         /// <summary>

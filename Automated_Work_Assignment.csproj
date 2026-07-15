@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
             Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
@@ -10,7 +10,7 @@
         <AppDesignerFolder>Properties</AppDesignerFolder>
         <RootNamespace>Automated_Work_Assignment</RootNamespace>
         <AssemblyName>Automated_Work_Assignment</AssemblyName>
-        <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+        <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
@@ -55,7 +55,7 @@
 
     <ItemGroup>
         <Reference Include="0Harmony, Version=2.3.5.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>..\packages\Lib.Harmony.2.3.5\lib\net48\0Harmony.dll</HintPath>
+            <HintPath>..\packages\Lib.Harmony.2.3.5\lib\net472\0Harmony.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="Assembly-CSharp">
@@ -92,6 +92,7 @@
         <Compile Include="AutoAssign_GameComponent.cs" />
         <Compile Include="AutomatedWorkAssignmentMod.cs" />
         <Compile Include="AutomatedWork_SaveData.cs" />
+        <Compile Include="Dialog_AWASettings.cs" />
         <Compile Include="Dialog_ExpertModeSettings.cs" />
         <Compile Include="Dialog_ManageExclusions.cs" />
         <Compile Include="Dialog_ManageJobExclusions.cs" />
@@ -104,9 +105,22 @@
         <Compile Include="WorkAssigner.cs" />
         <Compile Include="WorkSettingValues.cs" />
         <Compile Include="WorkTypePriority.cs" />
+        <Compile Include="Experimental\Heuristics\ContextSnapshot.cs" />
+        <Compile Include="Experimental\Heuristics\HeuristicManager.cs" />
+        <Compile Include="Experimental\Heuristics\PlayerProfile.cs" />
+        <Compile Include="Experimental\UI\Dialog_ExperimentalSettings.cs" />
     </ItemGroup>
     <ItemGroup>
         <None Include="packages.config" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+    <PropertyGroup>
+        <ModDeployDir>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment</ModDeployDir>
+    </PropertyGroup>
+    <Target Name="DeployModContent" AfterTargets="Build">
+        <!-- Sync About folder (About.xml, Preview.png, etc.) -->
+        <Exec Command="robocopy &quot;$(ProjectDir)About&quot; &quot;$(ModDeployDir)\About&quot; /MIR /NJH /NJS /NFL /NDL" IgnoreExitCode="true" />
+        <!-- Sync Languages folder (English, Spanish, French, etc.) -->
+        <Exec Command="robocopy &quot;$(ProjectDir)Languages&quot; &quot;$(ModDeployDir)\Languages&quot; /MIR /NJH /NJS /NFL /NDL" IgnoreExitCode="true" />
+    </Target>
 </Project>
