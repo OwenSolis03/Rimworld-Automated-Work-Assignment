@@ -66,4 +66,20 @@
   <AWA_WorkTypeSelect_Tooltip>Select {0} to edit rules.</AWA_WorkTypeSelect_Tooltip>
   <AWA_WorkTypeNoSkill_Tooltip>{0} has no associated skill. Expert rules will use Social skill as fallback.</AWA_WorkTypeNoSkill_Tooltip>
 
+  <!-- New experimental and UI keys -->
+  <AWA_Experimental_Title>Experimental Feature: Player Profiling</AWA_Experimental_Title>
+  <AWA_Experimental_Warning>WARNING: This feature collects context data (Biome, Resources, Temperature) when you manually assign priorities to create a profile of your playstyle. It may impact game performance.</AWA_Experimental_Warning>
+  <AWA_Experimental_UpdateFreq>Update Frequency: Every {0} hours</AWA_Experimental_UpdateFreq>
+  <AWA_Experimental_CPUWarning><color=gray>Lower values mean it reacts faster to situation changes but consumes more CPU.</color></AWA_Experimental_CPUWarning>
+  <AWA_EnableExperimentalHeuristics>Enable Experimental Heuristics</AWA_EnableExperimentalHeuristics>
+  <AWA_EnableExperimentalHeuristics_Tooltip>Activates the profiling and heuristic assignment logic.</AWA_EnableExperimentalHeuristics_Tooltip>
+  <AWA_JobExclusion_Desc>Select pawns to exclude from {0}:</AWA_JobExclusion_Desc>
+  <AWA_JobExclusion_SubDesc1>Excluded pawns will never be assigned to this job by the mod.</AWA_JobExclusion_SubDesc1>
+  <AWA_JobExclusion_SubDesc2>(They can still be manually assigned in the Work tab)</AWA_JobExclusion_SubDesc2>
+  <AWA_Error_NoPawnList>Error: Could not load pawn list.</AWA_Error_NoPawnList>
+  <AWA_Error_ScrollView>Error setting up scroll view.</AWA_Error_ScrollView>
+  <AWA_AssignmentSystemMode>Assignment System Mode:</AWA_AssignmentSystemMode>
+  <AWA_Error_PreparingList>Error preparing list: {0}</AWA_Error_PreparingList>
+  <AWA_Error_ProcessingGroup>Error processing {0}</AWA_Error_ProcessingGroup>
+
 </LanguageData>

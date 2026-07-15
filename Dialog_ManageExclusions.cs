@@ -104,9 +104,9 @@ namespace Automated_Work_Assignment
             // Error handling if pawn list failed to load
             if (availablePawns == null) {
 #if RIMWORLD_1_6
-                listing.Label("Error: Could not load pawn list.");
+                listing.Label("AWA_Error_NoPawnList".Translate());
 #elif RIMWORLD_1_5
-                string t2 = "Error: Could not load pawn list.";
+                string t2 = "AWA_Error_NoPawnList".Translate();
                 Widgets.Label(listing.GetRect(Text.CalcHeight(t2, listing.ColumnWidth)), t2);
                 listing.Gap(listing.verticalSpacing);
 #endif
@@ -134,9 +134,9 @@ namespace Automated_Work_Assignment
             } catch (Exception ex) {
                 Log.Error($"[AutoWork] Exception setting up ScrollView in exclusion dialog: {ex}");
 #if RIMWORLD_1_6
-                listing.Label("Error setting up scroll view.");
+                listing.Label("AWA_Error_ScrollView".Translate());
 #elif RIMWORLD_1_5
-                string t3 = "Error setting up scroll view.";
+                string t3 = "AWA_Error_ScrollView".Translate();
                 Widgets.Label(listing.GetRect(Text.CalcHeight(t3, listing.ColumnWidth)), t3);
                 listing.Gap(listing.verticalSpacing);
 #endif

@@ -16,23 +16,21 @@ Smart Assignment: Intelligently prioritizes pawns by considering both their rele
 
 Emergency Priority: Automatically assigns Priority 1 (Highest) to essential roles like Doctor and Firefighter for designated pawns, ensuring critical tasks are handled swiftly.
 
-Detailed Configuration (via Mod Settings):
+Detailed Configuration (via Dedicated Settings Window):
+Say goodbye to cluttered menus! Automated Work Assignment features its own standalone, draggable, and resizable window with collapsible categories.
 
-- Set the desired number of pawns for each job type.
-
-- Set the target manual priority (1-Highest to 4-Lowest) you want assigned to the selected pawns for each job.
-
-- Exclude specific colonists: Prevent the mod from ever changing the priorities of selected individuals using the "Manage Excluded Pawns" dialog. Ideal for your dedicated specialists![/b]
-
-- Toggle Automatic Daily Refresh: Choose whether the mod automatically re-evaluates and assigns priorities once near the start of each day (enabled by default).
+- Simple Mode: Set the desired number of pawns and target manual priority (1-Highest to 4-Lowest) for each job type.
+- Expert Mode: Advanced controls for each job type, allowing you to set minimum skill thresholds, required passions, and backup priorities.
+- Exclude specific colonists: Prevent the mod from changing the priorities of selected individuals using the "Manage Excluded Pawns" dialog. Ideal for your dedicated specialists!
+- Toggle Automatic Daily Refresh: Choose whether the mod automatically re-evaluates and assigns priorities once near the start of each day.
 
 Enhanced Work Tab UI: Adds convenient buttons directly to the main Work tab for instant control:
+- Enable/Disable Mod: Quickly toggle the mod's entire assignment logic ON or OFF.
+- Refresh Now: Manually trigger a reassignment check at any time (if the mod is ON).
+- Mod Settings: Direct access to the configuration window.
 
-Enable/Disable Mod: Quickly toggle the mod's entire assignment logic ON or OFF.
-
-Refresh Now: Manually trigger a reassignment check at any time (if the mod is ON).
-
-Mod Settings: Direct access to the configuration window.
+Experimental Features (WIP):
+- Player Profiling / Heuristics: A work-in-progress module intended to learn from your manual assignments. Please note: This feature is currently a Work In Progress (WIP) and does nothing functionally yet—it only collects contextual data in the background if enabled (which is stored locally and is not uploaded anywhere).
 
 Compatibility: Designed to automatically detect and manage work types added by other mods. New jobs will appear in the settings automatically.
 
@@ -60,15 +58,15 @@ A: It should have a very minimal impact. The automatic daily refresh runs the ma
 
 Q: How does the mod decide which pawn is 'best'?
 
-A: It currently calculates a score based on the pawn's relevant Skill Level plus a bonus for Passion (a larger bonus for Burning Passion, a smaller one for Minor Passion). Pawns with higher scores are prioritized. (Future updates may allow customizing this calculation).
+A: In Simple Mode, it calculates a score based on the pawn's relevant Skill Level plus a bonus for Passion. In Expert Mode, you can tightly customize this logic by setting rules based on skill level thresholds.
 
 Q: Can I exclude specific pawns?
 
-A: Yes. Use the "Manage Excluded Pawns" button in the Mod Settings window to select colonists that the mod should completely ignore.
+A: Yes! You can globally exclude pawns using the "Manage Excluded Pawns" button, meaning the mod will never touch any of their priorities. Alternatively, in Expert Mode, you can use "Manage Job Exclusions" to prevent a pawn from being assigned to one specific job type, while still letting the mod manage their other tasks.
 
 Q: Can I manually override an assignment?
 
-A: Yes. You can turn the mod OFF globally using the button on the Work Tab, exclude the specific pawn you want to manage manually, or set the 'Desired Count' for a specific job to 0 in the settings (which makes the mod set everyone to priority 0 for that job).
+A: Yes. You can turn the mod OFF globally, globally exclude a specific pawn, exclude a pawn from a specific job, or set the 'Desired Count' for a job to 0 (which sets everyone to priority 0 for that job).
 
 Q: Does the mod respect Zones, Schedules, Outfits, etc.?
 

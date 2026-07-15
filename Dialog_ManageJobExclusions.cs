@@ -88,19 +88,19 @@ namespace Automated_Work_Assignment
             try 
             {
 #if RIMWORLD_1_6
-                listing.Label($"Select pawns to exclude from {selectedWorkType.labelShort}:");
-                listing.Label("Excluded pawns will never be assigned to this job by the mod.");
-                listing.Label("(They can still be manually assigned in the Work tab)");
+                listing.Label("AWA_JobExclusion_Desc".Translate(selectedWorkType.labelShort));
+                listing.Label("AWA_JobExclusion_SubDesc1".Translate());
+                listing.Label("AWA_JobExclusion_SubDesc2".Translate());
 #elif RIMWORLD_1_5
-                string t1 = $"Select pawns to exclude from {selectedWorkType.labelShort}:";
+                string t1 = "AWA_JobExclusion_Desc".Translate(selectedWorkType.labelShort);
                 Widgets.Label(listing.GetRect(Text.CalcHeight(t1, listing.ColumnWidth)), t1);
                 listing.Gap(listing.verticalSpacing);
                 
-                string t2 = "Excluded pawns will never be assigned to this job by the mod.";
+                string t2 = "AWA_JobExclusion_SubDesc1".Translate();
                 Widgets.Label(listing.GetRect(Text.CalcHeight(t2, listing.ColumnWidth)), t2);
                 listing.Gap(listing.verticalSpacing);
                 
-                string t3 = "(They can still be manually assigned in the Work tab)";
+                string t3 = "AWA_JobExclusion_SubDesc2".Translate();
                 Widgets.Label(listing.GetRect(Text.CalcHeight(t3, listing.ColumnWidth)), t3);
                 listing.Gap(listing.verticalSpacing);
 #endif
@@ -114,9 +114,9 @@ namespace Automated_Work_Assignment
             if (availablePawns == null) 
             {
 #if RIMWORLD_1_6
-                listing.Label("Error: Could not load pawn list.");
+                listing.Label("AWA_Error_NoPawnList".Translate());
 #elif RIMWORLD_1_5
-                string t4 = "Error: Could not load pawn list.";
+                string t4 = "AWA_Error_NoPawnList".Translate();
                 Widgets.Label(listing.GetRect(Text.CalcHeight(t4, listing.ColumnWidth)), t4);
                 listing.Gap(listing.verticalSpacing);
 #endif

@@ -54,10 +54,10 @@ namespace Automated_Work_Assignment.Experimental.UI
 
             Text.Font = GameFont.Medium;
 #if RIMWORLD_1_6
-            listing.Label("Experimental Feature: Player Profiling");
+            listing.Label("AWA_Experimental_Title".Translate());
 #elif RIMWORLD_1_5
-            Rect rect1 = listing.GetRect(Text.CalcHeight("Experimental Feature: Player Profiling", listing.ColumnWidth));
-            Widgets.Label(rect1, "Experimental Feature: Player Profiling");
+            Rect rect1 = listing.GetRect(Text.CalcHeight("AWA_Experimental_Title".Translate(), listing.ColumnWidth));
+            Widgets.Label(rect1, "AWA_Experimental_Title".Translate());
             listing.Gap(listing.verticalSpacing);
 #endif
             Text.Font = GameFont.Small;
@@ -66,10 +66,10 @@ namespace Automated_Work_Assignment.Experimental.UI
 
             GUI.color = new Color(1f, 0.4f, 0.4f);
 #if RIMWORLD_1_6
-            listing.Label("WARNING: This feature collects context data (Biome, Resources, Temperature) when you manually assign priorities to create a profile of your playstyle. It may impact game performance.");
+            listing.Label("AWA_Experimental_Warning".Translate());
 #elif RIMWORLD_1_5
-            Rect rect2 = listing.GetRect(Text.CalcHeight("WARNING: This feature collects context data (Biome, Resources, Temperature) when you manually assign priorities to create a profile of your playstyle. It may impact game performance.", listing.ColumnWidth));
-            Widgets.Label(rect2, "WARNING: This feature collects context data (Biome, Resources, Temperature) when you manually assign priorities to create a profile of your playstyle. It may impact game performance.");
+            Rect rect2 = listing.GetRect(Text.CalcHeight("AWA_Experimental_Warning".Translate(), listing.ColumnWidth));
+            Widgets.Label(rect2, "AWA_Experimental_Warning".Translate());
             listing.Gap(listing.verticalSpacing);
 #endif
             GUI.color = Color.white;
@@ -77,18 +77,18 @@ namespace Automated_Work_Assignment.Experimental.UI
             listing.Gap();
 
             listing.CheckboxLabeled(
-                "Enable Experimental Heuristics", 
+                "AWA_EnableExperimentalHeuristics".Translate(), 
                 ref saveData.enableExperimentalHeuristics,
-                "Activates the profiling and heuristic assignment logic."
+                "AWA_EnableExperimentalHeuristics_Tooltip".Translate()
             );
 
             if (saveData.enableExperimentalHeuristics)
             {
                 listing.Gap();
 #if RIMWORLD_1_6
-                listing.Label($"Update Frequency: Every {saveData.heuristicsUpdateFrequencyHours} hours");
+                listing.Label("AWA_Experimental_UpdateFreq".Translate(saveData.heuristicsUpdateFrequencyHours));
 #elif RIMWORLD_1_5
-                string freqText = $"Update Frequency: Every {saveData.heuristicsUpdateFrequencyHours} hours";
+                string freqText = "AWA_Experimental_UpdateFreq".Translate(saveData.heuristicsUpdateFrequencyHours);
                 Rect rect3 = listing.GetRect(Text.CalcHeight(freqText, listing.ColumnWidth));
                 Widgets.Label(rect3, freqText);
                 listing.Gap(listing.verticalSpacing);
@@ -98,10 +98,10 @@ namespace Automated_Work_Assignment.Experimental.UI
                 saveData.heuristicsUpdateFrequencyHours = Mathf.RoundToInt(freq);
                 
 #if RIMWORLD_1_6
-                listing.Label("<color=gray>Lower values mean it reacts faster to situation changes but consumes more CPU.</color>");
+                listing.Label("AWA_Experimental_CPUWarning".Translate());
 #elif RIMWORLD_1_5
-                Rect rect4 = listing.GetRect(Text.CalcHeight("<color=gray>Lower values mean it reacts faster to situation changes but consumes more CPU.</color>", listing.ColumnWidth));
-                Widgets.Label(rect4, "<color=gray>Lower values mean it reacts faster to situation changes but consumes more CPU.</color>");
+                Rect rect4 = listing.GetRect(Text.CalcHeight("AWA_Experimental_CPUWarning".Translate(), listing.ColumnWidth));
+                Widgets.Label(rect4, "AWA_Experimental_CPUWarning".Translate());
                 listing.Gap(listing.verticalSpacing);
 #endif
             }

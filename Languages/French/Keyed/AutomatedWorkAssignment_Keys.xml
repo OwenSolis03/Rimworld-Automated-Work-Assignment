@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <LanguageData>
 
   <!-- EN: Automated Work Assignment -->
@@ -95,5 +95,20 @@
   <AWA_ExpertMode_Info>Le mode Expert utilise les réglages de Quantité/Pourcentage des barres principales.\nLes règles ci-dessous définissent quelle priorité (1-4) assigner selon le niveau de compétence.</AWA_ExpertMode_Info>
   <AWA_WorkTypeSelect_Tooltip>Sélectionnez {0} pour modifier les règles.</AWA_WorkTypeSelect_Tooltip>
   <AWA_WorkTypeNoSkill_Tooltip>{0} n'a aucune compétence associée. Le mode Expert utilisera la compétence Social par défaut.</AWA_WorkTypeNoSkill_Tooltip>
+  <!-- Nouvelles clés expérimentales et interface -->
+  <AWA_Experimental_Title>Fonctionnalité Expérimentale : Profilage du Joueur</AWA_Experimental_Title>
+  <AWA_Experimental_Warning>AVERTISSEMENT : Cette fonctionnalité recueille des données de contexte (Biome, Ressources, Température) lorsque vous assignez manuellement des priorités pour créer un profil de votre style de jeu. Cela peut affecter les performances du jeu.</AWA_Experimental_Warning>
+  <AWA_Experimental_UpdateFreq>Fréquence de mise à jour : Toutes les {0} heures</AWA_Experimental_UpdateFreq>
+  <AWA_Experimental_CPUWarning><color=gray>Des valeurs plus faibles signifient qu'il réagit plus vite aux changements de situation mais consomme plus de CPU.</color></AWA_Experimental_CPUWarning>
+  <AWA_EnableExperimentalHeuristics>Activer les Heuristiques Expérimentales</AWA_EnableExperimentalHeuristics>
+  <AWA_EnableExperimentalHeuristics_Tooltip>Active le profilage et la logique d'affectation heuristique.</AWA_EnableExperimentalHeuristics_Tooltip>
+  <AWA_JobExclusion_Desc>Sélectionner les colons à exclure de {0} :</AWA_JobExclusion_Desc>
+  <AWA_JobExclusion_SubDesc1>Les colons exclus ne se verront jamais attribuer ce travail par le mod.</AWA_JobExclusion_SubDesc1>
+  <AWA_JobExclusion_SubDesc2>(Ils peuvent toujours être assignés manuellement dans l'onglet Travail)</AWA_JobExclusion_SubDesc2>
+  <AWA_Error_NoPawnList>Erreur : Impossible de charger la liste des colons.</AWA_Error_NoPawnList>
+  <AWA_Error_ScrollView>Erreur lors de la configuration de la vue de défilement.</AWA_Error_ScrollView>
+  <AWA_AssignmentSystemMode>Mode du Système d'Affectation :</AWA_AssignmentSystemMode>
+  <AWA_Error_PreparingList>Erreur lors de la préparation de la liste : {0}</AWA_Error_PreparingList>
+  <AWA_Error_ProcessingGroup>Erreur lors du traitement de {0}</AWA_Error_ProcessingGroup>
 
 </LanguageData>

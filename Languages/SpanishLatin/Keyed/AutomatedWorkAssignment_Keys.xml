@@ -65,5 +65,20 @@
   <AWA_ExpertMode_Info>El Modo Experto usa los ajustes de Cantidad/Porcentaje de las barras principales.\nLas reglas definen qué prioridad (1-4) asignar según el nivel de habilidad.</AWA_ExpertMode_Info>
   <AWA_WorkTypeSelect_Tooltip>Selecciona {0} para editar reglas.</AWA_WorkTypeSelect_Tooltip>
   <AWA_WorkTypeNoSkill_Tooltip>{0} no tiene habilidad asociada. El Modo Experto usará la habilidad Social como base.</AWA_WorkTypeNoSkill_Tooltip>
+  <!-- Nuevas claves experimentales y de interfaz -->
+  <AWA_Experimental_Title>Característica Experimental: Perfilado del Jugador</AWA_Experimental_Title>
+  <AWA_Experimental_Warning>ADVERTENCIA: Esta característica recopila datos de contexto (Bioma, Recursos, Temperatura) cuando asignas prioridades manualmente para crear un perfil de tu estilo de juego. Puede afectar el rendimiento del juego.</AWA_Experimental_Warning>
+  <AWA_Experimental_UpdateFreq>Frecuencia de actualización: Cada {0} horas</AWA_Experimental_UpdateFreq>
+  <AWA_Experimental_CPUWarning><color=gray>Valores más bajos significan que reacciona más rápido a los cambios de situación, pero consume más CPU.</color></AWA_Experimental_CPUWarning>
+  <AWA_EnableExperimentalHeuristics>Habilitar Heurísticas Experimentales</AWA_EnableExperimentalHeuristics>
+  <AWA_EnableExperimentalHeuristics_Tooltip>Activa la lógica de perfilado y asignación heurística.</AWA_EnableExperimentalHeuristics_Tooltip>
+  <AWA_JobExclusion_Desc>Selecciona colonos para excluir de {0}:</AWA_JobExclusion_Desc>
+  <AWA_JobExclusion_SubDesc1>El mod nunca asignará este trabajo a los colonos excluidos.</AWA_JobExclusion_SubDesc1>
+  <AWA_JobExclusion_SubDesc2>(Aún pueden ser asignados manualmente en la pestaña de Trabajo)</AWA_JobExclusion_SubDesc2>
+  <AWA_Error_NoPawnList>Error: No se pudo cargar la lista de colonos.</AWA_Error_NoPawnList>
+  <AWA_Error_ScrollView>Error al configurar la vista de desplazamiento.</AWA_Error_ScrollView>
+  <AWA_AssignmentSystemMode>Modo del Sistema de Asignación:</AWA_AssignmentSystemMode>
+  <AWA_Error_PreparingList>Error al preparar la lista: {0}</AWA_Error_PreparingList>
+  <AWA_Error_ProcessingGroup>Error al procesar {0}</AWA_Error_ProcessingGroup>
 
 </LanguageData>

@@ -157,9 +157,9 @@ namespace Automated_Work_Assignment
 
                     // --- Assignment Mode Selector ---
 #if RIMWORLD_1_6
-                    listingStandard.Label("Assignment System Mode:");
+                    listingStandard.Label("AWA_AssignmentSystemMode".Translate());
 #elif RIMWORLD_1_5
-                    string t1 = "Assignment System Mode:";
+                    string t1 = "AWA_AssignmentSystemMode".Translate();
                     Widgets.Label(listingStandard.GetRect(Text.CalcHeight(t1, listingStandard.ColumnWidth)), t1);
                     listingStandard.Gap(listingStandard.verticalSpacing);
 #endif
@@ -403,9 +403,9 @@ namespace Automated_Work_Assignment
             {
                 Log.Error($"[AutoWork] Exception preparing ScrollView: {ex}");
 #if RIMWORLD_1_6
-                listingStandard.Label($"Error preparing list: {ex.Message}");
+                listingStandard.Label("AWA_Error_PreparingList".Translate(ex.Message));
 #elif RIMWORLD_1_5
-                string t2 = $"Error preparing list: {ex.Message}";
+                string t2 = "AWA_Error_PreparingList".Translate(ex.Message);
                 Widgets.Label(listingStandard.GetRect(Text.CalcHeight(t2, listingStandard.ColumnWidth)), t2);
                 listingStandard.Gap(listingStandard.verticalSpacing);
 #endif
@@ -623,7 +623,7 @@ namespace Automated_Work_Assignment
                     {
                         Log.Error($"[AutoWork] Exception drawing row for '{group?[0]?.defName ?? "NULL"}': {ex}");
                         Rect errorRect = new Rect(viewRect.x, currentY, viewRect.width, 30f);
-                        Widgets.Label(errorRect, $"Error processing {group?[0]?.labelShort ?? "Unknown"}");
+                        Widgets.Label(errorRect, "AWA_Error_ProcessingGroup".Translate(group?[0]?.labelShort ?? "Unknown"));
                     }
                     finally
                     {
