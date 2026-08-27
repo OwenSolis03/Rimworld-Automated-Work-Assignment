@@ -109,7 +109,7 @@ namespace Automated_Work_Assignment
                     int finalDesiredCount;
                     if (workSetting.usePercentage)
                     {
-                        finalDesiredCount = CalculateCountFromPercentage(workSetting.percentage, eligibleForThisJob.Count);
+                        finalDesiredCount = CalculateCountFromPercentage(workSetting.percentage, eligibleForThisJob.Count, saveData.roundUpPercentage);
                     }
                     else
                     {
@@ -147,13 +147,14 @@ namespace Automated_Work_Assignment
         /// </summary>
         /// <param name="percentage">The target percentage (0.0 to 1.0).</param>
         /// <param name="totalEligibleCount">The total number of available colonists.</param>
+        /// <param name="roundUp">If true, round the fractional result up to the next whole pawn instead of to the nearest.</param>
         /// <returns>The integer count of pawns to assign.</returns>
-        private static int CalculateCountFromPercentage(float percentage, int totalEligibleCount)
+        private static int CalculateCountFromPercentage(float percentage, int totalEligibleCount, bool roundUp = false)
         {
             if (percentage <= 0f || totalEligibleCount <= 0) return 0;
             if (percentage >= 1f) return totalEligibleCount;
             float rawValue = percentage * totalEligibleCount;
-            int calculatedCount = Mathf.RoundToInt(rawValue);
+            int calculatedCount = roundUp ? Mathf.CeilToInt(rawValue) : Mathf.RoundToInt(rawValue);
             
             // Ensure at least one pawn is assigned if percentage is positive but calculated count rounded to 0
             return (calculatedCount == 0 && percentage > 0f) ? 1 : Mathf.Min(calculatedCount, totalEligibleCount);
@@ -170,7 +171,8 @@ namespace Automated_Work_Assignment
         {
             List<Pawn> eligiblePawns = new List<Pawn>();
             List<string> excludedIDs = saveData?.excludedPawnIDs ?? new List<string>();
-            
+            bool excludeChildren = saveData?.excludeChildren ?? false;
+
             if (Find.CurrentMap == null) return eligiblePawns;
 
             try
@@ -184,6 +186,7 @@ namespace Automated_Work_Assignment
                         && !p.Downed
                         && p.MentalStateDef == null
                         && p.workSettings != null
+                        && (!excludeChildren || p.DevelopmentalStage.Adult())
                         && !excludedIDs.Contains(p.ThingID))
                     {
                         eligiblePawns.Add(p);
@@ -212,6 +215,7 @@ namespace Automated_Work_Assignment
             
             List<Pawn> eligiblePawns = new List<Pawn>();
             List<string> globalExcludedIDs = saveData?.excludedPawnIDs ?? new List<string>();
+            bool excludeChildren = saveData?.excludeChildren ?? false;
             List<string> jobExcludedIDs = new List<string>();
             
             if (saveData?.perJobExcludedPawnIDs != null && 
@@ -233,6 +237,7 @@ namespace Automated_Work_Assignment
                         && !p.Downed
                         && p.MentalStateDef == null
                         && p.workSettings != null
+                        && (!excludeChildren || p.DevelopmentalStage.Adult())
                         && !globalExcludedIDs.Contains(p.ThingID)
                         && !jobExcludedIDs.Contains(p.ThingID))
                     {

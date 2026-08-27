@@ -1,106 +1,87 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
-            Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
-    <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{6C00C106-0CDE-49E5-9B33-5ED31C88B3E7}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>Automated_Work_Assignment</RootNamespace>
-        <AssemblyName>Automated_Work_Assignment</AssemblyName>
-        <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-        <FileAlignment>512</FileAlignment>
-        <LangVersion>latest</LangVersion>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release 1.6|AnyCPU' ">
-        <DebugType>pdbonly</DebugType>
-        <Optimize>true</Optimize>
-        <DefineConstants>TRACE;RIMWORLD_1_6</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <DocumentationFile>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.6\Assemblies\Automated_Work_Assignment.xml</DocumentationFile>
-        <OutputPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.6\Assemblies</OutputPath>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release 1.5|AnyCPU' ">
-        <DebugType>pdbonly</DebugType>
-        <Optimize>true</Optimize>
-        <DefineConstants>TRACE;RIMWORLD_1_5</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <DocumentationFile>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.5\Assemblies\Automated_Work_Assignment.xml</DocumentationFile>
-        <OutputPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.5\Assemblies</OutputPath>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug 1.6|AnyCPU' ">
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <DefineConstants>DEBUG;TRACE;RIMWORLD_1_6</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <DocumentationFile>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.6\Assemblies\Automated_Work_Assignment.xml</DocumentationFile>
-        <OutputPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.6\Assemblies\</OutputPath>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug 1.5|AnyCPU' ">
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <DefineConstants>DEBUG;TRACE;RIMWORLD_1_5</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <DocumentationFile>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.5\Assemblies\Automated_Work_Assignment.xml</DocumentationFile>
-        <OutputPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment\1.5\Assemblies\</OutputPath>
-    </PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk">
 
-    <ItemGroup>
-        <PackageReference Include="Lib.Harmony" Version="2.3.5" ExcludeAssets="runtime" />
-        <PackageReference Include="Krafs.Rimworld.Ref" Version="1.5.*" Condition="'$(Configuration)' == 'Debug 1.5' Or '$(Configuration)' == 'Release 1.5'" ExcludeAssets="runtime" />
-        <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.*" Condition="'$(Configuration)' == 'Debug 1.6' Or '$(Configuration)' == 'Release 1.6'" ExcludeAssets="runtime" />
-        <Reference Include="System"/>
-        <Reference Include="System.Core"/>
-        <Reference Include="System.Data"/>
-        <Reference Include="System.Xml"/>
-        <Reference Include="VSE" Condition="'$(Configuration)' == 'Debug 1.5' Or '$(Configuration)' == 'Release 1.5'">
-            <HintPath>C:\Program Files (x86)\Steam\steamapps\workshop\content\294100\3400246558\1.5\Assemblies\VSE.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="VSE" Condition="'$(Configuration)' == 'Debug 1.6' Or '$(Configuration)' == 'Release 1.6'">
-            <HintPath>C:\Program Files (x86)\Steam\steamapps\workshop\content\294100\3400246558\1.6\Assemblies\VSE.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-    </ItemGroup>
+  <!--
+    RimWorld mod assembly.
 
-    <ItemGroup>
-        <Compile Include="AutoAssign_GameComponent.cs" />
-        <Compile Include="AutomatedWorkAssignmentMod.cs" />
-        <Compile Include="AutomatedWork_SaveData.cs" />
-        <Compile Include="Dialog_AWASettings.cs" />
-        <Compile Include="Dialog_ExpertModeSettings.cs" />
-        <Compile Include="Dialog_ManageExclusions.cs" />
-        <Compile Include="Dialog_ManageJobExclusions.cs" />
-        <Compile Include="ExpertModeRuleManager.cs" />
-        <Compile Include="HarmonyPatches.cs" />
-        <Compile Include="ModDetector.cs" />
-        <Compile Include="Properties\AssemblyInfo.cs"/>
-        <Compile Include="SkillPriorityRule.cs" />
-        <Compile Include="UnifiedSuitabilityCalculator.cs" />
-        <Compile Include="WorkAssigner.cs" />
-        <Compile Include="WorkSettingValues.cs" />
-        <Compile Include="WorkTypePriority.cs" />
-        <Compile Include="Experimental\Heuristics\ContextSnapshot.cs" />
-        <Compile Include="Experimental\Heuristics\HeuristicManager.cs" />
-        <Compile Include="Experimental\Heuristics\PlayerProfile.cs" />
-        <Compile Include="Experimental\UI\Dialog_ExperimentalSettings.cs" />
-    </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
-    <PropertyGroup>
-        <ModDeployDir>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment</ModDeployDir>
-    </PropertyGroup>
-    <Target Name="DeployModContent" AfterTargets="Build">
-        <!-- Sync About folder (About.xml, Preview.png, etc.) -->
-        <Exec Command="robocopy &quot;$(ProjectDir)About&quot; &quot;$(ModDeployDir)\About&quot; /MIR /NJH /NJS /NFL /NDL" IgnoreExitCode="true" />
-        <!-- Sync Languages folder (English, Spanish, French, etc.) -->
-        <Exec Command="robocopy &quot;$(ProjectDir)Languages&quot; &quot;$(ModDeployDir)\Languages&quot; /MIR /NJH /NJS /NFL /NDL" IgnoreExitCode="true" />
-    </Target>
+    Builds against Krafs.Rimworld.Ref (reference-only game assemblies pulled from
+    NuGet), so a clean checkout compiles with nothing but the .NET SDK installed -
+    no local RimWorld install, no hand-wired HintPaths.
+
+    Pick the target game version through the configuration name:
+        dotnet build "-p:Configuration=Debug 1.6"
+        dotnet build "-p:Configuration=Release 1.5"
+    A bare "Debug"/"Release" (or no Configuration at all) defaults to RimWorld 1.6.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>Automated_Work_Assignment</AssemblyName>
+    <RootNamespace>Automated_Work_Assignment</RootNamespace>
+    <Configurations>Debug 1.5;Release 1.5;Debug 1.6;Release 1.6</Configurations>
+
+    <!-- Keep the hand-maintained Properties/AssemblyInfo.cs instead of a generated one -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+    <!-- RimWorld loads a bare DLL: no .deps.json, and never copy NuGet refs next to it -->
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <!-- Map the four "<Debug|Release> <version>" configurations onto a game version -->
+  <PropertyGroup>
+    <RimWorldVersion Condition="$(Configuration.Contains('1.5'))">1.5</RimWorldVersion>
+    <RimWorldVersion Condition="'$(RimWorldVersion)' == ''">1.6</RimWorldVersion>
+  </PropertyGroup>
+
+  <!-- SDK already defines TRACE for every configuration, and DEBUG only for a bare
+       "Debug"; add DEBUG back for the "Debug <version>" configs the code's #if DEBUG needs. -->
+  <PropertyGroup Condition="$(Configuration.StartsWith('Release'))">
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition="!$(Configuration.StartsWith('Release'))">
+    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RimWorldVersion)' == '1.5'">
+    <DefineConstants>$(DefineConstants);RIMWORLD_1_5</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(RimWorldVersion)' == '1.6'">
+    <DefineConstants>$(DefineConstants);RIMWORLD_1_6</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Output into <repo>/<version>/Assemblies so the repo folder itself is a loadable mod -->
+  <PropertyGroup>
+    <OutputPath>$(MSBuildProjectDirectory)\$(RimWorldVersion)\Assemblies\</OutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);1.5\**;1.6\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Lib.Harmony" Version="2.3.5" ExcludeAssets="runtime" PrivateAssets="all" />
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.5.*" Condition="'$(RimWorldVersion)' == '1.5'" ExcludeAssets="runtime" PrivateAssets="all" />
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.*" Condition="'$(RimWorldVersion)' == '1.6'" ExcludeAssets="runtime" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!--
+    Optional convenience: mirror About/ + Languages/ and drop the freshly built
+    assembly into a local RimWorld install. Automatically skipped when that folder
+    is absent (CI, other machines, no Steam), so it never breaks a plain build.
+    Override with:  dotnet build "-p:Configuration=Debug 1.6" -p:ModDeployDir=...
+  -->
+  <PropertyGroup>
+    <ModDeployDir Condition="'$(ModDeployDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\Automated_Work_Assignment</ModDeployDir>
+  </PropertyGroup>
+  <Target Name="DeployModContent" AfterTargets="Build" Condition="'$(ModDeployDir)' != '' And Exists('$(ModDeployDir)')">
+    <Exec Command="robocopy &quot;$(ProjectDir)About&quot; &quot;$(ModDeployDir)\About&quot; /MIR /NJH /NJS /NFL /NDL" IgnoreExitCode="true" />
+    <Exec Command="robocopy &quot;$(ProjectDir)Languages&quot; &quot;$(ModDeployDir)\Languages&quot; /MIR /NJH /NJS /NFL /NDL" IgnoreExitCode="true" />
+    <Exec Command="robocopy &quot;$(OutputPath.TrimEnd('\'))&quot; &quot;$(ModDeployDir)\$(RimWorldVersion)\Assemblies&quot; Automated_Work_Assignment.dll Automated_Work_Assignment.pdb /NJH /NJS /NFL /NDL" IgnoreExitCode="true" />
+  </Target>
+
 </Project>

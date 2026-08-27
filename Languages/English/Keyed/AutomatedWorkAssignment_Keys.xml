@@ -6,6 +6,10 @@
   <AWA_EnableModTooltip>When checked, the mod will manage work priorities.</AWA_EnableModTooltip>
   <AWA_EnableDailyRefreshLabel>Enable Automatic Daily Refresh</AWA_EnableDailyRefreshLabel>
   <AWA_EnableDailyRefreshTooltip>If enabled, assignments will be refreshed automatically at the start of each day.</AWA_EnableDailyRefreshTooltip>
+  <AWA_RoundUpPercentageLabel>Round percentages up</AWA_RoundUpPercentageLabel>
+  <AWA_RoundUpPercentageTooltip>When a percentage does not divide evenly, round the pawn count UP to the next whole colonist instead of to the nearest.\nExample: 25% of 5 colonists gives 2 instead of 1.</AWA_RoundUpPercentageTooltip>
+  <AWA_ExcludeChildrenLabel>Exclude children from automation</AWA_ExcludeChildrenLabel>
+  <AWA_ExcludeChildrenTooltip>When enabled, colonists who are not yet adults are ignored by the automated assignment system. Their work priorities are left untouched.</AWA_ExcludeChildrenTooltip>
   <AWA_ManageExclusionsButton>Manage Excluded Pawns</AWA_ManageExclusionsButton>
   <AWA_DesiredPawnsLabel>Configure Count (0=disabled) and Priority (1=Highest, 4=Lowest) per Job:</AWA_DesiredPawnsLabel>
   <AWA_CountLabel>Count:</AWA_CountLabel>

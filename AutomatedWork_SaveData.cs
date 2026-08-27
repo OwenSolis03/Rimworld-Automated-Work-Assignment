@@ -15,6 +15,18 @@ namespace Automated_Work_Assignment
         public bool modEnabled = true;
         public bool enableDailyRefresh = true;
 
+        /// <summary>
+        /// If true, the percentage-to-headcount calculation rounds UP to the next whole pawn
+        /// (e.g. 25% of 5 pawns = 2) instead of rounding to the nearest whole number.
+        /// </summary>
+        public bool roundUpPercentage = false;
+
+        /// <summary>
+        /// If true, colonists that are not yet adults (children) are skipped by the automated
+        /// assignment system entirely, regardless of the per-pawn exclusion list.
+        /// </summary>
+        public bool excludeChildren = false;
+
         // --- Experimental Settings ---
         public bool enableExperimentalHeuristics = false;
         public int heuristicsUpdateFrequencyHours = 24;
@@ -145,6 +157,8 @@ namespace Automated_Work_Assignment
             // Basic Settings
             Scribe_Values.Look(ref modEnabled, "modEnabled_perSave", true);
             Scribe_Values.Look(ref enableDailyRefresh, "enableDailyRefresh_perSave", true);
+            Scribe_Values.Look(ref roundUpPercentage, "roundUpPercentage", false);
+            Scribe_Values.Look(ref excludeChildren, "excludeChildren", false);
             
             // Experimental
             Scribe_Values.Look(ref enableExperimentalHeuristics, "enableExperimentalHeuristics", false);

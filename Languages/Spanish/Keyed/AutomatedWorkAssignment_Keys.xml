@@ -6,6 +6,10 @@
   <AWA_EnableModTooltip>Si está marcado, el mod gestionará las prioridades de trabajo.</AWA_EnableModTooltip>
   <AWA_EnableDailyRefreshLabel>Habilitar Recarga Diaria Automática</AWA_EnableDailyRefreshLabel>
   <AWA_EnableDailyRefreshTooltip>Si está habilitado, las asignaciones se recargarán automáticamente al inicio de cada día.</AWA_EnableDailyRefreshTooltip>
+  <AWA_RoundUpPercentageLabel>Redondear porcentajes hacia arriba</AWA_RoundUpPercentageLabel>
+  <AWA_RoundUpPercentageTooltip>Cuando un porcentaje no da un número exacto, redondea la cantidad de peones HACIA ARRIBA al siguiente colono entero en lugar de al más cercano.\nEjemplo: 25% de 5 colonos da 2 en vez de 1.</AWA_RoundUpPercentageTooltip>
+  <AWA_ExcludeChildrenLabel>Excluir a los niños de la automatización</AWA_ExcludeChildrenLabel>
+  <AWA_ExcludeChildrenTooltip>Si se activa, los colonos que aún no son adultos son ignorados por el sistema de asignación automática. Sus prioridades de trabajo no se modifican.</AWA_ExcludeChildrenTooltip>
   <AWA_ManageExclusionsButton>Gestionar Peones Excluidos</AWA_ManageExclusionsButton>
   <AWA_DesiredPawnsLabel>Configurar Cantidad (0=desactivado) y Prioridad (1=Máxima, 4=Mínima) por Trabajo:</AWA_DesiredPawnsLabel>
   <AWA_CountLabel>Cantidad:</AWA_CountLabel>

@@ -11,6 +11,14 @@
   <AWA_EnableDailyRefreshLabel>Activer le rafraîchissement quotidien automatique</AWA_EnableDailyRefreshLabel>
   <!-- EN: If enabled, assignments will be refreshed automatically near the start of each day. -->
   <AWA_EnableDailyRefreshTooltip>Si activé, les assignations seront actualisées automatiquement au début de chaque journée.</AWA_EnableDailyRefreshTooltip>
+  <!-- EN: Round percentages up -->
+  <AWA_RoundUpPercentageLabel>Arrondir les pourcentages au supérieur</AWA_RoundUpPercentageLabel>
+  <!-- EN: When a percentage does not divide evenly, round the pawn count UP... -->
+  <AWA_RoundUpPercentageTooltip>Lorsqu'un pourcentage ne tombe pas juste, arrondit le nombre de colons AU SUPÉRIEUR plutôt qu'au plus proche.\nExemple : 25 % de 5 colons donne 2 au lieu de 1.</AWA_RoundUpPercentageTooltip>
+  <!-- EN: Exclude children from automation -->
+  <AWA_ExcludeChildrenLabel>Exclure les enfants de l'automatisation</AWA_ExcludeChildrenLabel>
+  <!-- EN: When enabled, colonists who are not yet adults are ignored by the automated assignment system. -->
+  <AWA_ExcludeChildrenTooltip>Si activé, les colons qui ne sont pas encore adultes sont ignorés par le système d'assignation automatique. Leurs priorités de travail ne sont pas modifiées.</AWA_ExcludeChildrenTooltip>
   <!-- EN: Manage Excluded Pawns -->
   <AWA_ManageExclusionsButton>Gérer les colons exclus</AWA_ManageExclusionsButton>
   <!-- EN: Configure Count (0=disabled) and Priority (1=Highest, 4=Lowest) per Job: -->

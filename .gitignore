@@ -1,11 +1,15 @@
-# === Existing .NET / Rider Rules ===
+# === .NET build output (SDK-style project) ===
 [Aa]ssemblies/
 [Oo]bj/
 [Bb]in/
 *.dll
 *.exe
 *.pdb
+*.binlog
+
+# === IDE / editor ===
 .idea/
+.vs/
 *.suo
 *.user
 *.sln.dotsettings.user

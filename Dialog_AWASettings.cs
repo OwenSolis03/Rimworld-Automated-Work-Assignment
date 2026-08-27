@@ -148,9 +148,21 @@ namespace Automated_Work_Assignment
                     );
                     
                     listingStandard.CheckboxLabeled(
-                        "AWA_EnableDailyRefreshLabel".Translate(), 
-                        ref saveData.enableDailyRefresh, 
+                        "AWA_EnableDailyRefreshLabel".Translate(),
+                        ref saveData.enableDailyRefresh,
                         "AWA_EnableDailyRefreshTooltip".Translate()
+                    );
+
+                    listingStandard.CheckboxLabeled(
+                        "AWA_RoundUpPercentageLabel".Translate(),
+                        ref saveData.roundUpPercentage,
+                        "AWA_RoundUpPercentageTooltip".Translate()
+                    );
+
+                    listingStandard.CheckboxLabeled(
+                        "AWA_ExcludeChildrenLabel".Translate(),
+                        ref saveData.excludeChildren,
+                        "AWA_ExcludeChildrenTooltip".Translate()
                     );
 
                     listingStandard.Gap(6f);
@@ -345,7 +357,11 @@ namespace Automated_Work_Assignment
             try
             {
                 float currentYPos = listingStandard.CurHeight;
-                float availableHeight = inRect.height - currentYPos - 10f;
+                // Reserve room for the bottom close button (doCloseButton). RimWorld draws it over
+                // the window content without shrinking inRect, so without this reservation the work
+                // type list and its sliders render underneath the button and steal its clicks.
+                float closeButtonReserve = doCloseButton ? (CloseButSize.y + 10f) : 0f;
+                float availableHeight = inRect.height - currentYPos - 10f - closeButtonReserve;
                 float remainingHeight = Mathf.Max(100f, availableHeight);
                 outRect = new Rect(inRect.x, currentYPos, inRect.width, remainingHeight);
 

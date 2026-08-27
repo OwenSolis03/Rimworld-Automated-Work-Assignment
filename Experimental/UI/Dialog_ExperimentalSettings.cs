@@ -49,8 +49,12 @@ namespace Automated_Work_Assignment.Experimental.UI
 
         public override void DoWindowContents(Rect inRect)
         {
+            // Keep content clear of the bottom close button so they never overlap.
+            float footerHeight = CloseButSize.y + 10f;
+            Rect contentRect = new Rect(inRect.x, inRect.y, inRect.width, inRect.height - footerHeight);
+
             Listing_Standard listing = new Listing_Standard();
-            listing.Begin(inRect);
+            listing.Begin(contentRect);
 
             Text.Font = GameFont.Medium;
 #if RIMWORLD_1_6
@@ -110,7 +114,7 @@ namespace Automated_Work_Assignment.Experimental.UI
 
             listing.End();
             
-            Rect closeButtonRect = new Rect(inRect.width - CloseButSize.x, inRect.height - CloseButSize.y, CloseButSize.x, CloseButSize.y);
+            Rect closeButtonRect = new Rect(inRect.width - CloseButSize.x - 5f, inRect.height - CloseButSize.y - 5f, CloseButSize.x, CloseButSize.y);
             if (Widgets.ButtonText(closeButtonRect, "CloseButton".Translate()))
             {
                 this.Close();
