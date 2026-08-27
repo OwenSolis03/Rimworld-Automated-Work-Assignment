@@ -25,11 +25,13 @@ Thumbs.db
 # === GitNexus & AI Optimization ===
 # Ignora la propia base de datos de grafos para evitar recursión
 .gitnexus/
+.claude/
 # Ignora modelos pesados y archivos de embeddings locales
 *.bin
 *.onnx
 *.pt
 *.h5
+"AGENTS.md"
 
 # === Node.js (Crucial para GitNexus) ===
 node_modules/
