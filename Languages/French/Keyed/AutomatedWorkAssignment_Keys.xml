@@ -87,13 +87,23 @@
   <AWA_PrioritizePassion_Tooltip>Si activé, les colons sont triés par passion D'ABORD, puis par compétence. Utile pour former des colons passionnés.</AWA_PrioritizePassion_Tooltip>
   
   <!-- Sliders & Buttons -->
-  <AWA_ModeToggle_Percentage>Mode : %</AWA_ModeToggle_Percentage>
-  <AWA_ModeToggle_Count>Mode : #</AWA_ModeToggle_Count>
-  <AWA_PassionWeightLabel>Passion : {0}x</AWA_PassionWeightLabel>
+  <AWA_ModeToggle_Percentage>Mode %</AWA_ModeToggle_Percentage>
+  <AWA_ModeToggle_Count>Mode quantité</AWA_ModeToggle_Count>
+  <AWA_PassionWeightLabel>Poids de passion : {0}x</AWA_PassionWeightLabel>
+  <AWA_MasterPassionActiveLabel>Poids de passion : {0}x (globale)</AWA_MasterPassionActiveLabel>
   <AWA_PassionWeight_Tooltip>Influence de la passion sur la priorité d'assignation.\n0x = Ignorer complètement la passion\n1x = Équilibre par défaut\n3x = Préférer fortement les colons passionnés</AWA_PassionWeight_Tooltip>
-  <AWA_BackupPriorityLabel>Secours : {0}</AWA_BackupPriorityLabel>
+  <AWA_BackupPriorityLabel>Priorité de secours : {0}</AWA_BackupPriorityLabel>
   <AWA_Off>OFF</AWA_Off>
   <AWA_BackupPriority_Tooltip>Priorité pour les colons NON sélectionnés dans le groupe principal.\n0 = Travail désactivé\n1-4 = Priorité de secours (utile pour Nettoyage/Transport)</AWA_BackupPriority_Tooltip>
+  <AWA_BackupBandTopLabel>Secours max. : {0}</AWA_BackupBandTopLabel>
+  <AWA_BackupBandBottomLabel>Secours min. : {0}</AWA_BackupBandBottomLabel>
+  <AWA_BackupBand_Tooltip>Plage de priorité de secours pour les colons NON sélectionnés dans le groupe principal.\nMax. = meilleurs colons de secours ; min. = les moins urgents.\nLes colons non sélectionnés sont répartis sur cette plage selon leur compétence, au lieu de partager tous le même numéro.\nMettez le max. sur OFF pour désactiver complètement le travail de secours.</AWA_BackupBand_Tooltip>
+  <AWA_PrimaryBandTopLabel>Principal max. : {0}</AWA_PrimaryBandTopLabel>
+  <AWA_PrimaryBandBottomLabel>Principal min. : {0}</AWA_PrimaryBandBottomLabel>
+  <AWA_PrimaryBand_Tooltip>Plage de priorité pour les colons SÉLECTIONNÉS.\nMax. (le curseur Priorité) = meilleurs colons ; min. = les moins urgents du groupe sélectionné.\nLes colons sélectionnés sont répartis sur cette plage selon leur compétence.\nAvec « Chef + répartition », le meilleur colon reste au max. et le reste remplit la plage en dessous.</AWA_PrimaryBand_Tooltip>
+  <AWA_CombinedRow_Tooltip>Affiche ces types de travail sur une seule ligne. Modifier la ligne applique la même valeur à chacun. L'assignation reste calculée par type de travail individuel.</AWA_CombinedRow_Tooltip>
+  <AWA_WorkTypeLegend>Chaque ligne contrôle un travail :\n• Quantité/% : combien de colons assigner\n• Priorité : à quel point c'est urgent (P1 = en premier, P4 = en dernier)\n• Poids de passion : combien la passion augmente le score d'un colon\n• Priorité de secours : priorité pour les colons NON sélectionnés (OFF = ils ne font pas ce travail)</AWA_WorkTypeLegend>
+  <AWA_WorkTypeLegend_Bands>Échelonnement progressif activé : les curseurs marqués « max. »/« min. » répartissent plusieurs colons sur cette plage de priorité au lieu de leur donner à tous le même numéro.</AWA_WorkTypeLegend_Bands>
 
   <!-- Expert Mode Dialog -->
   <AWA_ExcludePawnsButton>Exclure des colons</AWA_ExcludePawnsButton>

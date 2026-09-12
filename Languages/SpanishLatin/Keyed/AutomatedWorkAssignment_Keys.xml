@@ -53,13 +53,23 @@
   <AWA_PrioritizePassion_Tooltip>Si se activa, los peones se ordenan PRIMERO por pasión, luego por habilidad. Útil para entrenar colonos apasionados.</AWA_PrioritizePassion_Tooltip>
   
   <!-- Sliders & Buttons -->
-  <AWA_ModeToggle_Percentage>Modo: %</AWA_ModeToggle_Percentage>
-  <AWA_ModeToggle_Count>Modo: #</AWA_ModeToggle_Count>
-  <AWA_PassionWeightLabel>Pasión: {0}x</AWA_PassionWeightLabel>
+  <AWA_ModeToggle_Percentage>Modo %</AWA_ModeToggle_Percentage>
+  <AWA_ModeToggle_Count>Modo cantidad</AWA_ModeToggle_Count>
+  <AWA_PassionWeightLabel>Peso de pasión: {0}x</AWA_PassionWeightLabel>
+  <AWA_MasterPassionActiveLabel>Peso de pasión: {0}x (global)</AWA_MasterPassionActiveLabel>
   <AWA_PassionWeight_Tooltip>Cuánto afecta la pasión a la prioridad de asignación.\n0x = Ignorar pasión totalmente\n1x = Equilibrio por defecto\n3x = Preferir fuertemente peones apasionados</AWA_PassionWeight_Tooltip>
-  <AWA_BackupPriorityLabel>Respaldo: {0}</AWA_BackupPriorityLabel>
+  <AWA_BackupPriorityLabel>Prioridad de respaldo: {0}</AWA_BackupPriorityLabel>
   <AWA_Off>OFF</AWA_Off>
   <AWA_BackupPriority_Tooltip>Prioridad para colonos NO seleccionados en el grupo principal.\n0 = Trabajo deshabilitado\n1-4 = Prioridad de respaldo (útil para Limpieza/Transporte)</AWA_BackupPriority_Tooltip>
+  <AWA_BackupBandTopLabel>Respaldo máx.: {0}</AWA_BackupBandTopLabel>
+  <AWA_BackupBandBottomLabel>Respaldo mín.: {0}</AWA_BackupBandBottomLabel>
+  <AWA_BackupBand_Tooltip>Banda de prioridad de respaldo para colonos NO seleccionados en el grupo principal.\nMáx. = mejores colonos de respaldo; mín. = los menos urgentes.\nLos colonos no seleccionados se reparten por este rango según su habilidad, en vez de compartir todos el mismo número.\nPon el máx. en OFF para desactivar el trabajo de respaldo por completo.</AWA_BackupBand_Tooltip>
+  <AWA_PrimaryBandTopLabel>Principal máx.: {0}</AWA_PrimaryBandTopLabel>
+  <AWA_PrimaryBandBottomLabel>Principal mín.: {0}</AWA_PrimaryBandBottomLabel>
+  <AWA_PrimaryBand_Tooltip>Banda de prioridad para los colonos SELECCIONADOS.\nMáx. (el deslizador de Prioridad) = mejores colonos; mín. = los menos urgentes del grupo seleccionado.\nLos colonos seleccionados se reparten por este rango según su habilidad.\nCon "Líder + reparto" activado, el mejor colono se queda en el máx. y el resto llena la banda por debajo.</AWA_PrimaryBand_Tooltip>
+  <AWA_CombinedRow_Tooltip>Muestra estos tipos de trabajo en una sola fila. Editar la fila aplica el mismo valor a cada uno. La asignación se sigue calculando por tipo de trabajo individual.</AWA_CombinedRow_Tooltip>
+  <AWA_WorkTypeLegend>Cada fila controla un trabajo:\n• Cantidad/%: cuántos colonos asignar\n• Prioridad: qué tan urgente (P1 = primero, P4 = último)\n• Peso de pasión: cuánto aumenta la pasión la puntuación de un colono\n• Prioridad de respaldo: prioridad para los colonos NO seleccionados (OFF = no hacen este trabajo)</AWA_WorkTypeLegend>
+  <AWA_WorkTypeLegend_Bands>Escalado gradual activado: los sliders marcados "máx."/"mín." reparten a varios colonos por ese rango de prioridad en vez de darles a todos el mismo número.</AWA_WorkTypeLegend_Bands>
 
   <!-- Expert Mode Dialog -->
   <AWA_ExcludePawnsButton>Excluir Peones</AWA_ExcludePawnsButton>

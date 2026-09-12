@@ -307,13 +307,29 @@ namespace Automated_Work_Assignment
                     listingStandard.CheckboxLabeled(
                         "Combine Similar Work Types",
                         ref saveData.combineSimilarWorkTypes,
-                        "Visually merges related work types (e.g. Grow/Plant Cut) into single rows."
+                        "Shows related work types (e.g. Growing + Cut plants) in one row for compactness. Editing the row writes the same value to each; assignment stays per individual work type."
                     );
                     listingStandard.CheckboxLabeled(
                         "Gradual Backup Scaling",
                         ref saveData.gradualBackupScaling,
-                        "Currently hides Backup Priority sliders. (Graded banding logic coming later)"
+                        "Replaces each single Backup Priority slider with a top/bottom band. Unselected colonists are spread across that priority range by skill instead of all sharing one number."
                     );
+                    if (saveData.gradualBackupScaling)
+                    {
+                        listingStandard.CheckboxLabeled(
+                            "    Also scale the primary group",
+                            ref saveData.bandPrimaryGroup,
+                            "Applies the same band idea to the SELECTED colonists: the Priority slider becomes the band top and a second slider sets the bottom. Off by default (selected pawns share one priority)."
+                        );
+                        if (saveData.bandPrimaryGroup)
+                        {
+                            listingStandard.CheckboxLabeled(
+                                "    Lead + spread (keep the best pawn at the top priority)",
+                                ref saveData.primaryBandLeadSpread,
+                                "The single best pawn stays at the top priority; the rest of the selected group is spread across the band below it. Useful for one lead doctor / lead cook plus helpers."
+                            );
+                        }
+                    }
                 }
 
                 listingStandard.GapLine(8f);
@@ -327,10 +343,34 @@ namespace Automated_Work_Assignment
                     listingStandard.End();
                     return;
                 }
+
+                // One-time legend explaining what each slider controls, instead of repeating
+                // the explanation in 20+ per-row labels. Players kept asking "what does this
+                // slider do" — a single reference line is cheaper than renaming every control.
+                GUI.color = Color.gray;
+#if RIMWORLD_1_6
+                listingStandard.Label("AWA_WorkTypeLegend".Translate());
+#elif RIMWORLD_1_5
+                string legendText = "AWA_WorkTypeLegend".Translate();
+                Widgets.Label(listingStandard.GetRect(Text.CalcHeight(legendText, listingStandard.ColumnWidth)), legendText);
+                listingStandard.Gap(listingStandard.verticalSpacing);
+#endif
+                if (saveData.gradualBackupScaling)
+                {
+#if RIMWORLD_1_6
+                    listingStandard.Label("AWA_WorkTypeLegend_Bands".Translate());
+#elif RIMWORLD_1_5
+                    string bandLegendText = "AWA_WorkTypeLegend_Bands".Translate();
+                    Widgets.Label(listingStandard.GetRect(Text.CalcHeight(bandLegendText, listingStandard.ColumnWidth)), bandLegendText);
+                    listingStandard.Gap(listingStandard.verticalSpacing);
+#endif
+                }
+                GUI.color = Color.white;
+                listingStandard.Gap(4f);
             }
-            catch (Exception ex) 
-            { 
-                Log.Error($"[AutoWork] Exception drawing general settings: {ex}"); 
+            catch (Exception ex)
+            {
+                Log.Error($"[AutoWork] Exception drawing general settings: {ex}");
             }
             
             // Determine the maximum number of colonists for slider limits
@@ -468,15 +508,21 @@ namespace Automated_Work_Assignment
                         float labelWidth = viewRect.width * 0.20f;
                         Rect labelRect = new Rect(rowCurrentX + 5f, rowCenterY, labelWidth, controlAreaHeight);
                         string displayLabel = workDef.labelShort.CapitalizeFirst();
-                        if (saveData.combineSimilarWorkTypes && group.Count > 1)
+                        bool isCombinedRow = saveData.combineSimilarWorkTypes && group.Count > 1;
+                        if (isCombinedRow)
                         {
-                            if (defName == "Growing" || defName == "PlantCutting") displayLabel = "Plants (Combined)";
-                            else if (defName == "Smithing" || defName == "Tailoring" || defName == "Crafting") displayLabel = "Crafting (Combined)";
+                            // Show the real sub-types instead of a hardcoded name, so the label
+                            // stays correct if the grouping changes and tells new players what's inside.
+                            displayLabel = string.Join(" / ", group.Select(w => w.labelShort.CapitalizeFirst()));
                         }
-                        
+
                         string arrow = isCollapsed ? "▶ " : "▼ ";
                         Widgets.DrawHighlightIfMouseover(labelRect);
                         Widgets.Label(labelRect, arrow + displayLabel);
+                        if (isCombinedRow)
+                        {
+                            TooltipHandler.TipRegion(labelRect, "AWA_CombinedRow_Tooltip".Translate());
+                        }
                         if (Widgets.ButtonInvisible(labelRect))
                         {
                             workTypeCollapsed[defName] = !isCollapsed;
@@ -540,6 +586,7 @@ namespace Automated_Work_Assignment
                                     0f, 1f,
                                     true,
                                     "AWA_PercentageLabel".Translate(currentSetting.percentage.ToStringPercent()),
+                                    "0%", "100%",
                                     roundTo: 0.01f
                                 );
                                 if (Mathf.Abs(newPct - currentSetting.percentage) > 0.001f)
@@ -556,6 +603,7 @@ namespace Automated_Work_Assignment
                                     0f, (float)maxPawnCountForSlider,
                                     true,
                                     "AWA_FixedCountLabel".Translate(currentSetting.count),
+                                    "0", maxPawnCountForSlider.ToString(),
                                     roundTo: 1f
                                 );
                                 if((int)newCount != currentSetting.count) 
@@ -564,30 +612,48 @@ namespace Automated_Work_Assignment
                                 }
                             }
 
+                            // While the primary band is on, this slider is the band TOP; the
+                            // bottom slider lives in row 2 (left column).
+                            bool primaryBandActive = saveData.gradualBackupScaling && saveData.bandPrimaryGroup;
+
                             Rect priorityGroupRect = new Rect(rowCurrentX + sliderWidth + 5f, rowCenterY, sliderWidth, controlAreaHeight);
                             float tempPriority = Mathf.Clamp(currentSetting.priority, 0, 4);
-                            string priorityLabelArg = currentSetting.priority == 0 ? "AWA_Off".Translate().ToString() : currentSetting.priority.ToString();
+                            // "P" prefix matches the band sliders (Backup/Primary top-bottom) so every
+                            // priority number in the row reads as the same unit at a glance.
+                            string priorityLabelArg = currentSetting.priority == 0 ? "AWA_Off".Translate().ToString() : ("P" + currentSetting.priority);
                             float newPriority = Widgets.HorizontalSlider(
                                 priorityGroupRect,
                                 tempPriority,
                                 0f, 4f,
                                 true,
-                                "AWA_PriorityFieldLabel".Translate(priorityLabelArg),
+                                (primaryBandActive ? "AWA_PrimaryBandTopLabel" : "AWA_PriorityFieldLabel").Translate(priorityLabelArg),
+                                "P1 (urgent)", "P4 (last)",
                                 roundTo: 1f
                             );
-                            if((int)newPriority != currentSetting.priority) 
-                            { 
-                                foreach (var wt in group) saveData.GetWorkSetting(wt.defName).priority = (int)newPriority;
+                            if((int)newPriority != currentSetting.priority)
+                            {
+                                foreach (var wt in group)
+                                {
+                                    var ws = saveData.GetWorkSetting(wt.defName);
+                                    ws.priority = (int)newPriority;
+                                    if (ws.primaryBandBottom < ws.priority) ws.primaryBandBottom = ws.priority;
+                                }
                             }
 
                             // --- Row 2: Passion Weight & Fallback Priority ---
                             float secondRowY = rowCenterY + controlAreaHeight + 4f; 
                             float secondRowStartX = rowCurrentX; 
                             
-                            // Passion Slider
+                            // Passion Slider. While Master Passion is on, the per-row slider is
+                            // replaced by a read-only hint; the effective weight is applied at
+                            // scoring time (WorkAssigner.CalculateSuitability), not written here.
                             if (saveData.useMasterPassion)
                             {
-                                foreach (var wt in group) saveData.GetWorkSetting(wt.defName).passionWeight = saveData.masterPassionWeight;
+                                Rect masterPassionRect = new Rect(secondRowStartX, secondRowY, sliderWidth, 22f);
+                                GUI.color = Color.gray;
+                                Widgets.Label(masterPassionRect, "AWA_MasterPassionActiveLabel".Translate(saveData.masterPassionWeight.ToString("F1")));
+                                GUI.color = Color.white;
+                                TooltipHandler.TipRegion(masterPassionRect, "AWA_PassionWeight_Tooltip".Translate());
                             }
                             else
                             {
@@ -609,10 +675,82 @@ namespace Automated_Work_Assignment
                                 TooltipHandler.TipRegion(passionWeightRect, "AWA_PassionWeight_Tooltip".Translate());
                             }
 
+                            // Primary-group band BOTTOM (top is the Priority slider in row 1).
+                            // Sits under the passion control; only drawn while primary banding is on.
+                            if (primaryBandActive)
+                            {
+                                Rect primaryBottomRect = new Rect(secondRowStartX, secondRowY + 24f, sliderWidth, 22f);
+                                string primaryBottomLabel = "AWA_PrimaryBandBottomLabel".Translate("P" + currentSetting.primaryBandBottom);
+                                float newPrimaryBottom = Widgets.HorizontalSlider(
+                                    primaryBottomRect,
+                                    currentSetting.primaryBandBottom,
+                                    0f, 4f,
+                                    true,
+                                    primaryBottomLabel,
+                                    "OFF", "P4",
+                                    roundTo: 1f
+                                );
+                                int primaryBottom = (int)newPrimaryBottom;
+                                // Bottom is never more urgent than the top (the Priority slider).
+                                if (primaryBottom < currentSetting.priority) primaryBottom = currentSetting.priority;
+                                if (primaryBottom != currentSetting.primaryBandBottom)
+                                {
+                                    foreach (var wt in group) saveData.GetWorkSetting(wt.defName).primaryBandBottom = primaryBottom;
+                                }
+                                TooltipHandler.TipRegion(primaryBottomRect, "AWA_PrimaryBand_Tooltip".Translate());
+                            }
+
                             // Fallback Priority Slider
                             if (saveData.gradualBackupScaling)
                             {
-                                // TODO: graded banding logic
+                                // Band mode: two stacked sliders defining [top .. bottom].
+                                // Unselected pawns are spread across this range by suitability rank.
+                                float bandX = secondRowStartX + sliderWidth + 5f;
+
+                                Rect bandTopRect = new Rect(bandX, secondRowY, sliderWidth, 22f);
+                                string bandTopLabel = "AWA_BackupBandTopLabel".Translate(
+                                    currentSetting.fallbackPriority == 0
+                                        ? "AWA_Off".Translate().ToString()
+                                        : ("P" + currentSetting.fallbackPriority));
+                                float newBandTop = Widgets.HorizontalSlider(
+                                    bandTopRect,
+                                    currentSetting.fallbackPriority,
+                                    0f, 4f,
+                                    true,
+                                    bandTopLabel,
+                                    "OFF", "P4",
+                                    roundTo: 1f
+                                );
+
+                                Rect bandBottomRect = new Rect(bandX, secondRowY + 24f, sliderWidth, 22f);
+                                string bandBottomLabel = "AWA_BackupBandBottomLabel".Translate("P" + currentSetting.backupBandBottom);
+                                float newBandBottom = Widgets.HorizontalSlider(
+                                    bandBottomRect,
+                                    currentSetting.backupBandBottom,
+                                    0f, 4f,
+                                    true,
+                                    bandBottomLabel,
+                                    "OFF", "P4",
+                                    roundTo: 1f
+                                );
+
+                                int bandTop = (int)newBandTop;
+                                int bandBottom = (int)newBandBottom;
+                                // Bottom can never be more urgent than top.
+                                if (bandBottom < bandTop) bandBottom = bandTop;
+
+                                if (bandTop != currentSetting.fallbackPriority || bandBottom != currentSetting.backupBandBottom)
+                                {
+                                    foreach (var wt in group)
+                                    {
+                                        var ws = saveData.GetWorkSetting(wt.defName);
+                                        ws.fallbackPriority = bandTop;
+                                        ws.backupBandBottom = bandBottom;
+                                    }
+                                }
+
+                                TooltipHandler.TipRegion(bandTopRect, "AWA_BackupBand_Tooltip".Translate());
+                                TooltipHandler.TipRegion(bandBottomRect, "AWA_BackupBand_Tooltip".Translate());
                             }
                             else
                             {

@@ -53,13 +53,23 @@
   <AWA_PrioritizePassion_Tooltip>When enabled, pawns are sorted by passion FIRST, then skill. Useful for training passionate colonists.</AWA_PrioritizePassion_Tooltip>
   
   <!-- Sliders & Buttons -->
-  <AWA_ModeToggle_Percentage>Mode: %</AWA_ModeToggle_Percentage>
-  <AWA_ModeToggle_Count>Mode: #</AWA_ModeToggle_Count>
-  <AWA_PassionWeightLabel>Passion: {0}x</AWA_PassionWeightLabel>
+  <AWA_ModeToggle_Percentage>% Mode</AWA_ModeToggle_Percentage>
+  <AWA_ModeToggle_Count>Count Mode</AWA_ModeToggle_Count>
+  <AWA_PassionWeightLabel>Passion weight: {0}x</AWA_PassionWeightLabel>
+  <AWA_MasterPassionActiveLabel>Passion weight: {0}x (global)</AWA_MasterPassionActiveLabel>
   <AWA_PassionWeight_Tooltip>How much passion affects assignment priority.\n0x = Ignore passion entirely\n1x = Default balance\n3x = Strongly prefer passionate pawns</AWA_PassionWeight_Tooltip>
-  <AWA_BackupPriorityLabel>Backup: {0}</AWA_BackupPriorityLabel>
+  <AWA_BackupPriorityLabel>Backup priority: {0}</AWA_BackupPriorityLabel>
   <AWA_Off>OFF</AWA_Off>
   <AWA_BackupPriority_Tooltip>Priority for colonists NOT in top selection.\n0 = Disable work\n1-4 = Backup priority (useful for Hauling/Cleaning)</AWA_BackupPriority_Tooltip>
+  <AWA_BackupBandTopLabel>Backup top: {0}</AWA_BackupBandTopLabel>
+  <AWA_BackupBandBottomLabel>Backup bottom: {0}</AWA_BackupBandBottomLabel>
+  <AWA_BackupBand_Tooltip>Backup priority band for colonists NOT in the top selection.\nTop = best backup pawns; bottom = least urgent.\nUnselected colonists are spread across this range by skill instead of all sharing one number.\nSet top to OFF to disable backup work entirely.</AWA_BackupBand_Tooltip>
+  <AWA_PrimaryBandTopLabel>Primary top: {0}</AWA_PrimaryBandTopLabel>
+  <AWA_PrimaryBandBottomLabel>Primary bottom: {0}</AWA_PrimaryBandBottomLabel>
+  <AWA_PrimaryBand_Tooltip>Priority band for the SELECTED colonists.\nTop (the Priority slider) = best pawns; bottom = least urgent of the selected group.\nThe selected pawns are spread across this range by skill.\nWith "Lead + spread" on, the single best pawn stays at the top and the rest fill the band below it.</AWA_PrimaryBand_Tooltip>
+  <AWA_CombinedRow_Tooltip>Shows these work types in one row. Editing the row applies the same value to each. Assignment is still calculated per individual work type.</AWA_CombinedRow_Tooltip>
+  <AWA_WorkTypeLegend>Each row controls one job:\n• Count/%: how many colonists to assign\n• Priority: how urgent (P1 = first, P4 = last)\n• Passion weight: how much passion boosts a colonist's score\n• Backup priority: priority for colonists NOT selected (OFF = they skip this job)</AWA_WorkTypeLegend>
+  <AWA_WorkTypeLegend_Bands>Gradual scaling is on: sliders labeled "top"/"bottom" spread several colonists across that priority range instead of giving them all the same number.</AWA_WorkTypeLegend_Bands>
 
   <!-- Expert Mode Dialog -->
   <AWA_ExcludePawnsButton>Exclude Pawns</AWA_ExcludePawnsButton>

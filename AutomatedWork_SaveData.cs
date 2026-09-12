@@ -73,6 +73,20 @@ namespace Automated_Work_Assignment
         public bool combineSimilarWorkTypes = false;
         public bool gradualBackupScaling = false;
 
+        /// <summary>
+        /// Sub-option of <see cref="gradualBackupScaling"/>: also spread the SELECTED (top-N)
+        /// colonists across a band [<see cref="WorkSettingValues.priority"/> ..
+        /// <see cref="WorkSettingValues.primaryBandBottom"/>] instead of a flat priority.
+        /// </summary>
+        public bool bandPrimaryGroup = false;
+
+        /// <summary>
+        /// Primary-band mode: keep the single best pawn at the top priority and spread the
+        /// rest across the band below it (one lead + helpers). Only relevant when
+        /// <see cref="bandPrimaryGroup"/> is on.
+        /// </summary>
+        public bool primaryBandLeadSpread = false;
+
         // --- Work Type Settings ---
 
         public Dictionary<string, WorkSettingValues> workSettings = new Dictionary<string, WorkSettingValues>();
@@ -126,10 +140,16 @@ namespace Automated_Work_Assignment
 
             // Range validation
             if (setting.priority < 1) setting.priority = 1;
-            if (setting.priority > 4) setting.priority = 4;
+            if (setting.priority > WorkSettingValues.MaxPriority) setting.priority = WorkSettingValues.MaxPriority;
             if (setting.count < 0) setting.count = 0;
             if (setting.percentage < 0f) setting.percentage = 0f;
             if (setting.percentage > 1f) setting.percentage = 1f;
+            if (setting.fallbackPriority < 0) setting.fallbackPriority = 0;
+            if (setting.fallbackPriority > WorkSettingValues.MaxPriority) setting.fallbackPriority = WorkSettingValues.MaxPriority;
+            if (setting.backupBandBottom < setting.fallbackPriority) setting.backupBandBottom = setting.fallbackPriority;
+            if (setting.backupBandBottom > WorkSettingValues.MaxPriority) setting.backupBandBottom = WorkSettingValues.MaxPriority;
+            if (setting.primaryBandBottom < setting.priority) setting.primaryBandBottom = setting.priority;
+            if (setting.primaryBandBottom > WorkSettingValues.MaxPriority) setting.primaryBandBottom = WorkSettingValues.MaxPriority;
 
             return setting;
         }
@@ -174,6 +194,8 @@ namespace Automated_Work_Assignment
             Scribe_Values.Look(ref masterPassionWeight, "masterPassionWeight", 1f);
             Scribe_Values.Look(ref combineSimilarWorkTypes, "combineSimilarWorkTypes", false);
             Scribe_Values.Look(ref gradualBackupScaling, "gradualBackupScaling", false);
+            Scribe_Values.Look(ref bandPrimaryGroup, "bandPrimaryGroup", false);
+            Scribe_Values.Look(ref primaryBandLeadSpread, "primaryBandLeadSpread", false);
 
             // Global Exclusion Lists
             Scribe_Collections.Look(ref excludedPawnIDs, "excludedPawnIDs_perSave", LookMode.Value);

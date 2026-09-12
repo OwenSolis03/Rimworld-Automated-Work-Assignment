@@ -117,12 +117,9 @@ namespace Automated_Work_Assignment
                     }
                     finalDesiredCount = Mathf.Min(finalDesiredCount, eligibleForThisJob.Count);
                     
-                    int targetPriority = workSetting.priority;
-                    int fallbackPriority = workSetting.fallbackPriority;
-
                     if (finalDesiredCount > 0)
                     {
-                        AssignWorkPriorities(workType, finalDesiredCount, targetPriority, fallbackPriority, eligibleForThisJob, saveData, expertManager);
+                        AssignWorkPriorities(workType, finalDesiredCount, workSetting, eligibleForThisJob, saveData, expertManager);
                     }
                     else
                     {
@@ -280,7 +277,13 @@ namespace Automated_Work_Assignment
                     return -1f;
 
                 WorkSettingValues workSetting = saveData?.GetWorkSetting(workType.defName);
-                float passionWeight = workSetting?.passionWeight ?? 1f;
+                // Master Passion (when enabled) is resolved here instead of being written into
+                // every WorkSettingValues during the settings UI draw. That draw-loop sync
+                // silently skipped work types whose row wasn't rendered (collapsed section /
+                // early return), leaving them on a stale per-row weight.
+                float passionWeight = (saveData != null && saveData.useMasterPassion)
+                    ? saveData.masterPassionWeight
+                    : (workSetting?.passionWeight ?? 1f);
 
                 // PERFORMANCE OPTIMIZATION: Use direct indexing instead of LINQ FirstOrDefault
                 SkillDef relevantSkillDef = (workType.relevantSkills != null && workType.relevantSkills.Count > 0) 
@@ -356,16 +359,57 @@ namespace Automated_Work_Assignment
         /// Applies priority settings to the list of eligible colonists.
         /// Sorts the colonists by suitability/passion and assigns priorities based on the selected mode.
         /// </summary>
+        /// <summary>
+        /// Maps a suitability rank to a priority inside a contiguous band [top..bottom].
+        /// Rank 0 is the best pawn and gets <paramref name="top"/> (the most urgent number);
+        /// the remaining pawns are spread evenly toward <paramref name="bottom"/>.
+        /// </summary>
+        /// <param name="rank">Zero-based position of the pawn in the sorted list (0 = best).</param>
+        /// <param name="count">Total number of pawns being spread across the band.</param>
+        /// <param name="top">Most urgent priority of the band (lower number).</param>
+        /// <param name="bottom">Least urgent priority of the band (higher number).</param>
+        internal static int PriorityForRank(int rank, int count, int top, int bottom)
+        {
+            if (count <= 1 || bottom <= top) return top;
+            int bandSize = bottom - top + 1;
+            int slot = (int)((long)rank * bandSize / count); // floor
+            return top + Mathf.Min(slot, bandSize - 1);
+        }
+
+        /// <summary>
+        /// Priority for a SELECTED (primary-group) pawn at suitability <paramref name="rank"/>.
+        /// Flat <c>workSetting.priority</c> unless the primary band is enabled, in which case the
+        /// top-N pawns are spread across [priority .. primaryBandBottom]. "Lead + spread" keeps
+        /// rank 0 at the top priority and spreads the rest over [priority+1 .. primaryBandBottom].
+        /// </summary>
+        private static int ComputePrimaryPriority(int rank, int count, WorkSettingValues workSetting, AutomatedWork_SaveData saveData)
+        {
+            int top = workSetting.priority;
+
+            if (!saveData.gradualBackupScaling || !saveData.bandPrimaryGroup || workSetting.primaryBandBottom <= top)
+                return top;
+
+            if (saveData.primaryBandLeadSpread)
+            {
+                if (rank == 0 || top + 1 > workSetting.primaryBandBottom) return top;
+                return PriorityForRank(rank - 1, count - 1, top + 1, workSetting.primaryBandBottom);
+            }
+
+            return PriorityForRank(rank, count, top, workSetting.primaryBandBottom);
+        }
+
         private static void AssignWorkPriorities(
-            WorkTypeDef workType, 
-            int desiredCount, 
-            int targetPriority, 
-            int fallbackPriority, 
-            List<Pawn> colonists, 
+            WorkTypeDef workType,
+            int desiredCount,
+            WorkSettingValues workSetting,
+            List<Pawn> colonists,
             AutomatedWork_SaveData saveData,
             ExpertModeRuleManager expertManager) // ADDED: Passed expertManager directly
         {
-            if (workType == null || colonists == null || saveData == null) return;
+            if (workType == null || colonists == null || saveData == null || workSetting == null) return;
+
+            int fallbackPriority = workSetting.fallbackPriority;
+            int backupBandBottom = workSetting.backupBandBottom;
             
             // 1. Calculate suitability for all candidates
             List<PawnSuitability> suitabilityList = new List<PawnSuitability>();
@@ -426,17 +470,20 @@ namespace Automated_Work_Assignment
                                     && expertManager.workTypeRules[workType].Any();
 
             HashSet<Pawn> assignedPawns = new HashSet<Pawn>();
-            
+
+            // Denominator for primary-band spreading: how many pawns actually get selected.
+            int primaryCount = Mathf.Min(desiredCount, suitabilityList.Count);
+
             // 4. Assign priorities to top candidates
             for (int i = 0; i < suitabilityList.Count && i < desiredCount; i++)
             {
                 Pawn pawnToAssign = suitabilityList[i].pawn;
                 int priorityToAssign = DefaultPriority;
-                
+
                 switch (saveData.assignmentMode)
                 {
                     case AutomatedWork_SaveData.AssignmentMode.Simple:
-                        priorityToAssign = targetPriority;
+                        priorityToAssign = ComputePrimaryPriority(i, primaryCount, workSetting, saveData);
                         break;
                         
                     case AutomatedWork_SaveData.AssignmentMode.Expert:
@@ -478,8 +525,8 @@ namespace Automated_Work_Assignment
                         break;
                         
                     case AutomatedWork_SaveData.AssignmentMode.Hybrid:
-                        priorityToAssign = targetPriority; // Default to Simple Mode target
-                        
+                        priorityToAssign = ComputePrimaryPriority(i, primaryCount, workSetting, saveData); // Default to (banded) Simple Mode target
+
                         if (expertRulesExist)
                         {
                             SkillDef relevantSkill = (workType.relevantSkills != null && workType.relevantSkills.Count > 0)
@@ -520,14 +567,31 @@ namespace Automated_Work_Assignment
                 if (pawnToAssign != null) assignedPawns.Add(pawnToAssign);
             }
             
-            // 5. Apply Fallback Priority to unassigned pawns
+            // 5. Apply Fallback Priority to unassigned pawns.
+            // suitabilityList is already sorted best -> worst, so the backups list keeps that order.
+            List<Pawn> backups = new List<Pawn>();
             foreach (var suitability in suitabilityList)
             {
                 if (suitability.pawn != null && !assignedPawns.Contains(suitability.pawn))
                 {
-                    // Fallback priority (usually 0, but user can set to 1-4 for things like Hauling)
-                    suitability.pawn.workSettings?.SetPriority(workType, fallbackPriority);
+                    backups.Add(suitability.pawn);
                 }
+            }
+
+            // When Gradual Backup Scaling is on (and a real backup priority is set), spread the
+            // unselected pawns across the band [fallbackPriority .. backupBandBottom] by rank
+            // instead of dropping them all onto the same flat number. With the toggle off, or
+            // with fallbackPriority == 0, behaviour is identical to before (flat / disable work).
+            bool useBand = saveData.gradualBackupScaling
+                           && fallbackPriority >= 1
+                           && backupBandBottom > fallbackPriority;
+
+            for (int b = 0; b < backups.Count; b++)
+            {
+                int priorityToAssign = useBand
+                    ? PriorityForRank(b, backups.Count, fallbackPriority, backupBandBottom)
+                    : fallbackPriority;
+                backups[b].workSettings?.SetPriority(workType, priorityToAssign);
             }
         }
     }
