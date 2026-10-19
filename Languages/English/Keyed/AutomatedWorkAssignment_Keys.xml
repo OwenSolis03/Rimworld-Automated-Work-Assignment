@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <AWA_SettingsCategory>Automated Work Assignment</AWA_SettingsCategory>
+  <AWA_EnableModLabel>Enable Mod Logic:</AWA_EnableModLabel>
+  <AWA_EnableModTooltip>When checked, the mod will manage work priorities.</AWA_EnableModTooltip>
+  <AWA_EnableDailyRefreshLabel>Enable Automatic Daily Refresh</AWA_EnableDailyRefreshLabel>
+  <AWA_EnableDailyRefreshTooltip>If enabled, assignments will be refreshed automatically at the start of each day.</AWA_EnableDailyRefreshTooltip>
+  <AWA_RoundUpPercentageLabel>Round percentages up</AWA_RoundUpPercentageLabel>
+  <AWA_RoundUpPercentageTooltip>When a percentage does not divide evenly, round the pawn count UP to the next whole colonist instead of to the nearest.\nExample: 25% of 5 colonists gives 2 instead of 1.</AWA_RoundUpPercentageTooltip>
+  <AWA_ExcludeChildrenLabel>Exclude children from automation</AWA_ExcludeChildrenLabel>
+  <AWA_ExcludeChildrenTooltip>When enabled, colonists who are not yet adults are ignored by the automated assignment system. Their work priorities are left untouched.</AWA_ExcludeChildrenTooltip>
+  <AWA_ManageExclusionsButton>Manage Excluded Pawns</AWA_ManageExclusionsButton>
+  <AWA_DesiredPawnsLabel>Configure Count (0=disabled) and Priority (1=Highest, 4=Lowest) per Job:</AWA_DesiredPawnsLabel>
+  <AWA_CountLabel>Count:</AWA_CountLabel>
+  <AWA_PriorityFieldLabel>Priority: {0}</AWA_PriorityFieldLabel>
+  <AWA_PercentageLabel>Percentage: {0}</AWA_PercentageLabel>
+  <AWA_FixedCountLabel>Count: {0}</AWA_FixedCountLabel>
+  <AWA_ModOn>AutoWork: ON</AWA_ModOn>
+  <AWA_ModOff>AutoWork: OFF</AWA_ModOff>
+  <AWA_RefreshButton>Refresh Now</AWA_RefreshButton>
+  <AWA_SettingsButton>Mod Settings</AWA_SettingsButton>
+  <AWA_ModDisabledMessage>Automated Work Assignment is currently disabled.</AWA_ModDisabledMessage>
+  <AWA_ExclusionDialogTitle>Manage Excluded Pawns</AWA_ExclusionDialogTitle>
+  <AWA_ExclusionDialogDesc>Select pawns to exclude from automatic assignment:</AWA_ExclusionDialogDesc>
+  <AWA_IncludeTaskTooltip>Uncheck to exclude this task from automatic assignment. The mod will ignore this task completely.</AWA_IncludeTaskTooltip>
+  <AWA_ToggleCountModeTooltip>Click to switch between Fixed Count (#) and Percentage (%) mode for assignments.</AWA_ToggleCountModeTooltip>
+  <AWA_LoadSaveFirst>Load a save game to configure Automated Work Assignment settings.</AWA_LoadSaveFirst>
+
+  <AWA_ConfigureExpertModeButton>Configure Expert Mode</AWA_ConfigureExpertModeButton>
+  <AWA_ConfigureExpertModeTooltip>Click to open the advanced rule editor to assign priorities based on skill ranges.</AWA_ConfigureExpertModeTooltip>
+
+  <AWA_ExpertMode_RuleWindowTitle>AWA: Expert Mode Rules</AWA_ExpertMode_RuleWindowTitle>
+  <AWA_ExpertMode_SelectWorkTypePrompt>Select a work type from the left list to configure its rules.</AWA_ExpertMode_SelectWorkTypePrompt>
+  <AWA_ExpertMode_AddRule>Add Rule</AWA_ExpertMode_AddRule>
+  <AWA_ExpertMode_DeleteRule>Delete Rule</AWA_ExpertMode_DeleteRule>
+  <AWA_ExpertMode_Priority>Priority</AWA_ExpertMode_Priority>
+  <AWA_ExpertMode_NoRulesDefined>No rules defined for this work type yet.</AWA_ExpertMode_NoRulesDefined>
+  <AWA_ExpertMode_LoadSaveFirst>Load a save game first to configure Expert Mode rules.</AWA_ExpertMode_LoadSaveFirst>
+
+  <!-- Assignment Modes -->
+  <AWA_AssignmentMode_Simple>Simple Mode</AWA_AssignmentMode_Simple>
+  <AWA_AssignmentMode_Simple_Tooltip>Uses only the Count/Priority sliders below. Expert Mode rules are ignored.</AWA_AssignmentMode_Simple_Tooltip>
+  <AWA_AssignmentMode_Expert>Expert Mode</AWA_AssignmentMode_Expert>
+  <AWA_AssignmentMode_Expert_Tooltip>Uses ONLY skill-based rules from Expert Mode. Simple sliders are ignored (except Count/Percentage).</AWA_AssignmentMode_Expert_Tooltip>
+  <AWA_AssignmentMode_Hybrid>Hybrid Mode</AWA_AssignmentMode_Hybrid>
+  <AWA_AssignmentMode_Hybrid_Tooltip>Expert rules override when they match. Simple Mode is fallback for unmatched skills.</AWA_AssignmentMode_Hybrid_Tooltip>
+
+  <!-- Advanced Settings -->
+  <AWA_ForceEmergencyPriorities>Force Emergency Priorities (Doctor/Firefighter = P1)</AWA_ForceEmergencyPriorities>
+  <AWA_ForceEmergencyPriorities_Tooltip>When enabled, Doctor and Firefighter are always forced to priority 1, overriding all other settings.</AWA_ForceEmergencyPriorities_Tooltip>
+  <AWA_PrioritizePassion>Prioritize Passion in Expert Mode</AWA_PrioritizePassion>
+  <AWA_PrioritizePassion_Tooltip>When enabled, pawns are sorted by passion FIRST, then skill. Useful for training passionate colonists.</AWA_PrioritizePassion_Tooltip>
+  
+  <!-- Sliders & Buttons -->
+  <AWA_ModeToggle_Percentage>% Mode</AWA_ModeToggle_Percentage>
+  <AWA_ModeToggle_Count>Count Mode</AWA_ModeToggle_Count>
+  <AWA_PassionWeightLabel>Passion weight: {0}x</AWA_PassionWeightLabel>
+  <AWA_MasterPassionActiveLabel>Passion weight: {0}x (global)</AWA_MasterPassionActiveLabel>
+  <AWA_PassionWeight_Tooltip>How much passion affects assignment priority.\n0x = Ignore passion entirely\n1x = Default balance\n3x = Strongly prefer passionate pawns</AWA_PassionWeight_Tooltip>
+  <AWA_BackupPriorityLabel>Backup priority: {0}</AWA_BackupPriorityLabel>
+  <AWA_Off>OFF</AWA_Off>
+  <AWA_BackupPriority_Tooltip>Priority for colonists NOT in top selection.\n0 = Disable work\n1-4 = Backup priority (useful for Hauling/Cleaning)</AWA_BackupPriority_Tooltip>
+  <AWA_BackupBandTopLabel>Backup top: {0}</AWA_BackupBandTopLabel>
+  <AWA_BackupBandBottomLabel>Backup bottom: {0}</AWA_BackupBandBottomLabel>
+  <AWA_BackupBand_Tooltip>Backup priority band for colonists NOT in the top selection.\nTop = best backup pawns; bottom = least urgent.\nUnselected colonists are spread across this range by skill instead of all sharing one number.\nSet top to OFF to disable backup work entirely.</AWA_BackupBand_Tooltip>
+  <AWA_PrimaryBandTopLabel>Primary top: {0}</AWA_PrimaryBandTopLabel>
+  <AWA_PrimaryBandBottomLabel>Primary bottom: {0}</AWA_PrimaryBandBottomLabel>
+  <AWA_PrimaryBand_Tooltip>Priority band for the SELECTED colonists.\nTop (the Priority slider) = best pawns; bottom = least urgent of the selected group.\nThe selected pawns are spread across this range by skill.\nWith "Lead + spread" on, the single best pawn stays at the top and the rest fill the band below it.</AWA_PrimaryBand_Tooltip>
+  <AWA_CombinedRow_Tooltip>Shows these work types in one row. Editing the row applies the same value to each. Assignment is still calculated per individual work type.</AWA_CombinedRow_Tooltip>
+  <AWA_WorkTypeLegend>Each row controls one job:\n• Count/%: how many colonists to assign\n• Priority: how urgent (P1 = first, P4 = last)\n• Passion weight: how much passion boosts a colonist's score\n• Backup priority: priority for colonists NOT selected (OFF = they skip this job)</AWA_WorkTypeLegend>
+  <AWA_WorkTypeLegend_Bands>Gradual scaling is on: sliders labeled "top"/"bottom" spread several colonists across that priority range instead of giving them all the same number.</AWA_WorkTypeLegend_Bands>
+
+  <!-- Expert Mode Dialog -->
+  <AWA_ExcludePawnsButton>Exclude Pawns</AWA_ExcludePawnsButton>
+  <AWA_ExcludePawns_Tooltip>Select specific pawns to exclude from this job type.</AWA_ExcludePawns_Tooltip>
+  <AWA_AddRule_Tooltip>Adds a new skill-based priority rule for this work type.</AWA_AddRule_Tooltip>
+  <AWA_NoSkillWarning>⚠ WARNING: {0} has no skill associated.\nExpert Mode rules will use Social skill as fallback.\nConsider using Simple Mode for this work type instead.</AWA_NoSkillWarning>
+  <AWA_ExpertMode_Info>Expert Mode uses the Count/Percentage settings from the main Simple Mode sliders.\nRules below define which priorities (1-4) to assign based on skill levels.</AWA_ExpertMode_Info>
+  <AWA_WorkTypeSelect_Tooltip>Select {0} to edit rules.</AWA_WorkTypeSelect_Tooltip>
+  <AWA_WorkTypeNoSkill_Tooltip>{0} has no associated skill. Expert rules will use Social skill as fallback.</AWA_WorkTypeNoSkill_Tooltip>
+
+  <!-- New experimental and UI keys -->
+  <AWA_Experimental_Title>Experimental Feature: Player Profiling</AWA_Experimental_Title>
+  <AWA_Experimental_Warning>WARNING: This feature collects context data (Biome, Resources, Temperature) when you manually assign priorities to create a profile of your playstyle. It may impact game performance.</AWA_Experimental_Warning>
+  <AWA_Experimental_UpdateFreq>Update Frequency: Every {0} hours</AWA_Experimental_UpdateFreq>
+  <AWA_Experimental_CPUWarning>Lower values mean it reacts faster to situation changes but consumes more CPU.</AWA_Experimental_CPUWarning>
+  <AWA_EnableExperimentalHeuristics>Enable Experimental Heuristics</AWA_EnableExperimentalHeuristics>
+  <AWA_EnableExperimentalHeuristics_Tooltip>Activates the profiling and heuristic assignment logic.</AWA_EnableExperimentalHeuristics_Tooltip>
+  <AWA_JobExclusion_Desc>Select pawns to exclude from {0}:</AWA_JobExclusion_Desc>
+  <AWA_JobExclusion_SubDesc1>Excluded pawns will never be assigned to this job by the mod.</AWA_JobExclusion_SubDesc1>
+  <AWA_JobExclusion_SubDesc2>(They can still be manually assigned in the Work tab)</AWA_JobExclusion_SubDesc2>
+  <AWA_Error_NoPawnList>Error: Could not load pawn list.</AWA_Error_NoPawnList>
+  <AWA_Error_ScrollView>Error setting up scroll view.</AWA_Error_ScrollView>
+  <AWA_AssignmentSystemMode>Assignment System Mode:</AWA_AssignmentSystemMode>
+  <AWA_Error_PreparingList>Error preparing list: {0}</AWA_Error_PreparingList>
+  <AWA_Error_ProcessingGroup>Error processing {0}</AWA_Error_ProcessingGroup>
+
+  <!-- Section headers, UI simplification options and dialog titles -->
+  <AWA_Section_BasicSettings>Basic Settings</AWA_Section_BasicSettings>
+  <AWA_Section_Management>Management Tools</AWA_Section_Management>
+  <AWA_Section_Simplification>UI Simplification (Optional)</AWA_Section_Simplification>
+  <AWA_Section_WorkTypes>Work Type Settings</AWA_Section_WorkTypes>
+  <AWA_ExperimentalButton>Experimental</AWA_ExperimentalButton>
+  <AWA_ExperimentalButton_Tooltip>Configure experimental heuristic profiling.</AWA_ExperimentalButton_Tooltip>
+  <AWA_Experimental_WindowTitle>Experimental Heuristics Module</AWA_Experimental_WindowTitle>
+  <AWA_MasterPassion>Enable Master Passion Slider</AWA_MasterPassion>
+  <AWA_MasterPassion_Tooltip>Replaces individual passion sliders with a single global slider.</AWA_MasterPassion_Tooltip>
+  <AWA_MasterPassionWeightLabel>Master passion weight: {0}x</AWA_MasterPassionWeightLabel>
+  <AWA_CombineWorkTypes>Combine Similar Work Types</AWA_CombineWorkTypes>
+  <AWA_CombineWorkTypes_Tooltip>Shows related work types (e.g. Growing + Cut plants) in one row for compactness. Editing the row writes the same value to each; assignment stays per individual work type.</AWA_CombineWorkTypes_Tooltip>
+  <AWA_GradualBackupScaling>Gradual Backup Scaling</AWA_GradualBackupScaling>
+  <AWA_GradualBackupScaling_Tooltip>Replaces each single Backup Priority slider with a top/bottom band. Unselected colonists are spread across that priority range by skill instead of all sharing one number.</AWA_GradualBackupScaling_Tooltip>
+  <AWA_BandPrimaryGroup>Also scale the primary group</AWA_BandPrimaryGroup>
+  <AWA_BandPrimaryGroup_Tooltip>Applies the same band idea to the SELECTED colonists: the Priority slider becomes the band top and a second slider sets the bottom. Off by default (selected pawns share one priority).</AWA_BandPrimaryGroup_Tooltip>
+  <AWA_PrimaryLeadSpread>Lead + spread (keep the best pawn at the top priority)</AWA_PrimaryLeadSpread>
+  <AWA_PrimaryLeadSpread_Tooltip>The single best pawn stays at the top priority; the rest of the selected group is spread across the band below it. Useful for one lead doctor / lead cook plus helpers.</AWA_PrimaryLeadSpread_Tooltip>
+  <AWA_SliderUrgent>P1 (urgent)</AWA_SliderUrgent>
+  <AWA_SliderLast>P4 (last)</AWA_SliderLast>
+  <AWA_ExpertMode_NoWorkTypes>No relevant work types found.</AWA_ExpertMode_NoWorkTypes>
+  <AWA_Error_RuleManagerLost>Error: Rule manager reference lost.</AWA_Error_RuleManagerLost>
+  <AWA_ExpertMode_MinSkill>Min skill: {0}</AWA_ExpertMode_MinSkill>
+  <AWA_ExpertMode_MaxSkill>Max skill: {0}</AWA_ExpertMode_MaxSkill>
+  <AWA_JobExclusion_Title>Exclude Pawns from {0}</AWA_JobExclusion_Title>
+  <AWA_IncapableSuffix>(Incapable)</AWA_IncapableSuffix>
+
+</LanguageData>

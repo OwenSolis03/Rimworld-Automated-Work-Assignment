@@ -1,92 +1,100 @@
-﻿using Verse;
+using Verse;
 
 namespace Automated_Work_Assignment
 {
     /// <summary>
-    /// Defines the configuration settings for a single work type (e.g., 'Cooking', 'Mining')
-    /// within the Automated Work Assignment mod. This class allows specifying how many pawns,
-    /// or what percentage of eligible pawns, should be assigned to the work type and at what priority.
-    /// It implements RimWorld's <see cref="IExposable"/> interface, enabling its data fields
-    /// to be saved and loaded as part of the game's save file using the Scribe system.
+    /// Defines the configuration settings for a single work type.
+    /// Stores preferences for pawn count, priority, percentage mode, and advanced weighting options.
     /// </summary>
     public class WorkSettingValues : IExposable
     {
         /// <summary>
-        /// The target number of pawns to be assigned to this work type when <see cref="usePercentage"/> is false.
-        /// For example, a value of 2 means the mod will try to assign the 2 most suitable pawns.
-        /// Defaults to 3 if not otherwise specified or loaded. Cannot be negative.
+        /// Highest priority number RimWorld accepts (1 = most urgent, 4 = least).
+        /// Kept as a single constant so band-scaling / future "More Work Priorities"
+        /// support only needs to change one place instead of scattered literals.
         /// </summary>
+        public const int MaxPriority = 4;
+
         public int count = 3;
-
-        /// <summary>
-        /// The priority level (1 to 4, where 1 is the highest priority) that will be set for the
-        /// pawns assigned to this work type by the mod.
-        /// Defaults to 3 if not otherwise specified or loaded. Clamped between 1 and 4.
-        /// </summary>
         public int priority = 3;
-
-        /// <summary>
-        /// The target percentage (as a fraction from 0.0 to 1.0) of *eligible* pawns to be assigned
-        /// to this work type when <see cref="usePercentage"/> is true.
-        /// For example, a value of 0.5 means the mod will try to assign the top 50% most suitable pawns.
-        /// Defaults to 1.0 (100%) if not otherwise specified or loaded. Clamped between 0.0 and 1.0.
-        /// </summary>
         public float percentage = 1f;
-
-        /// <summary>
-        /// A boolean flag determining the assignment mode for this work type.
-        /// If true, the assignment logic uses the <see cref="percentage"/> value.
-        /// If false, the assignment logic uses the fixed <see cref="count"/> value.
-        /// Defaults to false (use fixed count mode).
-        /// </summary>
         public bool usePercentage = false;
 
         /// <summary>
-        /// Default constructor. Initializes a new instance of <see cref="WorkSettingValues"/> with default values.
-        /// This constructor is required by RimWorld's Scribe system for loading saved data.
+        /// Determines the weight of passion in the suitability calculation.
+        /// 0.0 = Ignore passion completely (skill only).
+        /// 1.0 = Default balance.
+        /// 2.0 = Double weight.
+        /// 3.0 = Maximum emphasis on passion.
         /// </summary>
-        public WorkSettingValues() { }
+        public float passionWeight = 1f;
 
         /// <summary>
-        /// Parameterized constructor. Initializes a new instance of <see cref="WorkSettingValues"/>
-        /// with specified count and priority, using default values for other fields (percentage mode off).
+        /// Priority assigned to colonists NOT selected for the primary assignment.
+        /// 0 = Disable work (default behavior).
+        /// 1-4 = Set backup priority.
+        /// Useful for tasks like Hauling/Cleaning where everyone should help if idle.
         /// </summary>
-        /// <param name="count">The initial desired number of pawns (fixed count mode).</param>
-        /// <param name="priority">The initial target priority level (1-4).</param>
+        public int fallbackPriority = 0;
+
+        /// <summary>
+        /// Bottom (least urgent) priority of the backup band when
+        /// <see cref="AutomatedWork_SaveData.gradualBackupScaling"/> is enabled.
+        /// The band spans [<see cref="fallbackPriority"/> .. <see cref="backupBandBottom"/>];
+        /// unselected pawns are spread across it by suitability rank instead of all
+        /// receiving the same flat <see cref="fallbackPriority"/>.
+        /// Ignored while gradual scaling is off, or when <see cref="fallbackPriority"/> is 0.
+        /// </summary>
+        public int backupBandBottom = MaxPriority;
+
+        /// <summary>
+        /// Bottom (least urgent) priority of the PRIMARY band when
+        /// <see cref="AutomatedWork_SaveData.gradualBackupScaling"/> and
+        /// <see cref="AutomatedWork_SaveData.bandPrimaryGroup"/> are both enabled.
+        /// The band spans [<see cref="priority"/> .. <see cref="primaryBandBottom"/>];
+        /// the selected (top-N) pawns are spread across it by suitability rank instead of
+        /// all receiving the flat <see cref="priority"/>.
+        /// Ignored while primary banding is off, or when it is not more urgent than <see cref="priority"/>.
+        /// </summary>
+        public int primaryBandBottom = MaxPriority;
+
+        public WorkSettingValues() { }
+
         public WorkSettingValues(int count, int priority)
         {
             this.count = count;
             this.priority = priority;
-            // Defaults for percentage and usePercentage remain as defined in field initializers.
         }
 
-        /// <summary>
-        /// Implements the <see cref="IExposable.ExposeData"/> method required by RimWorld's save/load system.
-        /// This method defines how the fields (<see cref="count"/>, <see cref="priority"/>,
-        /// <see cref="percentage"/>, <see cref="usePercentage"/>) are written to or read from the save file
-        /// using the <see cref="Scribe_Values"/> utility. It also includes validation logic
-        /// (clamping) that runs after data is loaded to ensure values remain within valid ranges.
-        /// </summary>
         public void ExposeData()
         {
-            // Use Scribe_Values.Look to save/load each field with a unique label and a default value.
-            Scribe_Values.Look(ref count, "count", 3); // "count" is the XML tag, 3 is the default if tag not found on load.
+            Scribe_Values.Look(ref count, "count", 3);
             Scribe_Values.Look(ref priority, "priority", 3);
             Scribe_Values.Look(ref percentage, "percentage", 1f);
             Scribe_Values.Look(ref usePercentage, "usePercentage", false);
+            Scribe_Values.Look(ref passionWeight, "passionWeight", 1f);
+            Scribe_Values.Look(ref fallbackPriority, "fallbackPriority", 0);
+            Scribe_Values.Look(ref backupBandBottom, "backupBandBottom", MaxPriority);
+            Scribe_Values.Look(ref primaryBandBottom, "primaryBandBottom", MaxPriority);
 
-            // Post-Load Validation/Clamping: Ensure loaded values are within expected bounds.
-            // Scribe.mode tells us if we are currently saving, loading, or in another state.
+            // Post-Load Validation
             if (Scribe.mode == LoadSaveMode.LoadingVars)
             {
-                // Clamp priority between 1 and 4.
-                if (priority < 1) priority = 1;
-                if (priority > 4) priority = 4;
-                // Ensure count is not negative.
+                if (priority < 0) priority = 0;
+                if (priority > MaxPriority) priority = MaxPriority;
                 if (count < 0) count = 0;
-                // Clamp percentage between 0.0 and 1.0.
                 if (percentage < 0f) percentage = 0f;
                 if (percentage > 1f) percentage = 1f;
+                if (passionWeight < 0f) passionWeight = 0f;
+                if (passionWeight > 3f) passionWeight = 3f;
+                if (fallbackPriority < 0) fallbackPriority = 0;
+                if (fallbackPriority > MaxPriority) fallbackPriority = MaxPriority;
+                if (backupBandBottom < 0) backupBandBottom = 0;
+                if (backupBandBottom > MaxPriority) backupBandBottom = MaxPriority;
+                if (primaryBandBottom > MaxPriority) primaryBandBottom = MaxPriority;
+                // A band bottom is never more urgent than its top.
+                if (backupBandBottom < fallbackPriority) backupBandBottom = fallbackPriority;
+                if (primaryBandBottom < priority) primaryBandBottom = priority;
             }
         }
     }

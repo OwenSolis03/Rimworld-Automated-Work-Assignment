@@ -1,178 +1,222 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Verse;
 
 namespace Automated_Work_Assignment
 {
     /// <summary>
     /// A RimWorld <see cref="GameComponent"/> dedicated to storing and managing all mod-related settings
-    /// that are specific to a particular save game. This component ensures that the user's configuration
-    /// for the Automated Work Assignment mod persists across saving and loading the game.
-    /// It holds settings such as the overall mod enablement state for the save, the daily refresh toggle,
-    /// detailed configurations for each work type, and lists of excluded pawns and work types.
-    /// These settings are serialized (saved) and deserialized (loaded) using RimWorld's Scribe system
-    /// within the <see cref="ExposeData"/> method.
+    /// that are specific to a particular save game. This component persists configuration data
+    /// such as assignment modes, exclusions, and per-job settings within the save file.
     /// </summary>
     public class AutomatedWork_SaveData : GameComponent
     {
-        // --- Settings Fields ---
-
-        /// <summary>
-        /// A boolean flag indicating whether the core logic of the Automated Work Assignment mod
-        /// is active for this specific save game. If set to <c>false</c>, no automatic assignments
-        /// or adjustments will occur in this save, regardless of other settings.
-        /// Defaults to <c>true</c>. Persisted via <see cref="ExposeData"/>.
-        /// </summary>
+        // --- Core Settings ---
+        
         public bool modEnabled = true;
-
-        /// <summary>
-        /// A boolean flag controlling whether the automatic daily refresh of work assignments
-        /// (managed by <see cref="AutoAssign_GameComponent"/>) is enabled for this specific save game.
-        /// If set to <c>false</c>, the daily check will not trigger <see cref="WorkAssigner.RefreshAssignments"/>.
-        /// Defaults to <c>true</c>. Persisted via <see cref="ExposeData"/>.
-        /// </summary>
         public bool enableDailyRefresh = true;
 
         /// <summary>
-        /// Stores the detailed configuration for each individual work type (<see cref="WorkTypeDef"/>)
-        /// within this save game. The dictionary uses the <see cref="WorkTypeDef.defName"/> as the key
-        /// and a <see cref="WorkSettingValues"/> object containing the count, priority, percentage, and mode
-        /// for that work type as the value. Initialized as an empty dictionary if null during loading.
-        /// Persisted via <see cref="ExposeData"/>. Use <see cref="GetWorkSetting"/> to access or create entries.
+        /// If true, the percentage-to-headcount calculation rounds UP to the next whole pawn
+        /// (e.g. 25% of 5 pawns = 2) instead of rounding to the nearest whole number.
         /// </summary>
-        public Dictionary<string, WorkSettingValues> workSettings = new Dictionary<string, WorkSettingValues>();
+        public bool roundUpPercentage = false;
 
         /// <summary>
-        /// A list containing the unique <see cref="Thing.ThingID"/> strings of pawns that should be
-        /// completely ignored by the automatic work assignment logic in this save game. Pawns in this list
-        /// will not have their work priorities modified by the mod. Initialized as an empty list if null
-        /// during loading. Managed via the <see cref="Dialog_ManageExclusions"/> window.
-        /// Persisted via <see cref="ExposeData"/>.
+        /// If true, colonists that are not yet adults (children) are skipped by the automated
+        /// assignment system entirely, regardless of the per-pawn exclusion list.
+        /// </summary>
+        public bool excludeChildren = false;
+
+        // --- Experimental Settings ---
+        public bool enableExperimentalHeuristics = false;
+        public int heuristicsUpdateFrequencyHours = 24;
+
+        /// <summary>
+        /// Defines the active assignment mode for the automated work system.
+        /// </summary>
+        public enum AssignmentMode
+        {
+            /// <summary>
+            /// Uses only the simple sliders (Count/Percentage, Priority) for assignments.
+            /// </summary>
+            Simple,
+            /// <summary>
+            /// Uses only the detailed skill-based rules defined in Expert Mode.
+            /// </summary>
+            Expert,
+            /// <summary>
+            /// Tries to apply Expert Mode rules first; if no rule matches, falls back to Simple Mode settings.
+            /// </summary>
+            Hybrid
+        }
+        
+        /// <summary>
+        /// The currently active mode determining how priorities are calculated.
+        /// </summary>
+        public AssignmentMode assignmentMode = AssignmentMode.Simple;
+
+        /// <summary>
+        /// If true, critical emergency jobs (Doctor, Firefighter) are forced to Priority 1,
+        /// overriding other user configurations to ensure colony safety.
+        /// </summary>
+        public bool forceEmergencyPriorities = true;
+
+        /// <summary>
+        /// If true, Expert Mode sorting logic prioritizes Passion over Skill level.
+        /// Useful for prioritizing the training of passionate pawns even if their current skill is lower.
+        /// </summary>
+        public bool prioritizePassionInExpertMode = false;
+
+        // --- UI Simplification Settings ---
+        public bool useMasterPassion = false;
+        public float masterPassionWeight = 1f;
+        public bool combineSimilarWorkTypes = false;
+        public bool gradualBackupScaling = false;
+
+        /// <summary>
+        /// Sub-option of <see cref="gradualBackupScaling"/>: also spread the SELECTED (top-N)
+        /// colonists across a band [<see cref="WorkSettingValues.priority"/> ..
+        /// <see cref="WorkSettingValues.primaryBandBottom"/>] instead of a flat priority.
+        /// </summary>
+        public bool bandPrimaryGroup = false;
+
+        /// <summary>
+        /// Primary-band mode: keep the single best pawn at the top priority and spread the
+        /// rest across the band below it (one lead + helpers). Only relevant when
+        /// <see cref="bandPrimaryGroup"/> is on.
+        /// </summary>
+        public bool primaryBandLeadSpread = false;
+
+        // --- Work Type Settings ---
+
+        public Dictionary<string, WorkSettingValues> workSettings = new Dictionary<string, WorkSettingValues>();
+
+        // --- Exclusion Lists ---
+
+        /// <summary>
+        /// Global list of Pawn ThingIDs that are completely excluded from the automated assignment system.
         /// </summary>
         public List<string> excludedPawnIDs = new List<string>();
 
         /// <summary>
-        /// A list containing the <see cref="Def.defName"/> strings of <see cref="WorkTypeDef"/>s that should be
-        /// completely excluded from the automatic assignment process in this save game. No assignments will be
-        /// made for work types whose defNames appear in this list. Initialized as an empty list if null
-        /// during loading. Managed via the mod's settings interface.
-        /// Persisted via <see cref="ExposeData"/>.
+        /// List of WorkTypeDef names (e.g., "Cooking", "Cleaning") that are excluded from automation.
         /// </summary>
         public List<string> excludedWorkTypeDefNames = new List<string>();
 
-        // --- Private working lists required by Scribe for dictionary serialization ---
-
         /// <summary>
-        /// Internal temporary list utilized exclusively by the RimWorld Scribe system
-        /// (<see cref="Scribe_Collections.Look{K, V}(ref Dictionary{K, V}, string, LookMode, LookMode, ref List{K}, ref List{V})"/>)
-        /// during the process of saving or loading the <see cref="workSettings"/> dictionary. It holds the keys
-        /// (<c>string</c> representing <see cref="WorkTypeDef.defName"/>) temporarily during serialization/deserialization.
-        /// This field should not be accessed or modified directly by mod logic.
+        /// Dictionary storing specific pawn exclusions per job type.
+        /// Key: WorkTypeDef name. Value: List of excluded Pawn ThingIDs.
         /// </summary>
+        public Dictionary<string, List<string>> perJobExcludedPawnIDs = new Dictionary<string, List<string>>();
+
+        // --- Private working lists for Scribe (Serialization) ---
+        
         private List<string> workSettingsKeysWorkingList;
-
-        /// <summary>
-        /// Internal temporary list utilized exclusively by the RimWorld Scribe system
-        /// (<see cref="Scribe_Collections.Look{K, V}(ref Dictionary{K, V}, string, LookMode, LookMode, ref List{K}, ref List{V})"/>)
-        /// during the process of saving or loading the <see cref="workSettings"/> dictionary. It holds the values
-        /// (<see cref="WorkSettingValues"/>) temporarily during serialization/deserialization.
-        /// This field should not be accessed or modified directly by mod logic.
-        /// </summary>
         private List<WorkSettingValues> workSettingsValuesWorkingList;
+        private List<string> perJobExclusionKeysWorkingList;
+        private List<List<string>> perJobExclusionValuesWorkingList;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AutomatedWork_SaveData"/> component.
-        /// This constructor is mandatory for all <see cref="GameComponent"/> subclasses and is called
-        /// by the RimWorld engine when associating the component with a <see cref="Verse.Game"/> instance.
-        /// </summary>
-        /// <param name="game">The current <see cref="Verse.Game"/> instance this component is being added to.</param>
         public AutomatedWork_SaveData(Game game) { }
 
         /// <summary>
-        /// Retrieves the specific <see cref="WorkSettingValues"/> for a given work type, identified by its defName,
-        /// within the context of this save game. If settings for the specified <paramref name="workTypeDefName"/>
-        /// do not already exist in the <see cref="workSettings"/> dictionary, this method creates a new
-        /// <see cref="WorkSettingValues"/> instance with default values, adds it to the dictionary, and then returns it.
-        /// It also performs safety checks: initializes the <see cref="workSettings"/> dictionary if it happens to be null,
-        /// and clamps the retrieved/created setting's values (priority, count, percentage) to valid ranges before returning.
+        /// Retrieves the settings for a specific work type.
+        /// If no settings exist for the specified type, a new default instance is created and stored.
         /// </summary>
-        /// <param name="workTypeDefName">The unique definition name (<c>defName</c>) of the <see cref="WorkTypeDef"/>
-        /// for which settings are requested.</param>
-        /// <returns>The existing or newly created <see cref="WorkSettingValues"/> instance for the specified work type,
-        /// ensuring its values are within valid bounds.</returns>
+        /// <param name="workTypeDefName">The defName of the WorkTypeDef to look up.</param>
+        /// <returns>The <see cref="WorkSettingValues"/> object for the specified work type.</returns>
         public WorkSettingValues GetWorkSetting(string workTypeDefName)
         {
-            // Safety check: Ensure the dictionary exists before attempting access.
             if (workSettings == null)
             {
-                Log.Warning("[AutoWork] SaveData: workSettings dictionary was null in GetWorkSetting. Initializing.");
+                Log.Warning("[AutoWork] SaveData: workSettings was null in GetWorkSetting. Initializing.");
                 workSettings = new Dictionary<string, WorkSettingValues>();
             }
 
-            // Attempt to retrieve the setting. If not found, create and add a default one.
             if (!workSettings.TryGetValue(workTypeDefName, out WorkSettingValues setting))
             {
-                setting = new WorkSettingValues(); // Create with defaults defined in WorkSettingValues
+                setting = new WorkSettingValues();
                 workSettings.Add(workTypeDefName, setting);
             }
 
-            // Ensure values are within logical limits after retrieval or creation.
-            // Note: Clamping is also done during loading in WorkSettingValues.ExposeData,
-            // but this provides an extra layer of safety for runtime access.
+            // Range validation
             if (setting.priority < 1) setting.priority = 1;
-            if (setting.priority > 4) setting.priority = 4; // RimWorld priorities are 1-4
-            if (setting.count < 0) setting.count = 0; // Cannot assign negative pawns
-            if (setting.percentage < 0f) setting.percentage = 0f; // Percentage cannot be negative
-            if (setting.percentage > 1f) setting.percentage = 1f; // Percentage cannot exceed 100%
+            if (setting.priority > WorkSettingValues.MaxPriority) setting.priority = WorkSettingValues.MaxPriority;
+            if (setting.count < 0) setting.count = 0;
+            if (setting.percentage < 0f) setting.percentage = 0f;
+            if (setting.percentage > 1f) setting.percentage = 1f;
+            if (setting.fallbackPriority < 0) setting.fallbackPriority = 0;
+            if (setting.fallbackPriority > WorkSettingValues.MaxPriority) setting.fallbackPriority = WorkSettingValues.MaxPriority;
+            if (setting.backupBandBottom < setting.fallbackPriority) setting.backupBandBottom = setting.fallbackPriority;
+            if (setting.backupBandBottom > WorkSettingValues.MaxPriority) setting.backupBandBottom = WorkSettingValues.MaxPriority;
+            if (setting.primaryBandBottom < setting.priority) setting.primaryBandBottom = setting.priority;
+            if (setting.primaryBandBottom > WorkSettingValues.MaxPriority) setting.primaryBandBottom = WorkSettingValues.MaxPriority;
 
             return setting;
         }
 
+        /// <summary>
+        /// Checks if a specific pawn is excluded from a specific job type.
+        /// </summary>
+        /// <param name="pawnID">The unique ThingID of the pawn.</param>
+        /// <param name="workTypeDefName">The defName of the work type.</param>
+        /// <returns>True if the pawn is excluded from this specific job; otherwise, false.</returns>
+        public bool IsPawnExcludedFromJob(string pawnID, string workTypeDefName)
+        {
+            if (perJobExcludedPawnIDs == null) return false;
+            if (!perJobExcludedPawnIDs.TryGetValue(workTypeDefName, out var excludedList)) return false;
+            return excludedList?.Contains(pawnID) ?? false;
+        }
 
         /// <summary>
-        /// Implements the core save/load logic for this <see cref="GameComponent"/>. This method is automatically
-        /// called by the RimWorld engine during the game saving and loading procedures. It uses the
-        /// <see cref="Verse.Scribe"/> system (specifically <see cref="Scribe_Values"/> and <see cref="Scribe_Collections"/>)
-        /// to serialize (write) the values of all public settings fields (<see cref="modEnabled"/>,
-        /// <see cref="enableDailyRefresh"/>, <see cref="workSettings"/>, <see cref="excludedPawnIDs"/>,
-        /// <see cref="excludedWorkTypeDefNames"/>) to the save file, or deserialize (read) them back when loading.
-        /// It also includes a post-load initialization step (<c>if (Scribe.mode == LoadSaveMode.PostLoadInit)</c>)
-        /// to ensure that collection fields (dictionaries and lists) are initialized to empty collections if they
-        /// were null after loading (e.g., if loading a save from before these fields were added).
+        /// Saves and loads the component's data using RimWorld's Scribe system.
         /// </summary>
         public override void ExposeData()
         {
-            // Always call the base method first for GameComponent's own potential data handling.
             base.ExposeData();
 
-            // Save/Load individual boolean flags with default values if not found in save data.
+            // Basic Settings
             Scribe_Values.Look(ref modEnabled, "modEnabled_perSave", true);
             Scribe_Values.Look(ref enableDailyRefresh, "enableDailyRefresh_perSave", true);
+            Scribe_Values.Look(ref roundUpPercentage, "roundUpPercentage", false);
+            Scribe_Values.Look(ref excludeChildren, "excludeChildren", false);
+            
+            // Experimental
+            Scribe_Values.Look(ref enableExperimentalHeuristics, "enableExperimentalHeuristics", false);
+            Scribe_Values.Look(ref heuristicsUpdateFrequencyHours, "heuristicsUpdateFrequencyHours", 24);
+            
+            // Advanced Features
+            Scribe_Values.Look(ref assignmentMode, "assignmentMode", AssignmentMode.Simple);
+            Scribe_Values.Look(ref forceEmergencyPriorities, "forceEmergencyPriorities", true);
+            Scribe_Values.Look(ref prioritizePassionInExpertMode, "prioritizePassionInExpertMode", false);
 
-            // Save/Load the list of excluded pawn IDs. LookMode.Value saves the string IDs directly.
+            // UI Simplification Settings
+            Scribe_Values.Look(ref useMasterPassion, "useMasterPassion", false);
+            Scribe_Values.Look(ref masterPassionWeight, "masterPassionWeight", 1f);
+            Scribe_Values.Look(ref combineSimilarWorkTypes, "combineSimilarWorkTypes", false);
+            Scribe_Values.Look(ref gradualBackupScaling, "gradualBackupScaling", false);
+            Scribe_Values.Look(ref bandPrimaryGroup, "bandPrimaryGroup", false);
+            Scribe_Values.Look(ref primaryBandLeadSpread, "primaryBandLeadSpread", false);
+
+            // Global Exclusion Lists
             Scribe_Collections.Look(ref excludedPawnIDs, "excludedPawnIDs_perSave", LookMode.Value);
-
-            // Save/Load the list of excluded work type definition names.
             Scribe_Collections.Look(ref excludedWorkTypeDefNames, "excludedWorkTypeDefNames_perSave", LookMode.Value);
 
-            // Save/Load the dictionary of work settings.
-            // LookMode.Value for keys (string defNames), LookMode.Deep for values (WorkSettingValues objects).
-            // Requires temporary lists for the Scribe system to handle dictionary serialization.
+            // Work Settings
             Scribe_Collections.Look(ref workSettings, "workSettings_perSave", LookMode.Value, LookMode.Deep,
                 ref workSettingsKeysWorkingList, ref workSettingsValuesWorkingList);
 
-            // --- Post Load Initialization ---
-            // This block executes only after all data has been loaded (LoadingVars phase is complete).
-            // It's crucial for ensuring collections are not null if they weren't present in the save file
-            // (e.g., loading an older save after adding a new collection field).
+            // Job-Specific Exclusions
+            Scribe_Collections.Look(ref perJobExcludedPawnIDs, "perJobExcludedPawnIDs", 
+                LookMode.Value, LookMode.Deep,
+                ref perJobExclusionKeysWorkingList, ref perJobExclusionValuesWorkingList);
+
+            // Post-load initialization and null checks
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
-                // If any collection is null after loading, initialize it as a new empty collection.
                 if (workSettings == null) workSettings = new Dictionary<string, WorkSettingValues>();
                 if (excludedPawnIDs == null) excludedPawnIDs = new List<string>();
                 if (excludedWorkTypeDefNames == null) excludedWorkTypeDefNames = new List<string>();
-
-                // Note: Further validation or clamping of loaded data can be done here if needed,
-                // although WorkSettingValues.ExposeData already handles clamping for its own fields.
+                if (perJobExcludedPawnIDs == null) perJobExcludedPawnIDs = new Dictionary<string, List<string>>();
             }
         }
     }

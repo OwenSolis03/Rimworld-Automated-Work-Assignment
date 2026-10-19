@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
@@ -8,27 +8,38 @@ using Verse;
 namespace Automated_Work_Assignment
 {
     /// <summary>
-    /// Static class containing the core logic for calculating pawn suitability and assigning work priorities based on mod settings.
+    /// Static utility class responsible for the core logic of assigning work priorities to pawns.
+    /// It calculates suitability scores, processes exclusion lists, and applies priorities based on
+    /// the selected assignment mode (Simple, Expert, or Hybrid).
     /// </summary>
     public static class WorkAssigner
     {
-        /// <summary>
-        /// The default priority value (0) assigned to pawns for work types they are not assigned to.
-        /// </summary>
         private const int DefaultPriority = 0;
 
         /// <summary>
-        /// A private helper struct to temporarily hold a pawn and their calculated suitability score, used for sorting.
+        /// Flag set to true while the automated assignment logic is running,
+        /// so Harmony patches can distinguish automated changes from manual player input.
         /// </summary>
-        private struct PawnSuitability { public Pawn pawn; public float score; }
+        public static bool IsRunningAutomatedRefresh { get; private set; } = false;
+
+        /// <summary>
+        /// Internal structure used to sort pawns based on their suitability score and passion.
+        /// </summary>
+        private struct PawnSuitability 
+        { 
+            public Pawn pawn; 
+            public float score; 
+            public Passion passion; 
+        }
         
         /// <summary>
-        /// The main entry point for the automatic work assignment logic. This method orchestrates the entire process
-        /// of refreshing pawn work priorities based on the current mod settings for the active save game.
-        /// It iterates through all manageable work types and applies either the simple or expert logic.
+        /// Main entry point for the assignment logic.
+        /// Iterates through all work types, filters eligible colonists, calculates required counts,
+        /// and delegates the specific priority assignment to <see cref="AssignWorkPriorities"/>.
         /// </summary>
         public static void RefreshAssignments()
         {
+            IsRunningAutomatedRefresh = true;
             AutomatedWork_SaveData saveData = null;
             try
             {
@@ -36,35 +47,41 @@ namespace Automated_Work_Assignment
             }
             catch (Exception ex)
             {
-                Log.Error($"[AutoWork] Exception retrieving save data in RefreshAssignments: {ex}");
+                Log.Error($"[AutoWork] Exception retrieving save data: {ex}");
                 return;
             }
 
             if (saveData == null)
             {
-                Log.ErrorOnce("[AutoWork] Per-save data (AutomatedWork_SaveData) is null in RefreshAssignments.", 1984775);
-                return;
-            }
-            if (!saveData.modEnabled)
-            {
+                Log.ErrorOnce("[AutoWork] Per-save data is null in RefreshAssignments.", 1984775);
                 return;
             }
 
             List<WorkTypeDef> workTypesToManage = null;
-            List<Pawn> colonists = null;
-
             try
             {
                 workTypesToManage = DefDatabase<WorkTypeDef>.AllDefsListForReading
                     .Where(wtd => wtd != null && wtd.workTags != WorkTags.None)
                     .ToList();
-                colonists = GetEligibleColonists(saveData);
             }
-            catch (Exception ex) { Log.Error($"[AutoWork] Exception retrieving WorkTypeDefs or Colonists: {ex}"); return; }
+            catch (Exception ex) 
+            { 
+                Log.Error($"[AutoWork] Exception retrieving WorkTypeDefs: {ex}"); 
+                return; 
+            }
 
-            if (Find.CurrentMap == null || colonists == null || !colonists.Any()) return;
-            
-            int totalEligibleColonists = colonists.Count;
+            if (Find.CurrentMap == null) return;
+
+            // PERFORMANCE OPTIMIZATION: Retrieve the ExpertManager once here instead of inside the loop
+            ExpertModeRuleManager expertManager = null;
+            try
+            {
+                expertManager = Current.Game.GetComponent<ExpertModeRuleManager>();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[AutoWork] Failed to retrieve ExpertModeRuleManager: {ex}");
+            }
 
             foreach (WorkTypeDef workType in workTypesToManage)
             {
@@ -72,35 +89,42 @@ namespace Automated_Work_Assignment
                 {
                     if (workType == null) continue;
 
+                    // Skip work types specifically excluded by the user
                     if (saveData.excludedWorkTypeDefNames != null && saveData.excludedWorkTypeDefNames.Contains(workType.defName))
                     {
                         continue;
                     }
 
-                    WorkSettingValues workSetting = saveData.GetWorkSetting(workType.defName);
-                    if (workSetting == null) { Log.ErrorOnce($"[AutoWork] Null workSetting for {workType.defName}", workType.defName.GetHashCode() ^ 1); continue; }
+                    List<Pawn> eligibleForThisJob = GetEligibleColonistsForJob(saveData, workType);
+                    if (!eligibleForThisJob.Any()) continue;
 
+                    WorkSettingValues workSetting = saveData.GetWorkSetting(workType.defName);
+                    if (workSetting == null) 
+                    { 
+                        Log.ErrorOnce($"[AutoWork] Null workSetting for {workType.defName}", workType.defName.GetHashCode() ^ 1); 
+                        continue; 
+                    }
+
+                    // Determine how many pawns should be assigned
                     int finalDesiredCount;
-                    
                     if (workSetting.usePercentage)
                     {
-                        finalDesiredCount = CalculateCountFromPercentage(workSetting.percentage, totalEligibleColonists);
+                        finalDesiredCount = CalculateCountFromPercentage(workSetting.percentage, eligibleForThisJob.Count, saveData.roundUpPercentage);
                     }
                     else
                     {
                         finalDesiredCount = workSetting.count;
                     }
-                    finalDesiredCount = Mathf.Min(finalDesiredCount, totalEligibleColonists);
+                    finalDesiredCount = Mathf.Min(finalDesiredCount, eligibleForThisJob.Count);
                     
-                    int targetPriority = workSetting.priority;
-
                     if (finalDesiredCount > 0)
                     {
-                        AssignWorkPriorities(workType, finalDesiredCount, targetPriority, colonists);
+                        AssignWorkPriorities(workType, finalDesiredCount, workSetting, eligibleForThisJob, saveData, expertManager);
                     }
                     else
                     {
-                        foreach (Pawn pawn in colonists)
+                        // If desired count is 0, disable this work for all eligible pawns
+                        foreach (Pawn pawn in eligibleForThisJob)
                         {
                             pawn?.workSettings?.SetPriority(workType, DefaultPriority);
                         }
@@ -108,55 +132,64 @@ namespace Automated_Work_Assignment
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"[AutoWork] Exception processing WorkTypeDef '{workType?.defName ?? "NULL"}' in RefreshAssignments: {ex}");
+                    Log.Error($"[AutoWork] Exception processing '{workType?.defName ?? "NULL"}': {ex}");
                 }
             }
 
-            try { if (DefDatabase<MainButtonDef>.GetNamed("Work", false) == null) { Log.ErrorOnce("[AutoWork] Could not find MainButtonDef 'Work'.", 918273645); } }
-            catch (Exception ex) { Log.Error($"[AutoWork] Exception checking MainButtonDef: {ex}"); }
+            IsRunningAutomatedRefresh = false;
         }
 
         /// <summary>
-        /// Calculates the absolute number of pawns to assign based on a given percentage of the total eligible workforce.
-        /// Ensures at least 1 pawn is returned if the percentage is greater than zero and there are eligible pawns.
+        /// Calculates the number of pawns to assign based on a target percentage.
         /// </summary>
-        /// <param name="percentage">The desired percentage of the workforce, expressed as a float from 0.0 to 1.0.</param>
-        /// <param name="totalEligibleCount">The total number of pawns available for assignment.</param>
-        /// <returns>The calculated absolute number of pawns to assign.</returns>
-        private static int CalculateCountFromPercentage(float percentage, int totalEligibleCount)
+        /// <param name="percentage">The target percentage (0.0 to 1.0).</param>
+        /// <param name="totalEligibleCount">The total number of available colonists.</param>
+        /// <param name="roundUp">If true, round the fractional result up to the next whole pawn instead of to the nearest.</param>
+        /// <returns>The integer count of pawns to assign.</returns>
+        private static int CalculateCountFromPercentage(float percentage, int totalEligibleCount, bool roundUp = false)
         {
             if (percentage <= 0f || totalEligibleCount <= 0) return 0;
             if (percentage >= 1f) return totalEligibleCount;
             float rawValue = percentage * totalEligibleCount;
-            int calculatedCount = Mathf.RoundToInt(rawValue);
+            int calculatedCount = roundUp ? Mathf.CeilToInt(rawValue) : Mathf.RoundToInt(rawValue);
             
+            // Ensure at least one pawn is assigned if percentage is positive but calculated count rounded to 0
             return (calculatedCount == 0 && percentage > 0f) ? 1 : Mathf.Min(calculatedCount, totalEligibleCount);
         }
 
         /// <summary>
-        /// Retrieves a list of all colonists who are eligible for automatic work assignment.
+        /// Retrieves a list of colonists eligible for general work assignment.
+        /// Excludes pawns that are dead, downed, in a mental state, or globally excluded.
+        /// PERFORMANCE OPTIMIZATION: Replaced LINQ with foreach loop.
         /// </summary>
-        /// <remarks>
-        /// Eligibility is determined by several factors: the pawn must be a free colonist, spawned, not downed,
-        /// not in a mental state, have work settings, and not be on the user-defined exclusion list.
-        /// </remarks>
-        /// <param name="saveData">The per-save data component containing the pawn exclusion list.</param>
-        /// <returns>A list of eligible <see cref="Pawn"/> objects.</returns>
+        /// <param name="saveData">The current save data containing exclusion lists.</param>
+        /// <returns>A list of eligible pawns.</returns>
         public static List<Pawn> GetEligibleColonists(AutomatedWork_SaveData saveData)
         {
+            List<Pawn> eligiblePawns = new List<Pawn>();
             List<string> excludedIDs = saveData?.excludedPawnIDs ?? new List<string>();
-            if (Find.CurrentMap == null) return new List<Pawn>();
+            bool excludeChildren = saveData?.excludeChildren ?? false;
+
+            if (Find.CurrentMap == null) return eligiblePawns;
 
             try
             {
-                return Find.CurrentMap.mapPawns.FreeColonists
-                    .Where(p => p != null
-                                && p.Spawned
-                                && !p.Downed
-                                && p.MentalStateDef == null
-                                && p.workSettings != null
-                                && !excludedIDs.Contains(p.ThingID))
-                    .ToList();
+                List<Pawn> mapPawns = Find.CurrentMap.mapPawns.FreeColonists;
+                for (int i = 0; i < mapPawns.Count; i++)
+                {
+                    Pawn p = mapPawns[i];
+                    if (p != null
+                        && p.Spawned
+                        && !p.Downed
+                        && p.MentalStateDef == null
+                        && p.workSettings != null
+                        && (!excludeChildren || p.DevelopmentalStage.Adult())
+                        && !excludedIDs.Contains(p.ThingID))
+                    {
+                        eligiblePawns.Add(p);
+                    }
+                }
+                return eligiblePawns;
             }
             catch (Exception ex)
             {
@@ -166,10 +199,61 @@ namespace Automated_Work_Assignment
         }
 
         /// <summary>
-        /// A convenience method to get the count of eligible colonists.
+        /// Retrieves eligible colonists specifically for a target work type.
+        /// Applies both global exclusions and per-job exclusions.
+        /// PERFORMANCE OPTIMIZATION: Replaced LINQ with foreach loop.
         /// </summary>
-        /// <param name="saveData">The per-save data component.</param>
-        /// <returns>The number of eligible pawns.</returns>
+        /// <param name="saveData">The current save data.</param>
+        /// <param name="workType">The work type being processed.</param>
+        /// <returns>A filtered list of eligible pawns.</returns>
+        public static List<Pawn> GetEligibleColonistsForJob(AutomatedWork_SaveData saveData, WorkTypeDef workType)
+        {
+            if (workType == null) return new List<Pawn>();
+            
+            List<Pawn> eligiblePawns = new List<Pawn>();
+            List<string> globalExcludedIDs = saveData?.excludedPawnIDs ?? new List<string>();
+            bool excludeChildren = saveData?.excludeChildren ?? false;
+            List<string> jobExcludedIDs = new List<string>();
+            
+            if (saveData?.perJobExcludedPawnIDs != null && 
+                saveData.perJobExcludedPawnIDs.TryGetValue(workType.defName, out var jobExclusions))
+            {
+                jobExcludedIDs = jobExclusions ?? new List<string>();
+            }
+            
+            if (Find.CurrentMap == null) return eligiblePawns;
+
+            try
+            {
+                List<Pawn> mapPawns = Find.CurrentMap.mapPawns.FreeColonists;
+                for (int i = 0; i < mapPawns.Count; i++)
+                {
+                    Pawn p = mapPawns[i];
+                    if (p != null
+                        && p.Spawned
+                        && !p.Downed
+                        && p.MentalStateDef == null
+                        && p.workSettings != null
+                        && (!excludeChildren || p.DevelopmentalStage.Adult())
+                        && !globalExcludedIDs.Contains(p.ThingID)
+                        && !jobExcludedIDs.Contains(p.ThingID))
+                    {
+                        eligiblePawns.Add(p);
+                    }
+                }
+                return eligiblePawns;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[AutoWork] Exception in GetEligibleColonistsForJob: {ex}");
+                return new List<Pawn>();
+            }
+        }
+
+        /// <summary>
+        /// Gets the total count of colonists eligible for general assignments.
+        /// Used primarily for UI slider limits.
+        /// </summary>
         internal static int GetEligibleColonistCount(AutomatedWork_SaveData saveData)
         {
             if (saveData == null) return 0;
@@ -177,121 +261,304 @@ namespace Automated_Work_Assignment
         }
 
         /// <summary>
-        /// Calculates a numerical 'suitability' score for a given pawn and work type. This score determines the pawn's ranking for assignment.
+        /// Calculates a suitability score for a pawn performing a specific work type.
+        /// Factors in skill level and passion. Supports vanilla passion values and 
+        /// Vanilla Skills Expanded (VSE) custom passion rates via <see cref="ModDetector"/>.
         /// </summary>
-        /// <remarks>
-        /// The scoring logic is as follows:
-        /// 1. The base score is the pawn's skill level in the work type's relevant skill (or 1 if no skill is associated).
-        /// 2. If Vanilla Skills Expanded is not active, a passion multiplier is applied (1.25x for minor, 1.5x for major).
-        /// 3. If VSE is active, its own passion system is used to calculate a bonus.
-        /// 4. A small, random value (0.00-0.01) is added as a tie-breaker to prevent pawn overload.
-        /// Returns -1f for pawns who are incapable of the work type.
-        /// </remarks>
         /// <param name="pawn">The pawn to evaluate.</param>
-        /// <param name="workType">The work type to evaluate for.</param>
-        /// <returns>The calculated suitability score, or -1f if ineligible.</returns>
-        private static float CalculateSuitability(Pawn pawn, WorkTypeDef workType)
+        /// <param name="workType">The work type to check.</param>
+        /// <param name="saveData">Save data containing configuration (e.g., passion weight).</param>
+        /// <returns>A float score, or -1f if the pawn is incapable.</returns>
+        internal static float CalculateSuitability(Pawn pawn, WorkTypeDef workType, AutomatedWork_SaveData saveData)
         {
             try
             {
-                if (pawn == null || pawn.skills == null || pawn.WorkTypeIsDisabled(workType)) return -1f;
+                if (pawn == null || pawn.skills == null || pawn.WorkTypeIsDisabled(workType)) 
+                    return -1f;
 
-                float score;
-                SkillRecord skill = null;
-                SkillDef relevantSkillDef = workType.relevantSkills?.FirstOrDefault();
-                
-                score = relevantSkillDef != null ? (skill = pawn.skills.GetSkill(relevantSkillDef))?.Level ?? 1f : 1f;
+                WorkSettingValues workSetting = saveData?.GetWorkSetting(workType.defName);
+                // Master Passion (when enabled) is resolved here instead of being written into
+                // every WorkSettingValues during the settings UI draw. That draw-loop sync
+                // silently skipped work types whose row wasn't rendered (collapsed section /
+                // early return), leaving them on a stale per-row weight.
+                float passionWeight = (saveData != null && saveData.useMasterPassion)
+                    ? saveData.masterPassionWeight
+                    : (workSetting?.passionWeight ?? 1f);
+
+                // PERFORMANCE OPTIMIZATION: Use direct indexing instead of LINQ FirstOrDefault
+                SkillDef relevantSkillDef = (workType.relevantSkills != null && workType.relevantSkills.Count > 0) 
+                    ? workType.relevantSkills[0] : null;
+
+                SkillRecord skill = relevantSkillDef != null ? pawn.skills.GetSkill(relevantSkillDef) : null;
+                float score = skill?.Level ?? 1f;
 
                 if (skill != null) 
                 {
-                    if (ModDetector.VSEIsActive) {
-                        ModDetector.EnsureReflectionInitialized();
-                        if (ModDetector.VSEReflectionSuccess && ModDetector.VSE_PassionToDefMethod != null && ModDetector.VSE_LearnRateFactorField != null) {
-                            try {
-                                object passionDefObj = ModDetector.VSE_PassionToDefMethod.Invoke(null, new object[] { skill.passion });
-                                if (passionDefObj != null) {
-                                    if (ModDetector.VSE_LearnRateFactorField.GetValue(passionDefObj) is float learnRateFactor) {
-                                        score += Mathf.Max(0f, (learnRateFactor - 1.0f) * 10f);
-                                    }
+                    float passionBonus = 0f;
+                    
+                    // Attempt to use VSE (Vanilla Skills Expanded) logic if available
+                    if (ModDetector.VSEIsActive && ModDetector.VSEReflectionSuccess) 
+                    {
+                        try 
+                        {
+                            if (ModDetector.VSE_PassionToDefDelegate != null && ModDetector.VSE_GetLearnRateDelegate != null)
+                            {
+                                object passionDefObj = ModDetector.VSE_PassionToDefDelegate(skill.passion);
+                                if (passionDefObj != null) 
+                                {
+                                    float learnRateFactor = ModDetector.VSE_GetLearnRateDelegate(passionDefObj);
+                                    passionBonus = Mathf.Max(0f, (learnRateFactor - 1.0f) * 10f);
                                 }
-                            } catch (Exception ex) { Log.ErrorOnce($"[AutoWork Compat] Exception VSE invoke/get {pawn.LabelShortCap},{skill.def.defName}: {ex.Message}", pawn.thingIDNumber ^ skill.def.shortHash ^ 2028); }
+                            }
+                            // Fallback to slower reflection if delegates failed but VSE is present
+                            else if (ModDetector.VSE_PassionToDefMethod != null && ModDetector.VSE_LearnRateFactorField != null)
+                            {
+                                object passionDefObj = ModDetector.VSE_PassionToDefMethod.Invoke(null, new object[] { skill.passion });
+                                if (passionDefObj != null && ModDetector.VSE_LearnRateFactorField.GetValue(passionDefObj) is float learnRateFactor)
+                                {
+                                    passionBonus = Mathf.Max(0f, (learnRateFactor - 1.0f) * 10f);
+                                }
+                            }
+                        } 
+                        catch (Exception ex) 
+                        { 
+                            Log.ErrorOnce($"[AWA] VSE error for {pawn.LabelShortCap},{skill.def.defName}: {ex.Message}", 
+                                pawn.thingIDNumber ^ skill.def.shortHash ^ 2028); 
                         }
                     }
                     else
                     {
-                        float passionMultiplier = 1.0f;
-                        Passion passionValue = skill.passion;
-                        if (passionValue == Passion.Major) passionMultiplier = 1.5f;
-                        else if (passionValue == Passion.Minor) passionMultiplier = 1.25f;
-                        score *= passionMultiplier;
+                        // Vanilla passion logic
+                        passionBonus = skill.passion switch 
+                        {
+                            Passion.Major => 5f,
+                            Passion.Minor => 2.5f,
+                            _ => 0f
+                        };
                     }
+                    
+                    score += passionBonus * passionWeight;
                 }
                 
+                // Ensure a minimum score for existing skills
                 if (score < 1f && relevantSkillDef != null) score = 1f;
                 
-                score += Rand.Range(0f, 0.01f);
+                // Deterministic tie-breaker based on ThingID to prevent flickering assignments
+                score += (pawn.thingIDNumber % 1000) * 0.00001f;
                 
                 return score;
-            } catch (Exception ex) { Log.Error($"[AutoWork] Exception CalculateSuitability {pawn?.ThingID ?? "NULL"},{workType?.defName ?? "NULL"}: {ex}"); return -1f; }
+            } 
+            catch (Exception ex) 
+            { 
+                Log.Error($"[AutoWork] CalculateSuitability failed for {pawn?.ThingID},{workType?.defName}: {ex}"); 
+                return -1f; 
+            }
         }
 
         /// <summary>
-        /// Assigns work priorities to the most suitable colonists for a specific work type, integrating simple and expert mode logic.
+        /// Applies priority settings to the list of eligible colonists.
+        /// Sorts the colonists by suitability/passion and assigns priorities based on the selected mode.
         /// </summary>
-        /// <remarks>
-        /// This method first calculates and sorts all eligible pawns by their suitability score for the given work type.
-        /// It then selects the top pawns based on the `desiredCount`. For each selected pawn, it determines the final priority:
-        /// 1. It checks if an Expert Mode rule matches the pawn's skill level. If so, that rule's priority is used.
-        /// 2. If no expert rule matches, it falls back to the `targetPriority` from the simple settings slider.
-        /// 3. As a final override, if the work type is Doctor or Firefighter, the priority is forced to 1.
-        /// Pawns who are not in the top selection are set to priority 0 for this work type.
-        /// </remarks>
-        /// <param name="workType">The work type being assigned.</param>
-        /// <param name="desiredCount">The number of pawns to assign to this work type, determined by the simple settings.</param>
-        /// <param name="targetPriority">The fallback priority from the simple settings slider.</param>
-        /// <param name="colonists">The list of all eligible colonists to consider for assignment.</param>
-        private static void AssignWorkPriorities(WorkTypeDef workType, int desiredCount, int targetPriority, List<Pawn> colonists)
+        /// <summary>
+        /// Maps a suitability rank to a priority inside a contiguous band [top..bottom].
+        /// Rank 0 is the best pawn and gets <paramref name="top"/> (the most urgent number);
+        /// the remaining pawns are spread evenly toward <paramref name="bottom"/>.
+        /// </summary>
+        /// <param name="rank">Zero-based position of the pawn in the sorted list (0 = best).</param>
+        /// <param name="count">Total number of pawns being spread across the band.</param>
+        /// <param name="top">Most urgent priority of the band (lower number).</param>
+        /// <param name="bottom">Least urgent priority of the band (higher number).</param>
+        internal static int PriorityForRank(int rank, int count, int top, int bottom)
         {
-            if (workType == null || colonists == null) return;
-            
-            List<PawnSuitability> suitabilityList = new List<PawnSuitability>();
-            foreach (Pawn pawn in colonists) {
-                if (pawn?.workSettings == null) continue;
-                float score = CalculateSuitability(pawn, workType);
-                if (score >= 0) { suitabilityList.Add(new PawnSuitability { pawn = pawn, score = score }); }
-                else { pawn.workSettings.SetPriority(workType, DefaultPriority); }
-            }
-            suitabilityList.Sort((a, b) => b.score.CompareTo(a.score));
+            if (count <= 1 || bottom <= top) return top;
+            int bandSize = bottom - top + 1;
+            int slot = (int)((long)rank * bandSize / count); // floor
+            return top + Mathf.Min(slot, bandSize - 1);
+        }
 
-            var expertManager = Current.Game.GetComponent<ExpertModeRuleManager>();
-            bool rulesForThisWorkTypeExist = expertManager?.workTypeRules.ContainsKey(workType) == true && expertManager.workTypeRules[workType].Any();
+        /// <summary>
+        /// Priority for a SELECTED (primary-group) pawn at suitability <paramref name="rank"/>.
+        /// Flat <c>workSetting.priority</c> unless the primary band is enabled, in which case the
+        /// top-N pawns are spread across [priority .. primaryBandBottom]. "Lead + spread" keeps
+        /// rank 0 at the top priority and spreads the rest over [priority+1 .. primaryBandBottom].
+        /// </summary>
+        private static int ComputePrimaryPriority(int rank, int count, WorkSettingValues workSetting, AutomatedWork_SaveData saveData)
+        {
+            int top = workSetting.priority;
+
+            if (!saveData.gradualBackupScaling || !saveData.bandPrimaryGroup || workSetting.primaryBandBottom <= top)
+                return top;
+
+            if (saveData.primaryBandLeadSpread)
+            {
+                if (rank == 0 || top + 1 > workSetting.primaryBandBottom) return top;
+                return PriorityForRank(rank - 1, count - 1, top + 1, workSetting.primaryBandBottom);
+            }
+
+            return PriorityForRank(rank, count, top, workSetting.primaryBandBottom);
+        }
+
+        private static void AssignWorkPriorities(
+            WorkTypeDef workType,
+            int desiredCount,
+            WorkSettingValues workSetting,
+            List<Pawn> colonists,
+            AutomatedWork_SaveData saveData,
+            ExpertModeRuleManager expertManager) // ADDED: Passed expertManager directly
+        {
+            if (workType == null || colonists == null || saveData == null || workSetting == null) return;
+
+            int fallbackPriority = workSetting.fallbackPriority;
+            int backupBandBottom = workSetting.backupBandBottom;
+            
+            // 1. Calculate suitability for all candidates
+            List<PawnSuitability> suitabilityList = new List<PawnSuitability>();
+            
+            // PERFORMANCE: Using standard for loop for potential slight speedup on list iteration
+            for (int i = 0; i < colonists.Count; i++)
+            {
+                Pawn pawn = colonists[i];
+                if (pawn?.workSettings == null) continue;
+                
+                float score = CalculateSuitability(pawn, workType, saveData);
+                if (score >= 0)
+                {
+                    Passion passion = Passion.None;
+                    // Directly access index 0 safely
+                    SkillDef relevantSkillDef = (workType.relevantSkills != null && workType.relevantSkills.Count > 0) 
+                        ? workType.relevantSkills[0] : null;
+
+                    if (relevantSkillDef != null)
+                    {
+                        passion = pawn.skills.GetSkill(relevantSkillDef)?.passion ?? Passion.None;
+                    }
+                    suitabilityList.Add(new PawnSuitability { pawn = pawn, score = score, passion = passion });
+                }
+                else 
+                { 
+                    // Pawn is ineligible (incapable), ensure priority is 0
+                    pawn.workSettings.SetPriority(workType, DefaultPriority); 
+                }
+            }
+            
+            // 2. Sort candidates based on configuration
+            if (saveData.prioritizePassionInExpertMode && saveData.assignmentMode == AutomatedWork_SaveData.AssignmentMode.Expert)
+            {
+                // Sort by Passion DESC, then Score DESC
+                suitabilityList.Sort((a, b) =>
+                {
+                    int passionComparison = b.passion.CompareTo(a.passion);
+                    if (passionComparison != 0) return passionComparison;
+                    return b.score.CompareTo(a.score);
+                });
+            }
+            else
+            {
+                // Default: Sort by Score DESC, then Passion DESC
+                suitabilityList.Sort((a, b) =>
+                {
+                    int scoreComparison = b.score.CompareTo(a.score);
+                    if (scoreComparison != 0) return scoreComparison;
+                    return b.passion.CompareTo(a.passion);
+                });
+            }
+
+            // 3. Prepare Expert Mode data if needed
+            // OPTIMIZATION: expertManager is now passed in, no GetComponent call needed
+            bool expertRulesExist = expertManager != null 
+                                    && expertManager.workTypeRules.ContainsKey(workType)
+                                    && expertManager.workTypeRules[workType].Any();
 
             HashSet<Pawn> assignedPawns = new HashSet<Pawn>();
-            
+
+            // Denominator for primary-band spreading: how many pawns actually get selected.
+            int primaryCount = Mathf.Min(desiredCount, suitabilityList.Count);
+
+            // 4. Assign priorities to top candidates
             for (int i = 0; i < suitabilityList.Count && i < desiredCount; i++)
             {
                 Pawn pawnToAssign = suitabilityList[i].pawn;
-                int priorityToAssign = targetPriority;
+                int priorityToAssign = DefaultPriority;
 
-                if (rulesForThisWorkTypeExist)
+                switch (saveData.assignmentMode)
                 {
-                    SkillDef relevantSkill = workType.relevantSkills?.FirstOrDefault();
-                    int skillLevel = (relevantSkill != null) ? pawnToAssign.skills.GetSkill(relevantSkill)?.Level ?? 0 : 0;
-                    
-                    SkillPriorityRule matchingRule = expertManager.workTypeRules[workType]
-                        .FirstOrDefault(rule => skillLevel >= rule.MinSkill && skillLevel <= rule.MaxSkill);
-                    
-                    if (matchingRule != null)
-                    {
-                        priorityToAssign = matchingRule.Priority;
-                    }
-                    else
-                    {
-                        priorityToAssign = DefaultPriority;
-                    }
+                    case AutomatedWork_SaveData.AssignmentMode.Simple:
+                        priorityToAssign = ComputePrimaryPriority(i, primaryCount, workSetting, saveData);
+                        break;
+                        
+                    case AutomatedWork_SaveData.AssignmentMode.Expert:
+                        if (expertRulesExist)
+                        {
+                            // Optimized skill retrieval
+                            SkillDef relevantSkill = (workType.relevantSkills != null && workType.relevantSkills.Count > 0)
+                                ? workType.relevantSkills[0] : null;
+                            
+                            int skillLevel;
+                            
+                            // Fallback to Social if work type has no skill (e.g., Cleaning/Hauling in some mods)
+                            if (relevantSkill == null)
+                            {
+                                relevantSkill = SkillDefOf.Social;
+                                skillLevel = pawnToAssign.skills.GetSkill(relevantSkill)?.Level ?? 0;
+                                Log.WarningOnce(
+                                    $"[AWA] {workType.defName} has no skill. Using Social as fallback.",
+                                    workType.defName.GetHashCode() ^ 88734
+                                );
+                            }
+                            else
+                            {
+                                skillLevel = pawnToAssign.skills.GetSkill(relevantSkill)?.Level ?? 0;
+                            }
+                            
+                            // Find matching rule for skill level
+                            // Note: List iteration is fine here as rules list is tiny (max 3-4 items)
+                            SkillPriorityRule matchingRule = expertManager.workTypeRules[workType]
+                                .FirstOrDefault(rule => skillLevel >= rule.MinSkill && skillLevel <= rule.MaxSkill);
+                            
+                            priorityToAssign = matchingRule?.Priority ?? DefaultPriority;
+                        }
+                        else
+                        {
+                            Log.WarningOnce($"[AWA] Expert Mode active but no rules for {workType.defName}. Using priority 0.", workType.defName.GetHashCode() ^ 77623);
+                            priorityToAssign = DefaultPriority;
+                        }
+                        break;
+                        
+                    case AutomatedWork_SaveData.AssignmentMode.Hybrid:
+                        priorityToAssign = ComputePrimaryPriority(i, primaryCount, workSetting, saveData); // Default to (banded) Simple Mode target
+
+                        if (expertRulesExist)
+                        {
+                            SkillDef relevantSkill = (workType.relevantSkills != null && workType.relevantSkills.Count > 0)
+                                ? workType.relevantSkills[0] : null;
+                            
+                            int skillLevel;
+                            
+                            if (relevantSkill == null)
+                            {
+                                relevantSkill = SkillDefOf.Social;
+                                skillLevel = pawnToAssign.skills.GetSkill(relevantSkill)?.Level ?? 0;
+                            }
+                            else
+                            {
+                                skillLevel = pawnToAssign.skills.GetSkill(relevantSkill)?.Level ?? 0;
+                            }
+                            
+                            SkillPriorityRule matchingRule = expertManager.workTypeRules[workType]
+                                .FirstOrDefault(rule => skillLevel >= rule.MinSkill && skillLevel <= rule.MaxSkill);
+                            
+                            // If a rule matches, override the Simple priority
+                            if (matchingRule != null)
+                            {
+                                priorityToAssign = matchingRule.Priority;
+                            }
+                        }
+                        break;
                 }
                 
-                if (workType == WorkTypeDefOf.Doctor || workType == WorkTypeDefOf.Firefighter)
+                // Emergency Priority Override (Doctor/Firefighter)
+                if (saveData.forceEmergencyPriorities && 
+                    (workType == WorkTypeDefOf.Doctor || workType == WorkTypeDefOf.Firefighter))
                 {
                     priorityToAssign = 1;
                 }
@@ -300,12 +567,31 @@ namespace Automated_Work_Assignment
                 if (pawnToAssign != null) assignedPawns.Add(pawnToAssign);
             }
             
+            // 5. Apply Fallback Priority to unassigned pawns.
+            // suitabilityList is already sorted best -> worst, so the backups list keeps that order.
+            List<Pawn> backups = new List<Pawn>();
             foreach (var suitability in suitabilityList)
             {
                 if (suitability.pawn != null && !assignedPawns.Contains(suitability.pawn))
                 {
-                    suitability.pawn.workSettings?.SetPriority(workType, DefaultPriority);
+                    backups.Add(suitability.pawn);
                 }
+            }
+
+            // When Gradual Backup Scaling is on (and a real backup priority is set), spread the
+            // unselected pawns across the band [fallbackPriority .. backupBandBottom] by rank
+            // instead of dropping them all onto the same flat number. With the toggle off, or
+            // with fallbackPriority == 0, behaviour is identical to before (flat / disable work).
+            bool useBand = saveData.gradualBackupScaling
+                           && fallbackPriority >= 1
+                           && backupBandBottom > fallbackPriority;
+
+            for (int b = 0; b < backups.Count; b++)
+            {
+                int priorityToAssign = useBand
+                    ? PriorityForRank(b, backups.Count, fallbackPriority, backupBandBottom)
+                    : fallbackPriority;
+                backups[b].workSettings?.SetPriority(workType, priorityToAssign);
             }
         }
     }

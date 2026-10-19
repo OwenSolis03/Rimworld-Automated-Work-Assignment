@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -46,6 +46,16 @@ namespace Automated_Work_Assignment
                 }
                 // -------------------------------------------------------
 
+                // --- Patch for Experimental Heuristics ---
+                var originalSetPriority = AccessTools.Method(typeof(Pawn_WorkSettings), nameof(Pawn_WorkSettings.SetPriority));
+                var postfixSetPriority = new HarmonyMethod(typeof(HarmonyPatches), nameof(SetPriorityPostfix));
+                if (originalSetPriority != null && postfixSetPriority != null)
+                {
+                    harmony.Patch(originalSetPriority, postfix: postfixSetPriority);
+                    Log.Message("[AutoWork] Patched Pawn_WorkSettings.SetPriority for heuristics.");
+                }
+                // -------------------------------------------------------
+
                 Log.Message("[AutoWork] Harmony patches applied.");
             }
             catch (Exception ex)
@@ -72,7 +82,6 @@ namespace Automated_Work_Assignment
                 // If no save data is loaded (e.g., on the main menu), do nothing.
                 if (saveData == null)
                 {
-                    // Log.ErrorOnce("[AutoWork] Save data is null in WorkTabPostfix! Cannot draw UI.", 846522); // Example optional log
                     return;
                 }
 
@@ -125,19 +134,10 @@ namespace Automated_Work_Assignment
                 // Draw the refresh button.
                 if (Widgets.ButtonText(refreshButtonRect, "AWA_RefreshButton".Translate()))
                 {
-                    // Only allow manual refresh if the mod is currently enabled for this save.
-                    if (saveData.modEnabled)
-                    {
-                        Log.Message("[AutoWork] Manual refresh triggered via UI button.");
-                        WorkAssigner.RefreshAssignments(); // Trigger the assignment logic.
-                    }
-                    else
-                    {
-                        // Show a feedback message if the user clicks Refresh while the mod is disabled.
-                        Messages.Message("AWA_ModDisabledMessage".Translate(), MessageTypeDefOf.CautionInput);
-                    }
+                    Log.Message("[AutoWork] Manual refresh triggered via UI button.");
+                    WorkAssigner.RefreshAssignments(); // Trigger the assignment logic.
                 }
-
+                
                 // --- Settings Button ---
                 // Position it to the left of the refresh button.
                 Rect settingsButtonRect = new Rect(
@@ -166,6 +166,36 @@ namespace Automated_Work_Assignment
             {
                 // Log any unexpected errors during the UI drawing process.
                 Log.Error($"[AutoWork] Exception in WorkTabPostfix UI drawing: {ex}");
+            }
+        }
+
+        /// <summary>
+        /// Harmony Postfix patch for Pawn_WorkSettings.SetPriority.
+        /// Intercepts manual priority changes made by the player to feed into the heuristic learning module.
+        /// </summary>
+        public static void SetPriorityPostfix(Pawn_WorkSettings __instance, WorkTypeDef w, int priority)
+        {
+            if (WorkAssigner.IsRunningAutomatedRefresh) return; // Ignore automated changes
+
+            var saveData = AutomatedWorkAssignmentMod.CurrentData;
+            if (saveData == null || !saveData.enableExperimentalHeuristics) return;
+
+            try
+            {
+                // Access the private 'pawn' field in Pawn_WorkSettings
+                Pawn pawn = Traverse.Create(__instance).Field("pawn").GetValue<Pawn>();
+                if (pawn != null && pawn.Map != null)
+                {
+                    var hm = Current.Game.GetComponent<Experimental.Heuristics.HeuristicManager>();
+                    if (hm != null)
+                    {
+                        hm.OnPlayerChangedPriority(pawn.Map, pawn, w, priority);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[AutoWork] Exception in SetPriorityPostfix heuristics: {ex}");
             }
         }
     }

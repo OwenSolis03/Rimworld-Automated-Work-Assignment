@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using RimWorld;
 using Verse;
 
@@ -21,6 +21,7 @@ namespace Automated_Work_Assignment
         /// the check runs on the first day loaded or started. Persisted via <see cref="ExposeData"/>.
         /// </summary>
         private int lastCheckDay = -1;
+        private int lastHeuristicTick = -1;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutoAssign_GameComponent"/>.
@@ -29,9 +30,14 @@ namespace Automated_Work_Assignment
         /// <param name="game">The current <see cref="Verse.Game"/> instance this component belongs to.</param>
         public AutoAssign_GameComponent(Game game) 
         {
+            // Ensure the ExpertModeRuleManager component is attached to the game to handle advanced rules
             if (game.GetComponent<ExpertModeRuleManager>() == null)
             {
                 game.components.Add(new ExpertModeRuleManager(game));
+            }
+            if (game.GetComponent<Experimental.Heuristics.HeuristicManager>() == null)
+            {
+                game.components.Add(new Experimental.Heuristics.HeuristicManager(game));
             }
         }
 
@@ -49,35 +55,61 @@ namespace Automated_Work_Assignment
         {
             base.GameComponentTick();
 
-            // Basic null checks for safety
+            // Basic null checks for safety to prevent crashes if game state is invalid
             if (Current.Game == null || Find.TickManager == null) return;
 
-            // Perform the check only once per in-game hour for performance reasons
+            // Perform the check only once per in-game hour for performance optimization
             if (Find.TickManager.TicksGame % GenDate.TicksPerHour == 0)
             {
                 int currentDay = GenDate.DaysPassed;
-                // Check if a new day has started since the last check
+                
+                // Check if a new day has started since the last successful check
                 if (currentDay > lastCheckDay)
                 {
-                    // Update the last check day to the current day
+                    // Update the last check day to the current day to prevent re-running today
                     lastCheckDay = currentDay;
 
                     // Retrieve the per-save settings component
                     var saveData = Current.Game.GetComponent<AutomatedWork_SaveData>();
 
-                    // Proceed only if settings exist and the relevant features are enabled
+                    // Proceed only if settings exist and the relevant features are enabled by the user
                     if (saveData != null && saveData.modEnabled && saveData.enableDailyRefresh)
                     {
                         Log.Message($"[AutoWork] Performing automatic daily check on day {currentDay}...");
                         try
                         {
-                            // Trigger the core logic to reassign work priorities
+                            // Trigger the core logic to reassign work priorities based on current settings
                             WorkAssigner.RefreshAssignments();
                         }
                         catch (Exception ex)
                         {
-                            // Log any errors that occur during the assignment process
+                            // Log any errors that occur during the assignment process to aid debugging
                             Log.Error($"[AutoWork] Exception during automatic daily refresh: {ex}");
+                        }
+                    }
+                }
+
+                // --- Experimental Heuristics Check ---
+                var currentSaveData = Current.Game.GetComponent<AutomatedWork_SaveData>();
+                if (currentSaveData != null && currentSaveData.enableExperimentalHeuristics)
+                {
+                    int ticksSinceLast = Find.TickManager.TicksGame - lastHeuristicTick;
+                    int freqTicks = currentSaveData.heuristicsUpdateFrequencyHours * GenDate.TicksPerHour;
+                    
+                    if (lastHeuristicTick == -1 || ticksSinceLast >= freqTicks)
+                    {
+                        lastHeuristicTick = Find.TickManager.TicksGame;
+                        try
+                        {
+                            var hm = Current.Game.GetComponent<Experimental.Heuristics.HeuristicManager>();
+                            if (hm != null && Find.CurrentMap != null)
+                            {
+                                hm.ApplyHeuristics(Find.CurrentMap);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error($"[AutoWork] Exception during heuristics refresh: {ex}");
                         }
                     }
                 }
@@ -95,6 +127,7 @@ namespace Automated_Work_Assignment
             base.ExposeData();
             // Persist the lastCheckDay field using the standard RimWorld Scribe system
             Scribe_Values.Look(ref lastCheckDay, "lastCheckDay", -1);
+            Scribe_Values.Look(ref lastHeuristicTick, "lastHeuristicTick", -1);
         }
     }
 }
