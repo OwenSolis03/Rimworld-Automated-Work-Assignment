@@ -5,86 +5,84 @@
     <supportedVersions>
         <li>1.5</li>
         <li>1.6</li>
+        <li>1.7</li>
     </supportedVersions>
-    <packageId>Ekinox0310.AutomatedWorkAssignment</packageId> <description>Tired of constantly juggling pawn work priorities as your colony grows? Do you wish assignments better reflected pawn passions and skills? Automated Work Assignment is here to help!
+    <packageId>Ekinox0310.AutomatedWorkAssignment</packageId>
+    <description>Tired of juggling work priorities every time your colony grows? Automated Work Assignment fills in the Work tab for you, putting each colonist on the jobs they are best at and most passionate about.
 
-This mod intelligently assigns work priorities based on both Skill Level and Passion, while giving you detailed control through the Mod Settings menu and convenient buttons directly on the main Work Tab. Spend less time micromanaging priorities and more time managing your colony!
+Spend less time micromanaging the priority grid and more time running your colony.
 
-Key Features:
+=== How it works ===
 
-Smart Assignment: Intelligently prioritizes pawns by considering both their relevant Skill Level and Passion (Minor/Major) for each work type.
+For every work type you decide how many colonists should do it (a fixed number or a percentage of the colony) and at which priority (1 = most urgent, 4 = least). The mod scores every colonist by Skill Level plus a Passion bonus, gives the job to the best candidates, and handles everyone else with a backup priority of your choice (or turns the job off for them).
 
-Emergency Priority: Automatically assigns Priority 1 (Highest) to essential roles like Doctor and Firefighter for designated pawns, ensuring critical tasks are handled swiftly.
+Assignments refresh automatically once per day, or instantly with the Refresh button on the Work tab.
 
-Detailed Configuration (via Dedicated Settings Window):
-Say goodbye to cluttered menus! Automated Work Assignment features its own standalone, draggable, and resizable window with collapsible categories.
+=== Features ===
 
-- Simple Mode: Set the desired number of pawns and target manual priority (1-Highest to 4-Lowest) for each job type.
-- Expert Mode: Advanced controls for each job type, allowing you to set minimum skill thresholds, required passions, and backup priorities.
-- Exclude specific colonists: Prevent the mod from changing the priorities of selected individuals using the "Manage Excluded Pawns" dialog. Ideal for your dedicated specialists!
-- Toggle Automatic Daily Refresh: Choose whether the mod automatically re-evaluates and assigns priorities once near the start of each day.
+Three assignment modes:
+- Simple Mode: count/percentage, priority, passion weight and backup priority per job.
+- Expert Mode: skill-range rules per job (e.g. "skill 0-5 = P4, skill 12-20 = P1"), with optional "passion first" sorting to train passionate colonists.
+- Hybrid Mode: Expert rules apply where they match; Simple Mode settings cover everything else.
 
-Enhanced Work Tab UI: Adds convenient buttons directly to the main Work tab for instant control:
-- Enable/Disable Mod: Quickly toggle the mod's entire assignment logic ON or OFF.
-- Refresh Now: Manually trigger a reassignment check at any time (if the mod is ON).
-- Mod Settings: Direct access to the configuration window.
+Smart priorities:
+- Emergency priorities: optionally force Doctor and Firefighter to priority 1 for assigned colonists.
+- Passion weight from 0x (ignore passion) to 3x (strongly prefer passionate pawns), per job or with one global slider.
+- Gradual priority bands: instead of giving every backup colonist the same number, spread them across a priority range by skill. The same can be applied to the main group, optionally keeping one "lead" pawn at the top (one head doctor or head cook plus helpers).
+- Percentages can round up to the next whole colonist (25% of 5 colonists = 2 instead of 1).
 
-Experimental Features (WIP):
-- Player Profiling / Heuristics: A work-in-progress module intended to learn from your manual assignments. Please note: This feature is currently a Work In Progress (WIP) and does nothing functionally yet—it only collects contextual data in the background if enabled (which is stored locally and is not uploaded anywhere).
+Control and exclusions:
+- Exclude colonists from automation entirely, or only from specific jobs.
+- Optionally leave children out of automation.
+- Turn off automation for individual work types.
+- Combine related work types (e.g. Growing + Cut plants) into one settings row.
 
-Compatibility: Designed to automatically detect and manage work types added by other mods. New jobs will appear in the settings automatically.
+Convenient UI:
+- Buttons on the Work tab: turn the mod ON/OFF, Refresh Now, and open the settings.
+- Standalone settings window: draggable, resizable, with collapsible sections and explanations for every option.
+- Settings are saved per save game.
 
-Requires Harmony.
+Experimental (WIP): a player-profiling module that only collects local context data when enabled. It does not change assignments yet and nothing is uploaded anywhere.
 
-Languages: Supports English, Spanish (Español), French (Français).
+=== Compatibility ===
 
-Frequently Asked Questions (FAQ)
+- Works with work types added by other mods; they show up in the settings automatically.
+- Supports Vanilla Skills Expanded passions.
+- RimWorld 1.5, 1.6 and 1.7.
+- Requires Harmony.
 
-Q: Is this compatible with mods adding new work types?
+Languages: English, Spanish (Spain and Latin America), French.
 
-A: Yes. The mod dynamically finds all available work types and includes them in the settings and assignment logic.
+=== FAQ ===
 
-Q: Is this compatible with "Work Tab" by Fluffy?
+Q: Is it compatible with "Work Tab" by Fluffy?
+A: Probably not. Both mods change the Work tab and the priority system, so one may overwrite the other. Use only one mod to manage work priorities.
 
-A: Likely conflicts. Both mods alter the Work Tab and priority system. Using both simultaneously might cause visual glitches or unexpected behavior where one mod overwrites the other. It's generally recommended to use only one mod for managing work priorities.
+Q: Is it compatible with AI/scheduling mods (Achtung!, Pawn Rules, etc.)?
+A: Generally yes. This mod only sets the priority numbers; other mods read them to decide what to do. Major conflicts are unlikely, but testing is always recommended.
 
-Q: Is this compatible with AI/Scheduling mods (Achtung!, Pawn Rules, etc.)?
+Q: Does it affect performance?
+A: Very little. The full assignment runs once per in-game day or when you press Refresh. It does not react to every skill change.
 
-A: Generally, yes. This mod sets the numerical priorities (1-4). Other mods usually work based on reading those priorities to decide task execution. Testing is always recommended, but major conflicts are unlikely.
+Q: How does it decide who is best?
+A: In Simple Mode, a score based on the colonist's relevant skill plus a passion bonus scaled by the passion weight. In Expert Mode, by the skill-range rules you define.
 
-Q: Does this mod impact performance / cause lag / lower TPS?
+Q: Can I still set priorities by hand?
+A: Yes. Turn the mod off, exclude a colonist (globally or for one job), or turn off automation for a work type, and the mod will leave those priorities alone.
 
-A: It should have a very minimal impact. The automatic daily refresh runs the main logic only once per game day. The checks performed more frequently are extremely lightweight. Manual refresh only uses resources when clicked. It's designed to be much more performance-friendly than mods that react to every single skill change.
+Q: Does it respect zones, schedules, outfits, etc.?
+A: Yes. The mod only sets priority numbers (1-4 or off). Allowed areas, work times, apparel, tools and every other base game rule still apply.
 
-Q: How does the mod decide which pawn is 'best'?
+Q: A colonist has priority 1 for a job but isn't doing it. Why?
+A: Check the usual RimWorld reasons: another priority-1 job ranked earlier, zone restrictions, schedule (sleep/recreation), injuries or bed rest, missing materials, or no path to the work.
 
-A: In Simple Mode, it calculates a score based on the pawn's relevant Skill Level plus a bonus for Passion. In Expert Mode, you can tightly customize this logic by setting rules based on skill level thresholds.
+Q: Does it manage Patient / Bed Rest?
+A: No. The game handles those automatically. The mod helps by keeping assigned doctors at priority 1 when emergency priorities are on.
 
-Q: Can I exclude specific pawns?
+Q: Can I add it to an existing save?
+A: Yes. Configure the settings, then press Refresh Now or wait for the daily refresh.
 
-A: Yes! You can globally exclude pawns using the "Manage Excluded Pawns" button, meaning the mod will never touch any of their priorities. Alternatively, in Expert Mode, you can use "Manage Job Exclusions" to prevent a pawn from being assigned to one specific job type, while still letting the mod manage their other tasks.
-
-Q: Can I manually override an assignment?
-
-A: Yes. You can turn the mod OFF globally, globally exclude a specific pawn, exclude a pawn from a specific job, or set the 'Desired Count' for a job to 0 (which sets everyone to priority 0 for that job).
-
-Q: Does the mod respect Zones, Schedules, Outfits, etc.?
-
-A: Yes. The mod only sets the priority numbers (1-4 or 0). All standard RimWorld rules regarding allowed areas, work times, required apparel, tool usage, etc., still apply and are handled by the base game.
-
-Q: Why isn't Pawn X doing Job Y even if assigned Priority 1?
-
-A: Check standard RimWorld reasons: Is there another task with Priority 1? Is the pawn restricted by Zone? Is it time for Sleep/Food/Recreation according to their schedule? Are they injured or ill (Patient/Bed Rest)? Do they have the required materials/tools? Can they pathfind to the location? The mod doesn't override these core game mechanics.
-
-Q: Does the mod manage 'Patient' or 'Bed Rest'?
-
-A: No, not directly. These are health states automatically prioritized very highly by the game itself based on pawn needs. The mod helps by ensuring the 'Doctor' job is forced to Priority 1 for assigned pawns, ensuring patients get treated promptly. You cannot set a count/priority for 'Patient'/'Bed Rest' in this mod.
-
-Q: Can I add this to an existing save?
-
-A: Yes, it should be safe to add to existing saves. Configure the settings and use "Refresh Now" or wait for the daily refresh to apply the initial priorities.
-
-Please let me know if you encounter any bugs.
+Please report any bugs you find.
     </description>
     <modDependencies>
         <li>
@@ -94,4 +92,4 @@ Please let me know if you encounter any bugs.
             <downloadUrl>https://github.com/pardeike/Harmony/releases/latest</downloadUrl>
         </li>
     </modDependencies>
-    </ModMetaData>
+</ModMetaData>

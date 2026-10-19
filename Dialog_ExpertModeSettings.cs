@@ -157,7 +157,7 @@ namespace Automated_Work_Assignment
 
             if (!relevantWorkTypesCache.Any())
             {
-                Widgets.Label(rect.ContractedBy(10f), "No relevant work types found.");
+                Widgets.Label(rect.ContractedBy(10f), "AWA_ExpertMode_NoWorkTypes".Translate());
                 return;
             }
 
@@ -220,7 +220,7 @@ namespace Automated_Work_Assignment
         private void DrawRuleEditor(Rect rect, WorkTypeDef workDef)
         {
             if (ruleManager == null) {
-                Widgets.Label(rect.ContractedBy(10f), "Error: Rule manager reference lost.");
+                Widgets.Label(rect.ContractedBy(10f), "AWA_Error_RuleManagerLost".Translate());
                 return;
             }
             
@@ -346,12 +346,12 @@ namespace Automated_Work_Assignment
                     
                     // Min Skill Slider
                     Rect minSliderRect = new Rect(skillAreaRect.x, skillSliderYStart, skillAreaRect.width, sliderHeight);
-                    string minLabel = $"Min Skill: {rule.MinSkill}";
+                    string minLabel = "AWA_ExpertMode_MinSkill".Translate(rule.MinSkill);
                     rule.MinSkill = (int)Widgets.HorizontalSlider(minSliderRect, rule.MinSkill, 0f, (float)maxSkillCap, true, minLabel, null, null, 1f);
                     
                     // Max Skill Slider
                     Rect maxSliderRect = new Rect(skillAreaRect.x, minSliderRect.yMax + verticalSpacing, skillAreaRect.width, sliderHeight);
-                    string maxLabel = $"Max Skill: {rule.MaxSkill}";
+                    string maxLabel = "AWA_ExpertMode_MaxSkill".Translate(rule.MaxSkill);
                     rule.MaxSkill = (int)Widgets.HorizontalSlider(maxSliderRect, rule.MaxSkill, 0f, (float)maxSkillCap, true, maxLabel, null, null, 1f);
                     
                     // Input Validation: Ensure Min <= Max

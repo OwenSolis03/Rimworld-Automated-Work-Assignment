@@ -49,7 +49,7 @@ namespace Automated_Work_Assignment
             absorbInputAroundWindow = true;
             draggable = true;
 
-            this.optionalTitle = $"Exclude Pawns from {workType.labelShort.CapitalizeFirst()}";
+            this.optionalTitle = "AWA_JobExclusion_Title".Translate(workType.labelShort.CapitalizeFirst());
             RefreshPawnList();
         }
 
@@ -165,7 +165,7 @@ namespace Automated_Work_Assignment
                     
                     if (pawn.WorkTypeIsDisabled(selectedWorkType))
                     {
-                        label += " (Incapable)";
+                        label += " " + "AWA_IncapableSuffix".Translate();
                         GUI.color = Color.gray; // Dim the text to indicate incapability
                     }
 

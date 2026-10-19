@@ -136,7 +136,7 @@ namespace Automated_Work_Assignment
                 // ============================================================
                 // SECTION: Basic Settings (collapsible)
                 // ============================================================
-                if (DrawSectionHeader(listingStandard, "Basic Settings", ref collapseBasicSettings))
+                if (DrawSectionHeader(listingStandard, "AWA_Section_BasicSettings".Translate(), ref collapseBasicSettings))
                 {
                     listingStandard.Gap(4f);
 
@@ -183,9 +183,9 @@ namespace Automated_Work_Assignment
                     
                     GameFont previousFont = Text.Font;
                     Text.Font = GameFont.Small;
-                    float simpleWidth = Text.CalcSize("Simple Mode").x;
-                    float expertWidth = Text.CalcSize("Expert Mode").x;
-                    float hybridWidth = Text.CalcSize("Hybrid Mode").x;
+                    float simpleWidth = Text.CalcSize("AWA_AssignmentMode_Simple".Translate()).x;
+                    float expertWidth = Text.CalcSize("AWA_AssignmentMode_Expert".Translate()).x;
+                    float hybridWidth = Text.CalcSize("AWA_AssignmentMode_Hybrid".Translate()).x;
                     Text.Font = previousFont;
                     
                     float currentX = modeRect.x;
@@ -254,7 +254,7 @@ namespace Automated_Work_Assignment
                 // ============================================================
                 // SECTION: Management Buttons (collapsible)
                 // ============================================================
-                if (DrawSectionHeader(listingStandard, "Management Tools", ref collapseManagement))
+                if (DrawSectionHeader(listingStandard, "AWA_Section_Management".Translate(), ref collapseManagement))
                 {
                     listingStandard.Gap(4f);
                     Rect buttonRowRect = listingStandard.GetRect(30f); 
@@ -275,11 +275,11 @@ namespace Automated_Work_Assignment
                     TooltipHandler.TipRegion(expertModeButtonRect, "AWA_ConfigureExpertModeTooltip".Translate());
 
                     Rect heuristicsButtonRect = new Rect(expertModeButtonRect.xMax + 10f, buttonRowRect.y, buttonWidth, buttonRowRect.height);
-                    if (Widgets.ButtonText(heuristicsButtonRect, "Experimental"))
+                    if (Widgets.ButtonText(heuristicsButtonRect, "AWA_ExperimentalButton".Translate()))
                     {
                         Find.WindowStack.Add(new Experimental.UI.Dialog_ExperimentalSettings(saveData));
                     }
-                    TooltipHandler.TipRegion(heuristicsButtonRect, "Configure experimental heuristic profiling.");
+                    TooltipHandler.TipRegion(heuristicsButtonRect, "AWA_ExperimentalButton_Tooltip".Translate());
                 }
 
                 listingStandard.GapLine(8f);
@@ -287,46 +287,47 @@ namespace Automated_Work_Assignment
                 // ============================================================
                 // SECTION: UI Simplification (collapsible)
                 // ============================================================
-                if (DrawSectionHeader(listingStandard, "UI Simplification (Optional)", ref collapseSimplification))
+                if (DrawSectionHeader(listingStandard, "AWA_Section_Simplification".Translate(), ref collapseSimplification))
                 {
                     listingStandard.Gap(4f);
                     listingStandard.CheckboxLabeled(
-                        "Enable Master Passion Slider",
+                        "AWA_MasterPassion".Translate(),
                         ref saveData.useMasterPassion,
-                        "Replaces individual passion sliders with a single global slider."
+                        "AWA_MasterPassion_Tooltip".Translate()
                     );
                     if (saveData.useMasterPassion)
                     {
                         saveData.masterPassionWeight = Widgets.HorizontalSlider(
                             listingStandard.GetRect(22f),
                             saveData.masterPassionWeight, 0f, 3f, true,
-                            "Master Passion Weight: " + saveData.masterPassionWeight.ToString("F1"),
+                            "AWA_MasterPassionWeightLabel".Translate(saveData.masterPassionWeight.ToString("F1")),
                             "0x", "3x", roundTo: 0.1f
                         );
                     }
                     listingStandard.CheckboxLabeled(
-                        "Combine Similar Work Types",
+                        "AWA_CombineWorkTypes".Translate(),
                         ref saveData.combineSimilarWorkTypes,
-                        "Shows related work types (e.g. Growing + Cut plants) in one row for compactness. Editing the row writes the same value to each; assignment stays per individual work type."
+                        "AWA_CombineWorkTypes_Tooltip".Translate()
                     );
                     listingStandard.CheckboxLabeled(
-                        "Gradual Backup Scaling",
+                        "AWA_GradualBackupScaling".Translate(),
                         ref saveData.gradualBackupScaling,
-                        "Replaces each single Backup Priority slider with a top/bottom band. Unselected colonists are spread across that priority range by skill instead of all sharing one number."
+                        "AWA_GradualBackupScaling_Tooltip".Translate()
                     );
                     if (saveData.gradualBackupScaling)
                     {
+                        // Leading spaces indent the dependent options under their parent toggle
                         listingStandard.CheckboxLabeled(
-                            "    Also scale the primary group",
+                            "    " + "AWA_BandPrimaryGroup".Translate(),
                             ref saveData.bandPrimaryGroup,
-                            "Applies the same band idea to the SELECTED colonists: the Priority slider becomes the band top and a second slider sets the bottom. Off by default (selected pawns share one priority)."
+                            "AWA_BandPrimaryGroup_Tooltip".Translate()
                         );
                         if (saveData.bandPrimaryGroup)
                         {
                             listingStandard.CheckboxLabeled(
-                                "    Lead + spread (keep the best pawn at the top priority)",
+                                "    " + "AWA_PrimaryLeadSpread".Translate(),
                                 ref saveData.primaryBandLeadSpread,
-                                "The single best pawn stays at the top priority; the rest of the selected group is spread across the band below it. Useful for one lead doctor / lead cook plus helpers."
+                                "AWA_PrimaryLeadSpread_Tooltip".Translate()
                             );
                         }
                     }
@@ -337,7 +338,7 @@ namespace Automated_Work_Assignment
                 // ============================================================
                 // SECTION: Work Types (collapsible)
                 // ============================================================
-                if (!DrawSectionHeader(listingStandard, "Work Type Settings", ref collapseWorkTypes))
+                if (!DrawSectionHeader(listingStandard, "AWA_Section_WorkTypes".Translate(), ref collapseWorkTypes))
                 {
                     // Section collapsed — skip work type list rendering entirely
                     listingStandard.End();
@@ -627,7 +628,7 @@ namespace Automated_Work_Assignment
                                 0f, 4f,
                                 true,
                                 (primaryBandActive ? "AWA_PrimaryBandTopLabel" : "AWA_PriorityFieldLabel").Translate(priorityLabelArg),
-                                "P1 (urgent)", "P4 (last)",
+                                "AWA_SliderUrgent".Translate(), "AWA_SliderLast".Translate(),
                                 roundTo: 1f
                             );
                             if((int)newPriority != currentSetting.priority)
@@ -687,7 +688,7 @@ namespace Automated_Work_Assignment
                                     0f, 4f,
                                     true,
                                     primaryBottomLabel,
-                                    "OFF", "P4",
+                                    "AWA_Off".Translate(), "P4",
                                     roundTo: 1f
                                 );
                                 int primaryBottom = (int)newPrimaryBottom;
@@ -718,7 +719,7 @@ namespace Automated_Work_Assignment
                                     0f, 4f,
                                     true,
                                     bandTopLabel,
-                                    "OFF", "P4",
+                                    "AWA_Off".Translate(), "P4",
                                     roundTo: 1f
                                 );
 
@@ -730,7 +731,7 @@ namespace Automated_Work_Assignment
                                     0f, 4f,
                                     true,
                                     bandBottomLabel,
-                                    "OFF", "P4",
+                                    "AWA_Off".Translate(), "P4",
                                     roundTo: 1f
                                 );
 
@@ -762,7 +763,7 @@ namespace Automated_Work_Assignment
                                     0f, 4f,
                                     true,
                                     fallbackLabel,
-                                    "OFF", "P4",
+                                    "AWA_Off".Translate(), "P4",
                                     roundTo: 1f
                                 );
                                 if((int)tempFallback != currentSetting.fallbackPriority)

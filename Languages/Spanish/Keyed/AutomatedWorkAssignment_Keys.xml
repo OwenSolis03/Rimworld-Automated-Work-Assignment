@@ -95,4 +95,32 @@
   <AWA_Error_PreparingList>Error al preparar la lista: {0}</AWA_Error_PreparingList>
   <AWA_Error_ProcessingGroup>Error al procesar {0}</AWA_Error_ProcessingGroup>
 
+  <!-- Section headers, UI simplification options and dialog titles -->
+  <AWA_Section_BasicSettings>Ajustes básicos</AWA_Section_BasicSettings>
+  <AWA_Section_Management>Herramientas de gestión</AWA_Section_Management>
+  <AWA_Section_Simplification>Simplificación de la interfaz (opcional)</AWA_Section_Simplification>
+  <AWA_Section_WorkTypes>Ajustes por tipo de trabajo</AWA_Section_WorkTypes>
+  <AWA_ExperimentalButton>Experimental</AWA_ExperimentalButton>
+  <AWA_ExperimentalButton_Tooltip>Configura el perfilado heurístico experimental.</AWA_ExperimentalButton_Tooltip>
+  <AWA_Experimental_WindowTitle>Módulo de heurísticas experimental</AWA_Experimental_WindowTitle>
+  <AWA_MasterPassion>Activar control de pasión global</AWA_MasterPassion>
+  <AWA_MasterPassion_Tooltip>Sustituye los controles de pasión individuales por un único control global.</AWA_MasterPassion_Tooltip>
+  <AWA_MasterPassionWeightLabel>Peso de pasión global: {0}x</AWA_MasterPassionWeightLabel>
+  <AWA_CombineWorkTypes>Combinar tipos de trabajo similares</AWA_CombineWorkTypes>
+  <AWA_CombineWorkTypes_Tooltip>Muestra los tipos de trabajo relacionados (p. ej. Cultivar + Cortar plantas) en una sola fila para ahorrar espacio. Editar la fila escribe el mismo valor en cada uno; la asignación se sigue calculando por tipo de trabajo individual.</AWA_CombineWorkTypes_Tooltip>
+  <AWA_GradualBackupScaling>Escalado gradual del respaldo</AWA_GradualBackupScaling>
+  <AWA_GradualBackupScaling_Tooltip>Sustituye cada control de prioridad de respaldo por una banda máx./mín. Los colonos no seleccionados se reparten por ese rango de prioridades según su habilidad, en vez de compartir todos el mismo número.</AWA_GradualBackupScaling_Tooltip>
+  <AWA_BandPrimaryGroup>Escalar también el grupo principal</AWA_BandPrimaryGroup>
+  <AWA_BandPrimaryGroup_Tooltip>Aplica la misma idea de banda a los colonos SELECCIONADOS: el control de Prioridad pasa a ser el máximo de la banda y un segundo control fija el mínimo. Desactivado por defecto (los colonos seleccionados comparten una prioridad).</AWA_BandPrimaryGroup_Tooltip>
+  <AWA_PrimaryLeadSpread>Líder + reparto (mantiene al mejor colono en la prioridad máxima)</AWA_PrimaryLeadSpread>
+  <AWA_PrimaryLeadSpread_Tooltip>El mejor colono se queda en la prioridad máxima; el resto del grupo seleccionado se reparte por la banda inferior. Útil para un médico o cocinero principal con ayudantes.</AWA_PrimaryLeadSpread_Tooltip>
+  <AWA_SliderUrgent>P1 (urgente)</AWA_SliderUrgent>
+  <AWA_SliderLast>P4 (última)</AWA_SliderLast>
+  <AWA_ExpertMode_NoWorkTypes>No se encontraron tipos de trabajo relevantes.</AWA_ExpertMode_NoWorkTypes>
+  <AWA_Error_RuleManagerLost>Error: se perdió la referencia al gestor de reglas.</AWA_Error_RuleManagerLost>
+  <AWA_ExpertMode_MinSkill>Habilidad mín.: {0}</AWA_ExpertMode_MinSkill>
+  <AWA_ExpertMode_MaxSkill>Habilidad máx.: {0}</AWA_ExpertMode_MaxSkill>
+  <AWA_JobExclusion_Title>Excluir peones de {0}</AWA_JobExclusion_Title>
+  <AWA_IncapableSuffix>(Incapaz)</AWA_IncapableSuffix>
+
 </LanguageData>

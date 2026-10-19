@@ -129,4 +129,32 @@
   <AWA_Error_PreparingList>Erreur lors de la préparation de la liste : {0}</AWA_Error_PreparingList>
   <AWA_Error_ProcessingGroup>Erreur lors du traitement de {0}</AWA_Error_ProcessingGroup>
 
+  <!-- Section headers, UI simplification options and dialog titles -->
+  <AWA_Section_BasicSettings>Paramètres de base</AWA_Section_BasicSettings>
+  <AWA_Section_Management>Outils de gestion</AWA_Section_Management>
+  <AWA_Section_Simplification>Simplification de l'interface (optionnel)</AWA_Section_Simplification>
+  <AWA_Section_WorkTypes>Paramètres par type de travail</AWA_Section_WorkTypes>
+  <AWA_ExperimentalButton>Expérimental</AWA_ExperimentalButton>
+  <AWA_ExperimentalButton_Tooltip>Configurer le profilage heuristique expérimental.</AWA_ExperimentalButton_Tooltip>
+  <AWA_Experimental_WindowTitle>Module d'heuristiques expérimental</AWA_Experimental_WindowTitle>
+  <AWA_MasterPassion>Activer le curseur de passion global</AWA_MasterPassion>
+  <AWA_MasterPassion_Tooltip>Remplace les curseurs de passion individuels par un seul curseur global.</AWA_MasterPassion_Tooltip>
+  <AWA_MasterPassionWeightLabel>Poids de passion global : {0}x</AWA_MasterPassionWeightLabel>
+  <AWA_CombineWorkTypes>Regrouper les types de travail similaires</AWA_CombineWorkTypes>
+  <AWA_CombineWorkTypes_Tooltip>Affiche les types de travail liés (ex. Cultiver + Couper les plantes) sur une seule ligne pour gagner de la place. Modifier la ligne écrit la même valeur dans chacun ; l'assignation reste calculée par type de travail individuel.</AWA_CombineWorkTypes_Tooltip>
+  <AWA_GradualBackupScaling>Échelonnage progressif du secours</AWA_GradualBackupScaling>
+  <AWA_GradualBackupScaling_Tooltip>Remplace chaque curseur de priorité de secours par une plage max./min. Les colons non sélectionnés sont répartis sur cette plage selon leur compétence, au lieu de partager tous le même numéro.</AWA_GradualBackupScaling_Tooltip>
+  <AWA_BandPrimaryGroup>Échelonner aussi le groupe principal</AWA_BandPrimaryGroup>
+  <AWA_BandPrimaryGroup_Tooltip>Applique la même idée de plage aux colons SÉLECTIONNÉS : le curseur Priorité devient le max. de la plage et un second curseur fixe le min. Désactivé par défaut (les colons sélectionnés partagent une priorité).</AWA_BandPrimaryGroup_Tooltip>
+  <AWA_PrimaryLeadSpread>Chef + répartition (garde le meilleur colon en priorité maximale)</AWA_PrimaryLeadSpread>
+  <AWA_PrimaryLeadSpread_Tooltip>Le meilleur colon reste en priorité maximale ; le reste du groupe sélectionné est réparti sur la plage en dessous. Utile pour un médecin ou cuisinier principal avec des aides.</AWA_PrimaryLeadSpread_Tooltip>
+  <AWA_SliderUrgent>P1 (urgent)</AWA_SliderUrgent>
+  <AWA_SliderLast>P4 (dernier)</AWA_SliderLast>
+  <AWA_ExpertMode_NoWorkTypes>Aucun type de travail pertinent trouvé.</AWA_ExpertMode_NoWorkTypes>
+  <AWA_Error_RuleManagerLost>Erreur : référence au gestionnaire de règles perdue.</AWA_Error_RuleManagerLost>
+  <AWA_ExpertMode_MinSkill>Compétence min. : {0}</AWA_ExpertMode_MinSkill>
+  <AWA_ExpertMode_MaxSkill>Compétence max. : {0}</AWA_ExpertMode_MaxSkill>
+  <AWA_JobExclusion_Title>Exclure des colons de {0}</AWA_JobExclusion_Title>
+  <AWA_IncapableSuffix>(Incapable)</AWA_IncapableSuffix>
+
 </LanguageData>

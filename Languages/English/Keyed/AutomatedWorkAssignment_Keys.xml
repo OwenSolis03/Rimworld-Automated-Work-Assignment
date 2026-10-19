@@ -96,4 +96,32 @@
   <AWA_Error_PreparingList>Error preparing list: {0}</AWA_Error_PreparingList>
   <AWA_Error_ProcessingGroup>Error processing {0}</AWA_Error_ProcessingGroup>
 
+  <!-- Section headers, UI simplification options and dialog titles -->
+  <AWA_Section_BasicSettings>Basic Settings</AWA_Section_BasicSettings>
+  <AWA_Section_Management>Management Tools</AWA_Section_Management>
+  <AWA_Section_Simplification>UI Simplification (Optional)</AWA_Section_Simplification>
+  <AWA_Section_WorkTypes>Work Type Settings</AWA_Section_WorkTypes>
+  <AWA_ExperimentalButton>Experimental</AWA_ExperimentalButton>
+  <AWA_ExperimentalButton_Tooltip>Configure experimental heuristic profiling.</AWA_ExperimentalButton_Tooltip>
+  <AWA_Experimental_WindowTitle>Experimental Heuristics Module</AWA_Experimental_WindowTitle>
+  <AWA_MasterPassion>Enable Master Passion Slider</AWA_MasterPassion>
+  <AWA_MasterPassion_Tooltip>Replaces individual passion sliders with a single global slider.</AWA_MasterPassion_Tooltip>
+  <AWA_MasterPassionWeightLabel>Master passion weight: {0}x</AWA_MasterPassionWeightLabel>
+  <AWA_CombineWorkTypes>Combine Similar Work Types</AWA_CombineWorkTypes>
+  <AWA_CombineWorkTypes_Tooltip>Shows related work types (e.g. Growing + Cut plants) in one row for compactness. Editing the row writes the same value to each; assignment stays per individual work type.</AWA_CombineWorkTypes_Tooltip>
+  <AWA_GradualBackupScaling>Gradual Backup Scaling</AWA_GradualBackupScaling>
+  <AWA_GradualBackupScaling_Tooltip>Replaces each single Backup Priority slider with a top/bottom band. Unselected colonists are spread across that priority range by skill instead of all sharing one number.</AWA_GradualBackupScaling_Tooltip>
+  <AWA_BandPrimaryGroup>Also scale the primary group</AWA_BandPrimaryGroup>
+  <AWA_BandPrimaryGroup_Tooltip>Applies the same band idea to the SELECTED colonists: the Priority slider becomes the band top and a second slider sets the bottom. Off by default (selected pawns share one priority).</AWA_BandPrimaryGroup_Tooltip>
+  <AWA_PrimaryLeadSpread>Lead + spread (keep the best pawn at the top priority)</AWA_PrimaryLeadSpread>
+  <AWA_PrimaryLeadSpread_Tooltip>The single best pawn stays at the top priority; the rest of the selected group is spread across the band below it. Useful for one lead doctor / lead cook plus helpers.</AWA_PrimaryLeadSpread_Tooltip>
+  <AWA_SliderUrgent>P1 (urgent)</AWA_SliderUrgent>
+  <AWA_SliderLast>P4 (last)</AWA_SliderLast>
+  <AWA_ExpertMode_NoWorkTypes>No relevant work types found.</AWA_ExpertMode_NoWorkTypes>
+  <AWA_Error_RuleManagerLost>Error: Rule manager reference lost.</AWA_Error_RuleManagerLost>
+  <AWA_ExpertMode_MinSkill>Min skill: {0}</AWA_ExpertMode_MinSkill>
+  <AWA_ExpertMode_MaxSkill>Max skill: {0}</AWA_ExpertMode_MaxSkill>
+  <AWA_JobExclusion_Title>Exclude Pawns from {0}</AWA_JobExclusion_Title>
+  <AWA_IncapableSuffix>(Incapable)</AWA_IncapableSuffix>
+
 </LanguageData>

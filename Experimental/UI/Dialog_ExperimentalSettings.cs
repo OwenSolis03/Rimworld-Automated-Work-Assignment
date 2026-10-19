@@ -23,7 +23,7 @@ namespace Automated_Work_Assignment.Experimental.UI
             absorbInputAroundWindow = true;
             draggable = true;
             resizeable = true;
-            optionalTitle = "Experimental Heuristics Module";
+            optionalTitle = "AWA_Experimental_WindowTitle".Translate();
         }
 
         /// <summary>
